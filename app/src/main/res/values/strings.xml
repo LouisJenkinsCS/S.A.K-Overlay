@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">SAKLauncher</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="intro">Welcome to the SAKLauncher, which stands for Swiss-Army-Knife Launcher. In this launcher, it will feature a plethora of varying features, utilities, and tools for you, the user, to enjoy!</string>
+    <string-array name="circular_button_options">
+        <item>Move</item>
+        <item>Modify</item>
+        <item>Duplicate</item>
+        <item>Hide</item>
+        <item>Delete</item>
+    </string-array>
+    <string-array name="popup_window_options">
+        <item>Move</item>
+        <item>Delete</item>
+        <item>Hide</item>
+        <item>Resize</item>
+    </string-array>
+</resources>
