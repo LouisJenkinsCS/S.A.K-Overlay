@@ -1,4 +1,4 @@
-package com.example.theif519.saklauncher;
+package com.theif519.sakoverlay;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -31,7 +31,7 @@ public class CircularButton extends Button {
         setBackgroundResource(R.drawable.roundbutton);
         invalidate();
         requestLayout();
-        Utils.AttributeRetriever.fillAttributes(this.getClass(), this, context, attrs);
+        com.theif519.utils.AttributeRetriever.fillAttributes(this.getClass(), this, context, attrs);
         this.setOnLongClickListener(new OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {

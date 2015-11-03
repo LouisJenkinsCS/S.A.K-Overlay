@@ -1,11 +1,11 @@
-package Utils;
+package com.theif519.utils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.util.Log;
 
-import com.example.theif519.saklauncher.R;
+import com.theif519.sakoverlay.R;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

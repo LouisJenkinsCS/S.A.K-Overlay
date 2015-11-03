@@ -5,7 +5,7 @@
     android:background="@color/sticky_note_background"
     android:orientation="vertical">
 
-    <com.example.theif519.saklauncher.MockActionBar
+    <com.theif519.sakoverlay.MockActionBar
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"/>
 

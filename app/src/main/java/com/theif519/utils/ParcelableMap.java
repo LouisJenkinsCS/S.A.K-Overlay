@@ -1,4 +1,4 @@
-package Utils;
+package com.theif519.utils;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -21,7 +21,7 @@ public class ParcelableMap<T extends Parcelable> implements Map<String, T>, Parc
 
     private ClassLoader mLoader;
 
-    private static final Parcelable.Creator<ParcelableMap<? extends Parcelable>> CREATOR = new Creator<ParcelableMap<? extends Parcelable>>() {
+    private static final Creator<ParcelableMap<? extends Parcelable>> CREATOR = new Creator<ParcelableMap<? extends Parcelable>>() {
         @Override
         public ParcelableMap<? extends Parcelable> createFromParcel(Parcel source) {
             return new ParcelableMap<>(source);
@@ -54,7 +54,7 @@ public class ParcelableMap<T extends Parcelable> implements Map<String, T>, Parc
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(mMap.size());
-        for (Map.Entry<String, T> entry : mMap.entrySet()) {
+        for (Entry<String, T> entry : mMap.entrySet()) {
             dest.writeString(entry.getKey());
             dest.writeParcelable(entry.getValue(), flags);
         }

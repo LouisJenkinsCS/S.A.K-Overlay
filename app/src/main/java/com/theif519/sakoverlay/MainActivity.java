@@ -1,4 +1,4 @@
-package com.example.theif519.saklauncher;
+package com.theif519.sakoverlay;
 
 import android.app.Activity;
 import android.app.FragmentTransaction;
@@ -11,14 +11,14 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 
+import com.theif519.utils.JSONDeserializer;
+import com.theif519.utils.JSONSerializer;
+
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import Utils.JSONDeserializer;
-import Utils.JSONSerializer;
 
 
 // TODO: Find a better way to register callbacks for button press, and menu options!

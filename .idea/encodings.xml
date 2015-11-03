@@ -1,6 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/CircularButton.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/FloatingFragment.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/FloatingFragmentFactory.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Introduction.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/IntroductionFragment.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/MainActivity.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/MockActionBar.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/StickyNote.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/StickyNoteFragment.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/AsyncParser.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/AttributeRetriever.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Callbacks.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/FileRetriever.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/JSONDeserializer.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/JSONSerializer.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/ParcelableMap.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Parsable.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/anim" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/drawable" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/layout" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/menu" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/mipmap-hdpi" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/mipmap-mdpi" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/mipmap-xhdpi" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/mipmap-xxhdpi" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/values" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/res/values-w820dp" charset="windows-1252" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

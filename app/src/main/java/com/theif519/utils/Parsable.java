@@ -1,4 +1,4 @@
-package Utils;
+package com.theif519.utils;
 
 /**
  * Author: Louis Jenkins
