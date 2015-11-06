@@ -7,7 +7,8 @@
 
     <com.theif519.sakoverlay.MockActionBar
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        app:mabTitle="Maps"/>
 
     <fragment
         android:id="@+id/map"

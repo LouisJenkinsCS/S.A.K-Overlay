@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="300dp"
+    android:layout_height="500dp"
+    android:orientation="vertical">
+
+    <com.theif519.sakoverlay.MockActionBar
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        app:mabTitle="Web Browser" />
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/button_text"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:paddingEnd="8dp"
+        android:paddingStart="8dp">
+
+        <Button
+            android:id="@+id/browser_action_back"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="&#9001;"
+            android:textSize="24sp" />
+
+        <Button
+            android:id="@+id/browser_action_forward"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/browser_action_back"
+            android:text="&#9002;"
+            android:textSize="24sp" />
+
+        <EditText
+            android:id="@+id/browser_action_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@+id/browser_action_forward"
+            android:layout_toStartOf="@+id/browser_action_refresh"
+            android:ellipsize="end"
+            android:inputType="textUri"
+            android:maxLines="1"
+            android:maxWidth="150dp"
+            android:text="@string/hello_world"
+            android:textSize="20sp" />
+
+        <Button
+            android:id="@+id/browser_action_refresh"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@+id/browser_action_home"
+            android:text="&#x21bb;"
+            android:textSize="24sp" />
+
+
+        <Button
+            android:id="@+id/browser_action_home"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="&#8962;"
+            android:textSize="24sp" />
+
+    </RelativeLayout>
+
+    <WebView
+        android:id="@+id/browser_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+</LinearLayout>

@@ -12,16 +12,15 @@ public class StickyNoteFragment extends FloatingFragment {
     protected static final String CONTENTS_KEY = "Contents";
     public static final String IDENTIFIER = "Sticky Note";
 
-    public static StickyNoteFragment newInstance(String title){
+    public static StickyNoteFragment newInstance(){
         StickyNoteFragment fragment = new StickyNoteFragment();
-        fragment.TITLE = title;
         fragment.LAYOUT_ID = R.layout.sticky_note;
         fragment.LAYOUT_TAG = IDENTIFIER;
         return fragment;
     }
 
     public static StickyNoteFragment deserialize(ArrayMap<String, String> map){
-        StickyNoteFragment fragment = StickyNoteFragment.newInstance("Sticky Note");
+        StickyNoteFragment fragment = StickyNoteFragment.newInstance();
         fragment.mappedData = map;
         return fragment;
     }

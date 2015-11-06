@@ -3,4 +3,7 @@
     <declare-styleable name="CircularButton">
         <attr name="imgSrc" format="reference"/>
     </declare-styleable>
+    <declare-styleable name="MockActionBar">
+        <attr name="mabTitle" format="string"/>
+    </declare-styleable>
 </resources>

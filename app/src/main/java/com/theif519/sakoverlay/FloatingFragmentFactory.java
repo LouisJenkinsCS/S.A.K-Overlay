@@ -20,6 +20,8 @@ public class FloatingFragmentFactory {
                 return IntroductionFragment.newInstance();
             case GoogleMapsFragment.IDENTIFIER:
                 return GoogleMapsFragment.newInstance();
+            case WebBrowserFragment.IDENTIFIER:
+                return WebBrowserFragment.newInstance();
             default:
                 return null;
         }

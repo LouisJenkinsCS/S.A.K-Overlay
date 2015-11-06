@@ -38,6 +38,13 @@
                 android:layout_marginEnd="3dp"
                 android:id="@+id/google_maps_button"/>
 
+            <com.theif519.sakoverlay.CircularButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginEnd="3dp"
+                android:id="@+id/web_browser_button"/>
+
         </LinearLayout>
     </ScrollView>
 

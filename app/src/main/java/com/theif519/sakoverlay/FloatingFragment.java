@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 /**
  * Created by theif519 on 10/29/2015.
@@ -46,12 +45,11 @@ public class FloatingFragment extends Fragment {
 
     private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY;
 
-    protected String TITLE = "FloatingFragment", LAYOUT_TAG = "DefaultFragment";
+    protected String LAYOUT_TAG = "DefaultFragment";
 
     protected int LAYOUT_ID = R.layout.default_fragment;
 
-    protected static final String TITLE_KEY = "Title", LAYOUT_ID_KEY = "Layout Id",
-            X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
+    protected static final String X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
             WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag";
 
     private static final String TAG = FloatingFragment.class.getSimpleName();
@@ -60,9 +58,8 @@ public class FloatingFragment extends Fragment {
 
     protected ArrayMap<String, String> mappedData;
 
-    public static FloatingFragment newInstance(int layoutId, String layoutTag, String title) {
+    public static FloatingFragment newInstance(int layoutId, String layoutTag) {
         FloatingFragment fragment = new FloatingFragment();
-        fragment.TITLE = title;
         fragment.LAYOUT_TAG = layoutTag;
         fragment.LAYOUT_ID = layoutId;
         return fragment;
@@ -73,7 +70,6 @@ public class FloatingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(LAYOUT_ID, container, false);
-        ((TextView) mContentView.findViewById(R.id.custom_action_title)).setText(TITLE);
         mContentView.findViewById(R.id.custom_action_close).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -169,8 +165,13 @@ public class FloatingFragment extends Fragment {
                 }
             }
         });
-        setup();
-        if (mappedData != null) unpack();
+        mContentView.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mappedData != null) unpack();
+                setup();
+            }
+        });
         return mContentView;
     }
 
@@ -222,7 +223,6 @@ public class FloatingFragment extends Fragment {
 
     public ArrayMap<String, String> serialize() {
         ArrayMap<String, String> map = new ArrayMap<>();
-        map.put(TITLE_KEY, TITLE);
         map.put(LAYOUT_TAG_KEY, LAYOUT_TAG);
         map.put(X_KEY, Integer.toString(x));
         map.put(Y_KEY, Integer.toString(y));
@@ -237,10 +237,6 @@ public class FloatingFragment extends Fragment {
      */
     public void setup(){
 
-    }
-
-    public String getTitle() {
-        return TITLE;
     }
 
     public String getLayoutTag() {

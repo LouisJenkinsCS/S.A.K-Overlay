@@ -11,7 +11,6 @@ public class IntroductionFragment extends FloatingFragment {
 
     public static IntroductionFragment newInstance(){
         IntroductionFragment fragment = new IntroductionFragment();
-        fragment.TITLE = "Welcome!";
         fragment.LAYOUT_TAG = IDENTIFIER;
         fragment.LAYOUT_ID = R.layout.introduction;
         return fragment;

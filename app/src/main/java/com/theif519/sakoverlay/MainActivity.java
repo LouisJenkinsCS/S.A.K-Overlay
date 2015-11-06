@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.home_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                FloatingFragment fragment = FloatingFragment.newInstance(R.layout.introduction, "Introduction", "Introduction");
+                FloatingFragment fragment = IntroductionFragment.newInstance();
                 mFragments.add(new WeakReference<>(fragment));
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
@@ -85,7 +85,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.sticky_note_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FloatingFragment fragment = StickyNoteFragment.newInstance("Sticky Note");
+                FloatingFragment fragment = StickyNoteFragment.newInstance();
                 mFragments.add(new WeakReference<>(fragment));
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
@@ -94,6 +94,14 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = GoogleMapsFragment.newInstance();
+                mFragments.add(new WeakReference<>(fragment));
+                getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
+            }
+        });
+        findViewById(R.id.web_browser_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FloatingFragment fragment = WebBrowserFragment.newInstance();
                 mFragments.add(new WeakReference<>(fragment));
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
@@ -151,5 +159,10 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         WORKER_THREAD.quitSafely();
+    }
+
+    @Override
+    public void onBackPressed() {
+        moveTaskToBack(true);
     }
 }
