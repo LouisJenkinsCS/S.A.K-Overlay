@@ -1,6 +1,5 @@
 package com.theif519.sakoverlay;
 
-import android.os.Bundle;
 import android.util.ArrayMap;
 import android.widget.EditText;
 
@@ -9,16 +8,15 @@ import android.widget.EditText;
  */
 public class StickyNoteFragment extends FloatingFragment {
 
+
     protected static final String CONTENTS_KEY = "Contents";
-    public static final String LAYOUT_TAG = "Sticky Note";
+    public static final String IDENTIFIER = "Sticky Note";
 
     public static StickyNoteFragment newInstance(String title){
         StickyNoteFragment fragment = new StickyNoteFragment();
-        Bundle args = new Bundle();
-        args.putString(TITLE_KEY, title);
-        args.putInt(LAYOUT_ID_KEY, R.layout.sticky_note);
-        args.putString(LAYOUT_TAG_KEY, LAYOUT_TAG);
-        fragment.setArguments(args);
+        fragment.TITLE = title;
+        fragment.LAYOUT_ID = R.layout.sticky_note;
+        fragment.LAYOUT_TAG = IDENTIFIER;
         return fragment;
     }
 

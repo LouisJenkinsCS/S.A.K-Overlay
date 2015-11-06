@@ -1,7 +1,10 @@
 package com.theif519.sakoverlay;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -13,6 +16,7 @@ import android.view.WindowManager;
 
 import com.theif519.utils.JSONDeserializer;
 import com.theif519.utils.JSONSerializer;
+import com.theif519.utils.ServiceTools;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -48,11 +52,28 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final String JSON_FILENAME = "SerializedPopupWindowExtenderInformation.json";
 
+    public void startServiceIfNotRunning(){
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for(ActivityManager.RunningServiceInfo service: manager.getRunningServices(Integer.MAX_VALUE)){
+            if(service.service.getClassName().equals(OverlayService.class.getName())){
+                return;
+            }
+        }
+        Intent intent = new Intent(this, OverlayService.class);
+        startService(intent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER);
         setContentView(R.layout.activity_main);
+        ServiceTools.startService(this, OverlayService.class, new ServiceTools.SetupIntent() {
+            @Override
+            public void setup(Intent intent) {
+                intent.putExtra(OverlayService.START_NOTIFICATION, true);
+            }
+        });
         findViewById(R.id.home_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
@@ -65,6 +86,14 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = StickyNoteFragment.newInstance("Sticky Note");
+                mFragments.add(new WeakReference<>(fragment));
+                getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
+            }
+        });
+        findViewById(R.id.google_maps_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FloatingFragment fragment = GoogleMapsFragment.newInstance();
                 mFragments.add(new WeakReference<>(fragment));
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }

@@ -14,10 +14,12 @@ public class FloatingFragmentFactory {
 
     public FloatingFragment getFragment(ArrayMap<String, String> map){
         switch(map.get(FloatingFragment.LAYOUT_TAG_KEY)){
-            case StickyNoteFragment.LAYOUT_TAG:
+            case StickyNoteFragment.IDENTIFIER:
                 return StickyNoteFragment.deserialize(map);
-            case IntroductionFragment.LAYOUT_TAG:
+            case IntroductionFragment.IDENTIFIER:
                 return IntroductionFragment.newInstance();
+            case GoogleMapsFragment.IDENTIFIER:
+                return GoogleMapsFragment.newInstance();
             default:
                 return null;
         }

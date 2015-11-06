@@ -1,6 +1,5 @@
 package com.theif519.sakoverlay;
 
-import android.os.Bundle;
 import android.util.ArrayMap;
 
 /**
@@ -8,16 +7,13 @@ import android.util.ArrayMap;
  */
 public class IntroductionFragment extends FloatingFragment {
 
-    public static final String LAYOUT_TAG = "Introduction";
-    private static final String TITLE = "Welcome";
+    public static final String IDENTIFIER = "Introduction";
 
     public static IntroductionFragment newInstance(){
         IntroductionFragment fragment = new IntroductionFragment();
-        Bundle args = new Bundle();
-        args.putString(TITLE_KEY, TITLE);
-        args.putInt(LAYOUT_ID_KEY, R.layout.introduction);
-        args.putString(LAYOUT_TAG_KEY, LAYOUT_TAG);
-        fragment.setArguments(args);
+        fragment.TITLE = "Welcome!";
+        fragment.LAYOUT_TAG = IDENTIFIER;
+        fragment.LAYOUT_ID = R.layout.introduction;
         return fragment;
     }
 
