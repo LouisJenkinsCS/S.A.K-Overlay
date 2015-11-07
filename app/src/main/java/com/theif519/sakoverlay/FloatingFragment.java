@@ -2,12 +2,9 @@ package com.theif519.sakoverlay;
 
 
 import android.app.Fragment;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -47,7 +44,7 @@ public class FloatingFragment extends Fragment {
 
     protected String LAYOUT_TAG = "DefaultFragment";
 
-    protected int LAYOUT_ID = R.layout.default_fragment;
+    protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
 
     protected static final String X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
             WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag";
@@ -70,6 +67,7 @@ public class FloatingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(LAYOUT_ID, container, false);
+        mContentView.setVisibility(View.INVISIBLE);
         mContentView.findViewById(R.id.custom_action_close).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -128,7 +126,7 @@ public class FloatingFragment extends Fragment {
         mContentView.findViewById(R.id.custom_action_minimize).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                minimize(mContentView.getWidth(), mContentView.getHeight());
+                minimize();
             }
         });
         getActivity().findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -157,7 +155,7 @@ public class FloatingFragment extends Fragment {
                 if (mContentView.getY() > MainActivity.maxY.get()) {
                     mContentView.setY(MainActivity.maxY.get());
                 }
-                if (mContentView.getVisibility() != View.GONE) {
+                if (mContentView.getVisibility() != View.INVISIBLE) {
                     height = mContentView.getHeight();
                     width = mContentView.getWidth();
                     x = (int) mContentView.getX();
@@ -165,6 +163,9 @@ public class FloatingFragment extends Fragment {
                 }
             }
         });
+        if(mappedData != null && Boolean.valueOf(mappedData.get(MINIMIZED_KEY))){
+            minimize();
+        } else mContentView.setVisibility(View.VISIBLE);
         mContentView.post(new Runnable() {
             @Override
             public void run() {
@@ -187,30 +188,23 @@ public class FloatingFragment extends Fragment {
         y = Integer.parseInt(mappedData.get(Y_KEY));
         width = Integer.parseInt(mappedData.get(WIDTH_KEY));
         height = Integer.parseInt(mappedData.get(HEIGHT_KEY));
-        boolean isMinimized = Boolean.valueOf(mappedData.get(MINIMIZED_KEY));
-        if (isMinimized) {
-            mContentView.post(new Runnable() {
-                @Override
-                public void run() {
-                    minimize(width, height);
-                }
-            });
-        }
         mContentView.setX(x);
         mContentView.setY(y);
         mContentView.setLayoutParams(new LinearLayout.LayoutParams(width, height));
-        Log.d(TAG, "Minimized: " + isMinimized);
         // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
     }
 
-    private void minimize(int width, int height) {
+    private void minimize() {
+        mContentView.setVisibility(View.INVISIBLE);
         final LinearLayout layout = (LinearLayout) getActivity().findViewById(R.id.minimized_fragments);
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        mContentView.draw(canvas);
         final ImageView view = new ImageView(getActivity());
-        view.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 192, 192, false));
-        layout.addView(view);
+        view.setImageResource(ICON_ID);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.setMarginEnd(3);
+        layoutParams.setMargins(0, 0, 0, 10);
+        layout.addView(view, layoutParams);
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -218,7 +212,6 @@ public class FloatingFragment extends Fragment {
                 layout.removeView(view);
             }
         });
-        mContentView.setVisibility(View.GONE);
     }
 
     public ArrayMap<String, String> serialize() {
@@ -228,7 +221,7 @@ public class FloatingFragment extends Fragment {
         map.put(Y_KEY, Integer.toString(y));
         map.put(WIDTH_KEY, Integer.toString(width));
         map.put(HEIGHT_KEY, Integer.toString(height));
-        map.put(MINIMIZED_KEY, Boolean.toString(mContentView.getVisibility() == View.GONE));
+        map.put(MINIMIZED_KEY, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
         return map;
     }
 

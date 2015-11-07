@@ -17,30 +17,35 @@
             android:layout_gravity="center_vertical"
             android:orientation="vertical">
 
-            <com.theif519.sakoverlay.CircularButton
+
+            <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@drawable/settings"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
                 android:id="@+id/home_button"/>
 
-            <com.theif519.sakoverlay.CircularButton
+            <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:layout_marginEnd="3dp"
-                android:id="@+id/sticky_note_button"/>
-
-            <com.theif519.sakoverlay.CircularButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:background="@drawable/maps"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
                 android:id="@+id/google_maps_button"/>
 
-            <com.theif519.sakoverlay.CircularButton
+            <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:layout_marginEnd="3dp"
+                android:id="@+id/sticky_note_button"
+                android:background="@drawable/sticky_note"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/browser"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
                 android:id="@+id/web_browser_button"/>
@@ -56,15 +61,17 @@
         android:id="@+id/main_layout"/>
 
     <ScrollView
-        android:layout_width="100dp"
+        android:layout_width="55dp"
         android:layout_height="fill_parent">
 
         <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:orientation="vertical"
             android:id="@+id/minimized_fragments">
+
+
 
         </LinearLayout>
     </ScrollView>

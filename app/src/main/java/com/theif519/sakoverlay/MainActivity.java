@@ -6,9 +6,6 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Process;
 import android.util.ArrayMap;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -34,20 +31,20 @@ public class MainActivity extends Activity {
     // Because MutableInt requires API level 23, and I'm too lazy to make a new class, and this handles any thread safety issues.
     public static final AtomicInteger maxX = new AtomicInteger(0), maxY = new AtomicInteger(0);
 
-    private static final HandlerThread WORKER_THREAD;
+    //private static final HandlerThread WORKER_THREAD;
 
-    private static final Handler WORKER_HANDLE;
+    //private static final Handler WORKER_HANDLE;
 
     /*
         This block of code initializes the handler thread which manages all background tasks,
         and due to the fact the Handler requires the looper of the HandlerThread, we must block
         until it has been initialized, hence the application may be slow to start up, sadly.
      */
-    static {
+    /*static {
         WORKER_THREAD = new HandlerThread("Generic Worker", Process.THREAD_PRIORITY_BACKGROUND);
         WORKER_THREAD.start();
         WORKER_HANDLE = new Handler(WORKER_THREAD.getLooper());
-    }
+    }*/
 
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final String JSON_FILENAME = "SerializedPopupWindowExtenderInformation.json";
@@ -137,10 +134,8 @@ public class MainActivity extends Activity {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    protected void onPause() {
+    private void serializeFloatingFragments(){
         List<ArrayMap<String, String>> mapList = new ArrayList<>();
-        super.onPause();
         for(WeakReference<FloatingFragment> fragmentWeakReference: mFragments){
             FloatingFragment fragment = fragmentWeakReference.get();
             if(fragment != null && !fragment.isDead()){
@@ -156,13 +151,14 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        WORKER_THREAD.quitSafely();
+    protected void onPause() {
+        super.onPause();
+        serializeFloatingFragments();
     }
 
     @Override
     public void onBackPressed() {
+        serializeFloatingFragments();
         moveTaskToBack(true);
     }
 }

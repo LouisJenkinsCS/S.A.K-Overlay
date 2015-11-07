@@ -8,14 +8,21 @@ import android.util.ArrayMap;
 public class FloatingFragmentFactory {
     private static final FloatingFragmentFactory INSTANCE = new FloatingFragmentFactory();
 
-    public static FloatingFragmentFactory getInstance(){
+    public static FloatingFragmentFactory getInstance() {
         return INSTANCE;
     }
 
-    public FloatingFragment getFragment(ArrayMap<String, String> map){
-        switch(map.get(FloatingFragment.LAYOUT_TAG_KEY)){
+    public FloatingFragment getFragment(ArrayMap<String, String> map) {
+        FloatingFragment fragment = createFragment(map.get(FloatingFragment.LAYOUT_TAG_KEY));
+        if(fragment == null) return null;
+        fragment.mappedData = map;
+        return fragment;
+    }
+
+    private FloatingFragment createFragment(String layoutTag) {
+        switch (layoutTag) {
             case StickyNoteFragment.IDENTIFIER:
-                return StickyNoteFragment.deserialize(map);
+                return StickyNoteFragment.newInstance();
             case IntroductionFragment.IDENTIFIER:
                 return IntroductionFragment.newInstance();
             case GoogleMapsFragment.IDENTIFIER:

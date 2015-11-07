@@ -16,14 +16,10 @@ public class StickyNoteFragment extends FloatingFragment {
         StickyNoteFragment fragment = new StickyNoteFragment();
         fragment.LAYOUT_ID = R.layout.sticky_note;
         fragment.LAYOUT_TAG = IDENTIFIER;
+        fragment.ICON_ID = R.drawable.sticky_note;
         return fragment;
     }
 
-    public static StickyNoteFragment deserialize(ArrayMap<String, String> map){
-        StickyNoteFragment fragment = StickyNoteFragment.newInstance();
-        fragment.mappedData = map;
-        return fragment;
-    }
 
     @Override
     public ArrayMap<String, String> serialize() {

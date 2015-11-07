@@ -1,7 +1,5 @@
 package com.theif519.sakoverlay;
 
-import android.util.ArrayMap;
-
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -19,6 +17,7 @@ public class GoogleMapsFragment extends FloatingFragment {
         GoogleMapsFragment fragment = new GoogleMapsFragment();
         fragment.LAYOUT_ID = R.layout.google_maps;
         fragment.LAYOUT_TAG = IDENTIFIER;
+        fragment.ICON_ID = R.drawable.maps;
         return fragment;
     }
 
@@ -33,9 +32,4 @@ public class GoogleMapsFragment extends FloatingFragment {
         });
     }
 
-    public GoogleMapsFragment deserialize(ArrayMap<String, String> map) {
-        GoogleMapsFragment fragment = GoogleMapsFragment.newInstance();
-        fragment.mappedData = map;
-        return fragment;
-    }
 }

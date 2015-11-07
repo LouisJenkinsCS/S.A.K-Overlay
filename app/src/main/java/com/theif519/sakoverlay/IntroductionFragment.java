@@ -1,7 +1,5 @@
 package com.theif519.sakoverlay;
 
-import android.util.ArrayMap;
-
 /**
  * Created by theif519 on 10/31/2015.
  */
@@ -16,9 +14,4 @@ public class IntroductionFragment extends FloatingFragment {
         return fragment;
     }
 
-    public IntroductionFragment deserialize(ArrayMap<String, String> map){
-        IntroductionFragment fragment = IntroductionFragment.newInstance();
-        fragment.mappedData = map;
-        return fragment;
-    }
 }

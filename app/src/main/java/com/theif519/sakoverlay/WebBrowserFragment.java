@@ -25,6 +25,7 @@ public class WebBrowserFragment extends FloatingFragment {
         WebBrowserFragment fragment = new WebBrowserFragment();
         fragment.LAYOUT_ID = R.layout.web_browser;
         fragment.LAYOUT_TAG = IDENTIFIER;
+        fragment.ICON_ID = R.drawable.browser;
         return fragment;
     }
 
@@ -83,6 +84,7 @@ public class WebBrowserFragment extends FloatingFragment {
     public ArrayMap<String, String> serialize() {
         return super.serialize();
     }
+
 
     @Override
     public void unpack() {

@@ -7,29 +7,34 @@ Swiss-Army-Knife Overlay
 
 TODO!
 
+#### Overlay
+
+A transparent and beautiful UI that can be shown on top of any application
+
 ### Why should I use it?
 
 TODO!
+
 
 ## Features
 
 ### Transparent
 
-TODO! (Maybe something to do with how it would only cause background activity to pause, and not stop and be less likely to be destroyed when memory gets low)
+Makes use of the Android Life Cycle based on visibility. Since the app being drawn over always remains visible, it is less likely to be destroyed.
 
 ### All-In-One
 
-TODO! (Maybe something to do with how you will no longer need any other applications besides the Swiss Army Knife, because it does it all and it's all available in one place)
+Every and anything you could need, all at one place, usable at any time. From a simple messager, email-client, web browser, or even sticky notes.
 
 ### Floating Widgets
 
-TODO! (Detail how you will be able to use certain widgets available on top of your favorite application without having it be paused)
+Dynamic, resizable, moveable and persistent floating "widgets", basically fragments, which allow you to multitask easily.
 
 ## Costs
 
 ### Absolutely Free
 
-TODO! (No charge)
+TODO!
 
 ## FAQ
 
