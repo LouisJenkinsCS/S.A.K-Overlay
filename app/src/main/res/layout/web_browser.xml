@@ -5,10 +5,10 @@
     android:layout_height="500dp"
     android:orientation="vertical">
 
-    <com.theif519.sakoverlay.MockActionBar
+    <com.theif519.sakoverlay.TitleBar
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        app:mabTitle="Web Browser" />
+        app:tbTitle="Web Browser" />
 
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"

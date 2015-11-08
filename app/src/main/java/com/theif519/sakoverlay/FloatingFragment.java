@@ -38,7 +38,7 @@ import android.widget.LinearLayout;
  */
 public class FloatingFragment extends Fragment {
 
-    private boolean mIsDead = false, mMinimizeHint = false;
+    private boolean mIsDead = false, mMinimizeHint = false, mFinishedMultiTouch = false;
 
     private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY;
 
@@ -78,29 +78,14 @@ public class FloatingFragment extends Fragment {
         mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        tmpX = (int) event.getRawX();
-                        tmpY = (int) event.getRawY();
-                        //Log.d(TAG, "Tapped... (" + x + ", " + y + ") : < " + width + "x" + height + " >");
-                        return false;
-                    case MotionEvent.ACTION_MOVE:
-                        if((int)event.getRawX() >= tmpX && (int)event.getRawX() >= MainActivity.maxX.get() - mContentView.getWidth()) mMinimizeHint = true;
-                        else mMinimizeHint = false;
-                        tmpX = (int) event.getRawX();
-                        tmpY = (int) event.getRawY();
-                        int moveX = Math.min(Math.max(tmpX - width / 2,  0), MainActivity.maxX.get() - width);
-                        int moveY = Math.min(Math.max(tmpY - height / 2, 0), MainActivity.maxY.get() - height);
-                        //Log.d(TAG, "Moving... (" + moveX + ", " + moveY + ")");
-                        mContentView.setX(moveX);
-                        mContentView.setY(moveY);
-                        return false;
-                    case MotionEvent.ACTION_UP:
-                        if(tmpX + mContentView.getWidth() >= MainActivity.maxX.get() && mMinimizeHint) minimize();
-                        //Log.d(TAG, "Released... (" + x + ", " + y + ")");
-                        return true;
+                if(mFinishedMultiTouch){
+                    return mFinishedMultiTouch = (event.getAction() != MotionEvent.ACTION_UP && event.getAction() != MotionEvent.ACTION_POINTER_UP);
                 }
-                return false;
+                if(event.getPointerCount() == 1){
+                    return handleMove(event);
+                } else {
+                    return mFinishedMultiTouch = handleResize(event);
+                }
             }
         });
         /*mContentView.findViewById(R.id.bottom_bar_resize).setOnTouchListener(new View.OnTouchListener() {
@@ -197,6 +182,75 @@ public class FloatingFragment extends Fragment {
         mContentView.setY(y);
         mContentView.setLayoutParams(new LinearLayout.LayoutParams(width, height));
         // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
+    }
+
+    private boolean handleMove(MotionEvent event){
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                tmpX = (int) event.getRawX();
+                tmpY = (int) event.getRawY();
+                //Log.d(TAG, "Tapped... (" + x + ", " + y + ") : < " + width + "x" + height + " >");
+                return false;
+            case MotionEvent.ACTION_MOVE:
+                if((int)event.getRawX() >= tmpX && (int)event.getRawX() >= MainActivity.maxX.get()) mMinimizeHint = true;
+                else mMinimizeHint = false;
+                tmpX = (int) event.getRawX();
+                tmpY = (int) event.getRawY();
+                int moveX = Math.min(Math.max(tmpX - mContentView.getWidth()/2,  0), MainActivity.maxX.get() - width);
+                int moveY = Math.min(Math.max(tmpY, 0), MainActivity.maxY.get() - height);
+                //Log.d(TAG, "Moving... (" + moveX + ", " + moveY + ")");
+                mContentView.setX(moveX);
+                mContentView.setY(moveY);
+                return false;
+            case MotionEvent.ACTION_UP:
+                if(tmpX >= MainActivity.maxX.get() && mMinimizeHint) minimize();
+                //Log.d(TAG, "Released... (" + x + ", " + y + ")");
+                return true;
+        }
+        return false;
+    }
+
+    private int tmpX2, tmpY2;
+
+    private boolean handleResize(MotionEvent event){
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_POINTER_DOWN:
+                tmpX = (int) event.getX(0);
+                tmpY = (int) event.getY(0);
+                tmpWidth = width;
+                tmpHeight = height;
+                tmpX2 = (int) event.getX(1);
+                tmpY2 = (int) event.getY(1);
+                return false;
+            case MotionEvent.ACTION_MOVE:
+                if(event.getPointerCount() != 2) return true;
+                // TODO: Make resizing it at negative coordinates rebound
+                /*
+                    We capture the difference between this and the originally captured coordinates. The reason
+                    is that, for example, if the user is pinching, then the pointer difference is negative, meaning
+                    that the overall size is shrinking. If it is positive, then the width and height should grow.
+                 */
+                int firstPointerDiffX = tmpX - (int) event.getX(0);
+                int firstPointerDiffY = tmpY - (int) event.getY(0);
+                int secondPointerDiffX = tmpX2 - (int) event.getX(1);
+                int secondPointerDiffY = tmpY2 - (int) event.getY(1);
+                /*
+                    Now we take the distance between both X pointers and Y pointers. This will result in how much we should
+                    grow or shrink. I.E, if pinching, then both will be negative, so, width + (-X) + (-X2) = new width.
+                 */
+                int xPointerDist = firstPointerDiffX - secondPointerDiffX;
+                int yPointerDist = firstPointerDiffY - secondPointerDiffY;
+                int resizeX = Math.min(Math.max(tmpWidth + xPointerDist, 0), MainActivity.maxX.get());
+                int resizeY = Math.min(Math.max(tmpHeight + yPointerDist, 0), MainActivity.maxY.get());
+                //Log.d(TAG, "Resizing... (" + resizeX + "x" + resizeY + ")");
+                mContentView.setLayoutParams(new LinearLayout.LayoutParams(resizeX, resizeY));
+                return false;
+            case MotionEvent.ACTION_POINTER_UP:
+            case MotionEvent.ACTION_UP:
+                //Log.d(TAG, "Released... <" + width + "x" + height + ">");
+                return true;
+        }
+        return false;
     }
 
     private void minimize() {

@@ -2,16 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/transparent_fragment"
     android:orientation="vertical">
 
     <com.theif519.sakoverlay.TitleBar
         android:layout_width="wrap_content"
         android:background="@color/button_text"
+        android:id="@+id/title_bar"
+        app:tbTitle="Introduction"
         android:layout_height="wrap_content"/>
 
     <LinearLayout
-        android:id="@+id/fragment_layout_main"
+        android:id="@+id/intro_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
@@ -27,7 +30,5 @@
             android:textStyle="bold|italic" />
 
     </LinearLayout>
-
-
 
 </LinearLayout>

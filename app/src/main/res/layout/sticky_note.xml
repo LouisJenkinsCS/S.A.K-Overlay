@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="@dimen/sticky_note_width"
+    android:layout_height="@dimen/sticky_note_height"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/sticky_note_background"
     android:orientation="vertical">
 
     <com.theif519.sakoverlay.TitleBar
         android:layout_width="wrap_content"
         android:background="@color/button_text"
+        app:tbTitle="Sticky Note"
         android:layout_height="wrap_content"/>
 
     <LinearLayout
-        android:layout_width="@dimen/sticky_note_width"
-        android:layout_height="@dimen/sticky_note_height">
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
 
         <EditText
             android:id="@+id/sticky_note_edit_text"
@@ -23,7 +25,5 @@
             android:inputType="textMultiLine" />
 
     </LinearLayout>
-
-
 
 </LinearLayout>

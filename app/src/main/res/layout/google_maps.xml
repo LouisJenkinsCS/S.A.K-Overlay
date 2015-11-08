@@ -5,10 +5,10 @@
     android:layout_height="300dp"
     android:orientation="vertical">
 
-    <com.theif519.sakoverlay.MockActionBar
+    <com.theif519.sakoverlay.TitleBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:mabTitle="Maps"/>
+        app:tbTitle="Maps"/>
 
     <fragment
         android:id="@+id/map"

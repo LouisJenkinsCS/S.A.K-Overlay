@@ -3,7 +3,6 @@ package com.theif519.sakoverlay;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
@@ -22,12 +21,9 @@ public class FloatingFragmentLayout extends RelativeLayout {
         super(context, attrs);
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.default_fragment, this);
-        mLayout = (ViewGroup) findViewById(R.id.fragment_layout_main);
+
     }
 
-    public void addViewToLayout(View v){
-        mLayout.addView(v);
-    }
 
 
 
