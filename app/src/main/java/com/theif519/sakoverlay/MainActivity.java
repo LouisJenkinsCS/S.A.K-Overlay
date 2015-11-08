@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
         WORKER_HANDLE = new Handler(WORKER_THREAD.getLooper());
     }*/
 
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = MainActivity.class.getName();
     public static final String JSON_FILENAME = "SerializedPopupWindowExtenderInformation.json";
 
     public void startServiceIfNotRunning(){

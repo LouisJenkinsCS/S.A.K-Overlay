@@ -1,67 +1,34 @@
 package com.theif519.sakoverlay;
 
-import android.app.Service;
+import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.PixelFormat;
-import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.widget.ImageView;
+import android.graphics.BitmapFactory;
+import android.widget.Toast;
 
 /**
  * Created by theif519 on 11/5/2015.
  */
-public class OverlayService extends Service {
-
-    private WindowManager mManager;
-    private ImageView mIcon;
+public class OverlayService extends IntentService {
 
     public static final String START_NOTIFICATION = "Start Notification";
 
     public OverlayService() {
-        super();
+        super("S.A.K-Overlay Service");
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        setupForegroundNotification();
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    protected void onHandleIntent(Intent intent) {
+        if(intent.getBooleanExtra(START_NOTIFICATION, false)){
+            setupForegroundNotification();
+        } else Toast.makeText(OverlayService.this, "Was unable to start notification!", Toast.LENGTH_SHORT).show();
     }
 
     private void setupForegroundNotification(){
-        mManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        mIcon = new ImageView(this);
-        mIcon.setImageResource(R.mipmap.ic_launcher);
-        final Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        intent.setAction(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        mIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(intent);
-            }
-        });
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSLUCENT);
-        params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 0;
-        params.y = 0;
-        mManager.addView(mIcon, params);
-        /*Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -76,6 +43,6 @@ public class OverlayService extends Service {
                 .build();
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(1, notification);
-        //startForeground(1, notification);*/
+        //startForeground(1, notification);
     }
 }

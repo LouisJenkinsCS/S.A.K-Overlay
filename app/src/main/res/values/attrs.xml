@@ -6,4 +6,8 @@
     <declare-styleable name="MockActionBar">
         <attr name="mabTitle" format="string"/>
     </declare-styleable>
+    <declare-styleable name="TitleBar">
+        <attr name="tbTitle" format="string"/>
+        <attr name="tbOptions" format="reference"/>
+    </declare-styleable>
 </resources>

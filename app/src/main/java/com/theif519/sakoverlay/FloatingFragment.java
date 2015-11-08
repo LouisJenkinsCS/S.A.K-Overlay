@@ -38,7 +38,7 @@ import android.widget.LinearLayout;
  */
 public class FloatingFragment extends Fragment {
 
-    private boolean mIsDead = false;
+    private boolean mIsDead = false, mMinimizeHint = false;
 
     private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY;
 
@@ -49,7 +49,7 @@ public class FloatingFragment extends Fragment {
     protected static final String X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
             WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag";
 
-    private static final String TAG = FloatingFragment.class.getSimpleName();
+    private static final String TAG = FloatingFragment.class.getName();
 
     private View mContentView;
 
@@ -68,14 +68,14 @@ public class FloatingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(LAYOUT_ID, container, false);
         mContentView.setVisibility(View.INVISIBLE);
-        mContentView.findViewById(R.id.custom_action_close).setOnClickListener(new View.OnClickListener() {
+        mContentView.findViewById(R.id.title_bar_close).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getActivity().getFragmentManager().beginTransaction().remove(FloatingFragment.this).commit();
                 mIsDead = true;
             }
         });
-        mContentView.findViewById(R.id.custom_action_move).setOnTouchListener(new View.OnTouchListener() {
+        mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -85,20 +85,25 @@ public class FloatingFragment extends Fragment {
                         //Log.d(TAG, "Tapped... (" + x + ", " + y + ") : < " + width + "x" + height + " >");
                         return false;
                     case MotionEvent.ACTION_MOVE:
-                        int moveX = Math.min(Math.max((int) event.getRawX() - v.getWidth(), 0), MainActivity.maxX.get() - width);
-                        int moveY = Math.min(Math.max((int) event.getRawY() - v.getHeight(), 0), MainActivity.maxY.get() - height);
+                        if((int)event.getRawX() >= tmpX && (int)event.getRawX() >= MainActivity.maxX.get() - mContentView.getWidth()) mMinimizeHint = true;
+                        else mMinimizeHint = false;
+                        tmpX = (int) event.getRawX();
+                        tmpY = (int) event.getRawY();
+                        int moveX = Math.min(Math.max(tmpX - width / 2,  0), MainActivity.maxX.get() - width);
+                        int moveY = Math.min(Math.max(tmpY - height / 2, 0), MainActivity.maxY.get() - height);
                         //Log.d(TAG, "Moving... (" + moveX + ", " + moveY + ")");
                         mContentView.setX(moveX);
                         mContentView.setY(moveY);
                         return false;
                     case MotionEvent.ACTION_UP:
+                        if(tmpX + mContentView.getWidth() >= MainActivity.maxX.get() && mMinimizeHint) minimize();
                         //Log.d(TAG, "Released... (" + x + ", " + y + ")");
                         return true;
                 }
                 return false;
             }
         });
-        mContentView.findViewById(R.id.custom_action_resize).setOnTouchListener(new View.OnTouchListener() {
+        /*mContentView.findViewById(R.id.bottom_bar_resize).setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -123,12 +128,12 @@ public class FloatingFragment extends Fragment {
                 return false;
             }
         });
-        mContentView.findViewById(R.id.custom_action_minimize).setOnClickListener(new View.OnClickListener() {
+        /*mContentView.findViewById(R.id.custom_action_minimize).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 minimize();
             }
-        });
+        });*/
         getActivity().findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {

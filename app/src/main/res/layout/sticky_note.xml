@@ -1,22 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="@dimen/sticky_note_width"
-    android:layout_height="@dimen/sticky_note_height"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:background="@color/sticky_note_background"
     android:orientation="vertical">
 
-    <com.theif519.sakoverlay.MockActionBar
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        app:mabTitle="Sticky Note"/>
+    <com.theif519.sakoverlay.TitleBar
+        android:layout_width="wrap_content"
+        android:background="@color/button_text"
+        android:layout_height="wrap_content"/>
 
-    <EditText
-        android:id="@+id/sticky_note_edit_text"
-        android:layout_width="fill_parent"
-        android:theme="@style/StickyNote_EditText"
-        android:layout_height="wrap_content"
-        android:textColor="@color/sticky_note_text"
-        android:inputType="textMultiLine" />
+    <LinearLayout
+        android:layout_width="@dimen/sticky_note_width"
+        android:layout_height="@dimen/sticky_note_height">
+
+        <EditText
+            android:id="@+id/sticky_note_edit_text"
+            android:layout_width="fill_parent"
+            android:theme="@style/StickyNote_EditText"
+            android:layout_height="fill_parent"
+            android:textColor="@color/sticky_note_text"
+            android:inputType="textMultiLine" />
+
+    </LinearLayout>
+
+
 
 </LinearLayout>

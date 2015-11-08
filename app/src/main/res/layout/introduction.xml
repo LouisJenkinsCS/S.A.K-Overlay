@@ -1,21 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:background="@color/transparent_fragment">
+    android:background="@color/transparent_fragment"
+    android:orientation="vertical">
 
-    <com.theif519.sakoverlay.MockActionBar
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        app:mabTitle="Welcome!"/>
+    <com.theif519.sakoverlay.TitleBar
+        android:layout_width="wrap_content"
+        android:background="@color/button_text"
+        android:layout_height="wrap_content"/>
 
-    <TextView
+    <LinearLayout
+        android:id="@+id/fragment_layout_main"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/intro"
-        android:textSize="20sp"
-        android:textStyle="bold|italic"
-        android:gravity="center"/>
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:tag="DONTREMOVE">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/intro"
+            android:textSize="20sp"
+            android:textStyle="bold|italic" />
+
+    </LinearLayout>
+
+
+
 </LinearLayout>
