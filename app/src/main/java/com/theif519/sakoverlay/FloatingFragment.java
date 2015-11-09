@@ -88,37 +88,6 @@ public class FloatingFragment extends Fragment {
                 }
             }
         });
-        /*mContentView.findViewById(R.id.bottom_bar_resize).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        tmpX = (int) event.getRawX();
-                        tmpY = (int) event.getRawY();
-                        tmpWidth = width;
-                        tmpHeight = height;
-                        //Log.d(TAG, "Tapped... (" + x + ", " + y + ") : < " + width + "x" + height + " >");
-                        return false;
-                    case MotionEvent.ACTION_MOVE:
-                        // TODO: Make resizing it at negative coordinates rebound
-                        int moveX = Math.min(Math.max(Math.abs(tmpWidth + (int) event.getRawX() - tmpX), 0), MainActivity.maxX.get());
-                        int moveY = Math.min(Math.max(Math.abs(tmpHeight + (int) event.getRawY() - tmpY), 0), MainActivity.maxY.get());
-                        //Log.d(TAG, "Resizing... (" + moveX + "x" + moveY + ")");
-                        mContentView.setLayoutParams(new LinearLayout.LayoutParams(moveX, moveY));
-                        return false;
-                    case MotionEvent.ACTION_UP:
-                        //Log.d(TAG, "Released... <" + width + "x" + height + ">");
-                        return true;
-                }
-                return false;
-            }
-        });
-        /*mContentView.findViewById(R.id.custom_action_minimize).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                minimize();
-            }
-        });*/
         getActivity().findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
