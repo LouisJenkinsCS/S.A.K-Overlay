@@ -197,10 +197,10 @@ public class FloatingFragment extends Fragment {
                 tmpY = (int) event.getRawY();
                 width = mContentView.getWidth();
                 height = mContentView.getHeight();
-                int scaleDiffX = width - (int)(width * scaleX);
-                int scaleDiffY = height - (int)(height * scaleY);
-                int moveX = Math.min(Math.max(tmpX - (int) (width * scaleX) / 2, -scaleDiffX + sidebarDimen), MainActivity.MAX_X.value - (int)(width * scaleX)-sidebarDimen);
-                int moveY = Math.min(Math.max(tmpY - (int) (height * scaleY) / 2, -scaleDiffY), MainActivity.MAX_Y.value - (int)(height * scaleY));
+                int scaleDiffX = (width - (int)(width * scaleX))/2;
+                int scaleDiffY = (height - (int)(height * scaleY))/2;
+                int moveX = Math.min(Math.max(tmpX - (int) (width * scaleX) / 2, -scaleDiffX), MainActivity.MAX_X.value - width + scaleDiffX);
+                int moveY = Math.min(Math.max(tmpY - (int) (height * scaleY) / 2, -scaleDiffY), MainActivity.MAX_Y.value - height + scaleDiffY);
                 Log.d(TAG, "Moving... (" + moveX + ", " + moveY + ")\nCoordinates: (" + tmpX + ", " + tmpY + ")\nScaled Coordinates: (" + tmpX * scaleX + ", " + tmpY * scaleY + ")\n" +
                         "Size: <" + width + ", " + height + ">\nScale Size: <" + (int)(width * scaleX) + ", " + (int)(height * scaleY) + ")\nScale Difference: (" + scaleDiffX + ", " + scaleDiffY + ")" );
                 mContentView.setX(moveX);
