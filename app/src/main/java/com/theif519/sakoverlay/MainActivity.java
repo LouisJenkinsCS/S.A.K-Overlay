@@ -7,19 +7,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.ArrayMap;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 
 import com.theif519.utils.JSONDeserializer;
 import com.theif519.utils.JSONSerializer;
+import com.theif519.utils.MutableObject;
 import com.theif519.utils.ServiceTools;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 // TODO: Find a better way to register callbacks for button press, and menu options!
@@ -28,8 +29,9 @@ public class MainActivity extends Activity {
 
     private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
 
-    // Because MutableInt requires API level 23, and I'm too lazy to make a new class, and this handles any thread safety issues.
-    public static final AtomicInteger maxX = new AtomicInteger(0), maxY = new AtomicInteger(0);
+    public static final MutableObject<Integer> MAX_X = new MutableObject<>(0), MAX_Y = new MutableObject<>(0);
+
+    public static final MutableObject<Float> SCALE_X = new MutableObject<>(1.0f), SCALE_Y = new MutableObject<>(1.0f);
 
     //private static final HandlerThread WORKER_THREAD;
 
@@ -106,10 +108,15 @@ public class MainActivity extends Activity {
         findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                maxX.set(findViewById(R.id.main_layout).getWidth());
-                maxY.set(findViewById(R.id.main_layout).getHeight());
+                MAX_X.value = findViewById(R.id.main_layout).getWidth();
+                MAX_Y.value = findViewById(R.id.main_layout).getHeight();
             }
         });
+        TypedValue value = new TypedValue();
+        getResources().getValue(R.dimen.default_scale_x, value, true);
+        SCALE_X.value = value.getFloat();
+        getResources().getValue(R.dimen.default_scale_y, value, true);
+        SCALE_Y.value = value.getFloat();
         final File jsonFile = new File(getExternalFilesDir(null), JSON_FILENAME);
         if(jsonFile.exists()){
             new JSONDeserializer() {

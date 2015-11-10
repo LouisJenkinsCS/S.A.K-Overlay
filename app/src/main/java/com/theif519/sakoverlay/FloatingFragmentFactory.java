@@ -15,7 +15,7 @@ public class FloatingFragmentFactory {
     public FloatingFragment getFragment(ArrayMap<String, String> map) {
         FloatingFragment fragment = createFragment(map.get(FloatingFragment.LAYOUT_TAG_KEY));
         if(fragment == null) return null;
-        fragment.mappedData = map;
+        fragment.mContext = map;
         return fragment;
     }
 

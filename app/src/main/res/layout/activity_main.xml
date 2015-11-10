@@ -8,7 +8,7 @@
     tools:context=".MainActivity">
 
     <ScrollView
-        android:layout_width="55dp"
+        android:layout_width="@dimen/activity_main_sidebar_width"
         android:layout_height="fill_parent">
 
         <LinearLayout
@@ -61,7 +61,7 @@
         android:id="@+id/main_layout"/>
 
     <ScrollView
-        android:layout_width="55dp"
+        android:layout_width="@dimen/activity_main_sidebar_width"
         android:layout_height="fill_parent">
 
         <LinearLayout

@@ -4,4 +4,6 @@
     <color name="button_text">#000000</color>
     <color name="sticky_note_text">#000</color>
     <color name="sticky_note_background">#cfd20d</color>
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
 </resources>

@@ -2,6 +2,11 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
-    <dimen name="sticky_note_width">300dp</dimen>
-    <dimen name="sticky_note_height">200dp</dimen>
+    <dimen name="sticky_note_width">250dp</dimen>
+    <dimen name="sticky_note_height">250dp</dimen>
+    <dimen name="web_browser_width">300dp</dimen>
+    <dimen name="web_browser_height">300dp</dimen>
+    <dimen name="google_maps_width">300dp</dimen>
+    <dimen name="google_maps_height">300dp</dimen>
+    <dimen name="activity_main_sidebar_width">55dp</dimen>
 </resources>

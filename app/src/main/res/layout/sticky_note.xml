@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:scaleX="@dimen/default_scale_x"
+    android:scaleY="@dimen/default_scale_y"
     android:layout_width="@dimen/sticky_note_width"
     android:layout_height="@dimen/sticky_note_height"
     xmlns:app="http://schemas.android.com/apk/res-auto"

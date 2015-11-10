@@ -2,6 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:scaleX="@dimen/default_scale_x"
+    android:scaleY="@dimen/default_scale_y"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/transparent_fragment"
     android:orientation="vertical">
