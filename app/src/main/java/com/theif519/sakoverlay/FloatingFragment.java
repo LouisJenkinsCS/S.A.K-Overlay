@@ -183,11 +183,13 @@ public class FloatingFragment extends Fragment {
         // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
     }
 
+    private int initialX, initialY;
+
     private boolean handleMove(MotionEvent event){
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                tmpX = (int) event.getRawX();
-                tmpY = (int) event.getRawY();
+                initialX = (int) event.getRawX() - (int) mContentView.getX();
+                initialY = (int) event.getRawY() - (int) mContentView.getY();
                 //Log.d(TAG, "Tapped... (" + x + ", " + y + ") : < " + width + "x" + height + " >");
                 return false;
             case MotionEvent.ACTION_MOVE:
@@ -199,8 +201,8 @@ public class FloatingFragment extends Fragment {
                 height = mContentView.getHeight();
                 int scaleDiffX = (width - (int)(width * scaleX))/2;
                 int scaleDiffY = (height - (int)(height * scaleY))/2;
-                int moveX = Math.min(Math.max(tmpX - (int) (width * scaleX) / 2, -scaleDiffX), MainActivity.MAX_X.value - width + scaleDiffX);
-                int moveY = Math.min(Math.max(tmpY - (int) (height * scaleY) / 2, -scaleDiffY), MainActivity.MAX_Y.value - height + scaleDiffY);
+                int moveX = Math.min(Math.max(tmpX - initialX, -scaleDiffX), MainActivity.MAX_X.value - width + scaleDiffX);
+                int moveY = Math.min(Math.max(tmpY - initialY, -scaleDiffY), MainActivity.MAX_Y.value - height + scaleDiffY);
                 Log.d(TAG, "Moving... (" + moveX + ", " + moveY + ")\nCoordinates: (" + tmpX + ", " + tmpY + ")\nScaled Coordinates: (" + tmpX * scaleX + ", " + tmpY * scaleY + ")\n" +
                         "Size: <" + width + ", " + height + ">\nScale Size: <" + (int)(width * scaleX) + ", " + (int)(height * scaleY) + ")\nScale Difference: (" + scaleDiffX + ", " + scaleDiffY + ")" );
                 mContentView.setX(moveX);
