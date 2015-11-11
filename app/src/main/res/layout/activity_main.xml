@@ -9,7 +9,9 @@
 
     <ScrollView
         android:layout_width="@dimen/activity_main_sidebar_width"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:scaleX="@dimen/default_scale_x"
+        android:scaleY="@dimen/default_scale_y">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -62,7 +64,9 @@
 
     <ScrollView
         android:layout_width="@dimen/activity_main_sidebar_width"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:scaleX="@dimen/default_scale_x"
+        android:scaleY="@dimen/default_scale_y">
 
         <LinearLayout
             android:layout_width="fill_parent"

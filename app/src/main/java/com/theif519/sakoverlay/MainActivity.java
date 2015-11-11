@@ -27,11 +27,21 @@ import java.util.List;
 // TODO: Change from popup menu to a dialog menu.
 public class MainActivity extends Activity {
 
+    /*
+        WeakReference - Allows me to keep track of fragments, without keeping them around after they are removed
+        permanently "destroyed" by the FragmentManager/FragmentTransaction.
+
+        To give an example of what I mean, imagine that this list, if I used strong referencing, would keep
+        the Garbage Collector from collecting these fragments as I kept a strong reference to them from this list.
+        Now, I COULD, of course, remove the fragments from this list as well when they are finished, but...
+
+        Well, it was a way I could experiment, so why not?
+     */
     private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
 
-    public static final MutableObject<Integer> MAX_X = new MutableObject<>(0), MAX_Y = new MutableObject<>(0);
+    private static final MutableObject<Integer> MAX_X = new MutableObject<>(0), MAX_Y = new MutableObject<>(0);
 
-    public static final MutableObject<Float> SCALE_X = new MutableObject<>(1.0f), SCALE_Y = new MutableObject<>(1.0f);
+    private static final MutableObject<Float> SCALE_X = new MutableObject<>(1.0f), SCALE_Y = new MutableObject<>(1.0f);
 
     //private static final HandlerThread WORKER_THREAD;
 
@@ -144,7 +154,9 @@ public class MainActivity extends Activity {
     private void serializeFloatingFragments(){
         List<ArrayMap<String, String>> mapList = new ArrayList<>();
         for(WeakReference<FloatingFragment> fragmentWeakReference: mFragments){
+            // Atomic operation, once obtained as strong reference, it is safe to dereference.
             FloatingFragment fragment = fragmentWeakReference.get();
+            // A fragment is dead when it is dismissed and is still contained in this list.
             if(fragment != null && !fragment.isDead()){
                 mapList.add(fragment.serialize());
             }
@@ -155,6 +167,22 @@ public class MainActivity extends Activity {
                 this.file = new File(getExternalFilesDir(null), JSON_FILENAME);
             }
         }.execute(mapList.toArray(new ArrayMap[0]));
+    }
+
+    public static int getMaxX(){
+        return MAX_X.value;
+    }
+
+    public static int getMaxY(){
+        return MAX_Y.value;
+    }
+
+    public static float getScaleX(){
+        return SCALE_X.value;
+    }
+
+    public static float getScaleY(){
+        return SCALE_Y.value;
     }
 
     @Override

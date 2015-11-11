@@ -1,6 +1,5 @@
 package com.theif519.sakoverlay;
 
-import android.util.ArrayMap;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -78,16 +77,5 @@ public class WebBrowserFragment extends FloatingFragment {
         });
         mBrowser.loadUrl(DEFAULT_HOMEPAGE);
         ((EditText) getContentView().findViewById(R.id.browser_action_text)).setText(DEFAULT_HOMEPAGE);
-    }
-
-    @Override
-    public ArrayMap<String, String> serialize() {
-        return super.serialize();
-    }
-
-
-    @Override
-    public void unpack() {
-        super.unpack();
     }
 }
