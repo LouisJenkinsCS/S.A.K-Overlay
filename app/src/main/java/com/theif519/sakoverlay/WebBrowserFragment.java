@@ -1,30 +1,39 @@
 package com.theif519.sakoverlay;
 
+import android.graphics.Bitmap;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+
+import java.util.ArrayList;
 
 /**
  * Created by theif519 on 11/6/2015.
  */
 public class WebBrowserFragment extends FloatingFragment {
 
+    private static final String HOME_OPTION = "Home", REFRESH_OPTION = "Refresh";
+
     private static final String DEFAULT_HOMEPAGE = "http://www.google.com";
     public static final String IDENTIFIER = "Web Browser";
 
     private WebView mBrowser;
+
+    private Button mBrowserBack, mBrowserForward;
 
     public static WebBrowserFragment newInstance(){
         WebBrowserFragment fragment = new WebBrowserFragment();
         fragment.LAYOUT_ID = R.layout.web_browser;
         fragment.LAYOUT_TAG = IDENTIFIER;
         fragment.ICON_ID = R.drawable.browser;
+        fragment.mOptions = new ArrayList<>();
+        fragment.mOptions.add(HOME_OPTION);
+        fragment.mOptions.add(REFRESH_OPTION);
         return fragment;
     }
 
@@ -32,14 +41,33 @@ public class WebBrowserFragment extends FloatingFragment {
     public void setup() {
         super.setup();
         mBrowser = (WebView) getContentView().findViewById(R.id.browser_view);
-        // Uh-Oh!
+        mBrowserBack = (Button) getContentView().findViewById(R.id.browser_action_back);
+        mBrowserBack.setVisibility(View.INVISIBLE);
+        mBrowserForward = (Button) getContentView().findViewById(R.id.browser_action_forward);
+        mBrowserForward.setVisibility(View.INVISIBLE);
         mBrowser.getSettings().setJavaScriptEnabled(true);
         mBrowser.getSettings().setBuiltInZoomControls(true);
         mBrowser.getSettings().setLoadWithOverviewMode(true);
         mBrowser.getSettings().setUseWideViewPort(true);
         mBrowser.getSettings().setSupportZoom(true);
         mBrowser.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
-        mBrowser.setWebViewClient(new WebViewClient());
+        mBrowser.setWebViewClient(new WebViewClient() {
+            @Override
+            public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+                super.doUpdateVisitedHistory(view, url, isReload);
+                if(mBrowser.canGoBack()){
+                    mBrowserBack.setVisibility(View.VISIBLE);
+                } else mBrowserBack.setVisibility(View.INVISIBLE);
+                if(mBrowser.canGoForward()){
+                    mBrowserForward.setVisibility(View.VISIBLE);
+                } else mBrowserForward.setVisibility(View.INVISIBLE);
+            }
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                ((EditText)getContentView().findViewById(R.id.browser_action_text)).setText(url);
+            }
+        });
         mBrowser.setWebChromeClient(new WebChromeClient());
         mBrowser.setInitialScale(1);
         getContentView().findViewById(R.id.browser_action_back).setOnClickListener(new View.OnClickListener() {
@@ -54,28 +82,40 @@ public class WebBrowserFragment extends FloatingFragment {
                 mBrowser.goForward();
             }
         });
-        getContentView().findViewById(R.id.browser_action_refresh).setOnClickListener(new View.OnClickListener() {
+        /*
+            Here we allow hitting enter/return on the edit text to submit and send HTTP requests. We also
+            check to see if the URL begins with the necessary prefix, "http" or "https", appending our own if
+            need be.
+         */
+        getContentView().findViewById(R.id.browser_action_text).setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public void onClick(View v) {
-                mBrowser.reload();
-            }
-        });
-        getContentView().findViewById(R.id.browser_action_home).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mBrowser.loadUrl(DEFAULT_HOMEPAGE);
-            }
-        });
-        ((EditText) getContentView().findViewById(R.id.browser_action_text)).setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    mBrowser.loadUrl(v.getText().toString());
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    String url = ((EditText)v).getText().toString();
+                    StringBuilder completeUrl = new StringBuilder();
+                    if(!url.toLowerCase().startsWith("http://") && !url.toLowerCase().startsWith("https://")){
+                        completeUrl.append("http://");
+                    }
+                    completeUrl.append(url);
+                    mBrowser.loadUrl(completeUrl.toString());
                 }
                 return true;
             }
         });
         mBrowser.loadUrl(DEFAULT_HOMEPAGE);
         ((EditText) getContentView().findViewById(R.id.browser_action_text)).setText(DEFAULT_HOMEPAGE);
+    }
+
+    @Override
+    public void onItemSelected(String string) {
+        super.onItemSelected(string);
+        switch(string){
+            case HOME_OPTION:
+                mBrowser.loadUrl(DEFAULT_HOMEPAGE);
+                break;
+            case REFRESH_OPTION:
+                mBrowser.reload();
+                break;
+        }
     }
 }

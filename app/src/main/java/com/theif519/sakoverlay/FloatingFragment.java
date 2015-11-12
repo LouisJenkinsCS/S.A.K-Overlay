@@ -21,10 +21,8 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupWindow;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * Created by theif519 on 10/29/2015.
@@ -60,12 +58,21 @@ public class FloatingFragment extends Fragment {
 
         mFinishedMultiTouch: Helps prevent the automatic snapping of views away from the finger released.
      */
-    private boolean mIsDead = false, mMinimizeHint = false, mFinishedMultiTouch = false;
+    private boolean mIsDead = false, mMinimizeHint = false, mFinishedMultiTouch = false, mIsTransparent = false;
 
+    /*
+        Required to keep track of the position and size of the view between each onTouchEvent.
+     */
     private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY, sidebarDimen;
 
+    /*
+        Shortcut to retrieve the float to scale all views and view elements by.
+     */
     private float scaleX = MainActivity.getScaleX(), scaleY = MainActivity.getScaleY();
 
+    /*
+        Keeps track of the tag to be
+     */
     protected String LAYOUT_TAG = "DefaultFragment";
 
     /*
@@ -80,8 +87,21 @@ public class FloatingFragment extends Fragment {
     protected static final String X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
             WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag";
 
+    /*
+        These constants are for menu options, to maintain consistency.
+     */
+    protected static final String TRANSPARENCY_TOGGLE_OPTION = "Transparency Toggle", BRING_TO_FRONT_OPTION = "Bring to Front";
+
+    /*
+        Convenient tag.
+     */
     private static final String TAG = FloatingFragment.class.getName();
 
+    /*
+        The list of options to be shown in the list view when the options menu is to be displayed
+        If left null, it will create a new one, and have the default options available, else the default
+        options are appended to the list view.
+     */
     protected ArrayList<String> mOptions;
 
     /*
@@ -110,7 +130,37 @@ public class FloatingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(LAYOUT_ID, container, false);
         mContentView.setVisibility(View.INVISIBLE);
+        setupGlobals();
+        setupListeners();
+        if (mContext != null && Boolean.valueOf(mContext.get(MINIMIZED_KEY))) {
+            minimize();
+        } else mContentView.setVisibility(View.VISIBLE);
+        mContentView.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mContext != null) unpack();
+                setup();
+            }
+        });
+        return mContentView;
+    }
+
+    /**
+     * Where we initialize, retrieve and setup our global variables.
+     */
+    private void setupGlobals(){
         sidebarDimen = (int) getResources().getDimension(R.dimen.activity_main_sidebar_width);
+        if(mOptions == null){
+            mOptions = new ArrayList<String>();
+        }
+        mOptions.add(TRANSPARENCY_TOGGLE_OPTION);
+        mOptions.add(BRING_TO_FRONT_OPTION);
+    }
+
+    /**
+     * Where we initialize all of our listeners.
+     */
+    private void setupListeners(){
         mContentView.findViewById(R.id.title_bar_close).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -165,25 +215,21 @@ public class FloatingFragment extends Fragment {
         mContentView.findViewById(R.id.title_bar_options).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ArrayAdapter<String> adapter;
-                if(mOptions != null) {
-                    adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, mOptions);
-                } else {
-                    adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, Collections.singletonList("Not Supported"));
-                }
+                final PopupWindow window = new PopupWindow(null, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);;
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, mOptions);
                 ListView listView = new ListView(getActivity());
                 listView.setAdapter(adapter);
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         onItemSelected((String) parent.getItemAtPosition(position));
+                        window.dismiss();
                     }
                 });
                 listView.setScaleX(scaleX);
                 listView.setScaleY(scaleY);
                 Point p = getScaledCoordinates();
-                Toast.makeText(getActivity(), "Coordinates: (" + p.x + ", " + p.y + ")", Toast.LENGTH_SHORT).show();
-                PopupWindow window = new PopupWindow(listView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+                window.setContentView(listView);
                 window.setWidth(measureContentWidth(adapter));
                 window.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparent_fragment)));
                 window.showAtLocation(getActivity().findViewById(R.id.main_layout), Gravity.NO_GRAVITY,
@@ -214,17 +260,6 @@ public class FloatingFragment extends Fragment {
                 }
             }
         });
-        if (mContext != null && Boolean.valueOf(mContext.get(MINIMIZED_KEY))) {
-            minimize();
-        } else mContentView.setVisibility(View.VISIBLE);
-        mContentView.post(new Runnable() {
-            @Override
-            public void run() {
-                if (mContext != null) unpack();
-                setup();
-            }
-        });
-        return mContentView;
     }
 
     /**
@@ -409,13 +444,6 @@ public class FloatingFragment extends Fragment {
         return map;
     }
 
-    /*
-        Overrided if there are any operations needing to be done when options selected.
-     */
-    protected void onItemSelected(String item){
-        Toast.makeText(getActivity(), "Selected: " + item, Toast.LENGTH_SHORT).show();
-    }
-
     /**
      * For subclasses to override to setup their own additional needed information. Not abstract as it is not
      * necessary to setup.
@@ -435,4 +463,20 @@ public class FloatingFragment extends Fragment {
     public boolean isDead() {
         return mIsDead;
     }
+
+    public void onItemSelected(String string){
+        switch(string){
+            case TRANSPARENCY_TOGGLE_OPTION:
+                if(mIsTransparent = !mIsTransparent){
+                    mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(android.R.color.transparent));
+                } else {
+                    mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(R.color.black));
+                }
+                break;
+            case BRING_TO_FRONT_OPTION:
+                mContentView.bringToFront();
+                break;
+        }
+    }
+
 }
