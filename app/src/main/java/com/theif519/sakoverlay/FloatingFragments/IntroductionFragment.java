@@ -1,4 +1,6 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.FloatingFragments;
+
+import com.theif519.sakoverlay.R;
 
 /**
  * Created by theif519 on 10/31/2015.

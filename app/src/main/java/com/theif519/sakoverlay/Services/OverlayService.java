@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.Services;
 
 import android.app.IntentService;
 import android.app.Notification;
@@ -8,6 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.widget.Toast;
+
+import com.theif519.sakoverlay.Activities.MainActivity;
+import com.theif519.sakoverlay.R;
 
 /**
  * Created by theif519 on 11/5/2015.

@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.Views;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.theif519.sakoverlay.R;
 import com.theif519.utils.AttributeRetriever;
 
 /**

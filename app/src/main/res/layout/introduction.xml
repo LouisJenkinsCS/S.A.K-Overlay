@@ -8,7 +8,7 @@
     android:background="@color/transparent_fragment"
     android:orientation="vertical">
 
-    <com.theif519.sakoverlay.TitleBar
+    <com.theif519.sakoverlay.Views.TitleBar
         android:layout_width="wrap_content"
         android:id="@+id/title_bar"
         app:tbTitle="Introduction"

@@ -1,7 +1,9 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.FloatingFragments;
 
 import android.util.ArrayMap;
 import android.widget.EditText;
+
+import com.theif519.sakoverlay.R;
 
 /**
  * Created by theif519 on 10/31/2015.

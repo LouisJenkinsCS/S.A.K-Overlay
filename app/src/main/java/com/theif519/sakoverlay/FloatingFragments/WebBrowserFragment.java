@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.FloatingFragments;
 
 import android.graphics.Bitmap;
 import android.view.KeyEvent;
@@ -9,6 +9,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.theif519.sakoverlay.R;
 
 import java.util.ArrayList;
 

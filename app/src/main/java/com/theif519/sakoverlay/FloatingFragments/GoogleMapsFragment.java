@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.FloatingFragments;
 
 import android.location.Location;
 
@@ -7,6 +7,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.theif519.sakoverlay.R;
 
 /**
  * Created by theif519 on 11/4/2015.

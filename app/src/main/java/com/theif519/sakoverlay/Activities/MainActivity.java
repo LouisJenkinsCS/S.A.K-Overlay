@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.Activities;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -12,6 +12,15 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 
+import com.theif519.sakoverlay.FloatingFragments.FloatingFragment;
+import com.theif519.sakoverlay.FloatingFragments.FloatingFragmentFactory;
+import com.theif519.sakoverlay.FloatingFragments.GoogleMapsFragment;
+import com.theif519.sakoverlay.FloatingFragments.IntroductionFragment;
+import com.theif519.sakoverlay.FloatingFragments.ScreenRecorderFragment;
+import com.theif519.sakoverlay.FloatingFragments.StickyNoteFragment;
+import com.theif519.sakoverlay.FloatingFragments.WebBrowserFragment;
+import com.theif519.sakoverlay.R;
+import com.theif519.sakoverlay.Services.OverlayService;
 import com.theif519.utils.JSONDeserializer;
 import com.theif519.utils.JSONSerializer;
 import com.theif519.utils.MutableObject;
@@ -111,6 +120,14 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = WebBrowserFragment.newInstance();
+                mFragments.add(new WeakReference<>(fragment));
+                getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
+            }
+        });
+        findViewById(R.id.record_screen_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FloatingFragment fragment = ScreenRecorderFragment.newInstance();
                 mFragments.add(new WeakReference<>(fragment));
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }

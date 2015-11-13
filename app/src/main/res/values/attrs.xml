@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="CircularButton">
-        <attr name="imgSrc" format="reference"/>
-    </declare-styleable>
-    <declare-styleable name="MockActionBar">
-        <attr name="mabTitle" format="string"/>
-    </declare-styleable>
     <declare-styleable name="TitleBar">
         <attr name="tbTitle" format="string"/>
         <attr name="tbOptions" format="reference"/>

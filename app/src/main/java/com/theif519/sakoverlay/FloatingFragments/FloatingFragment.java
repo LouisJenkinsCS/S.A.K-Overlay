@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.FloatingFragments;
 
 
 import android.app.Fragment;
@@ -21,6 +21,9 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupWindow;
+
+import com.theif519.sakoverlay.Activities.MainActivity;
+import com.theif519.sakoverlay.R;
 
 import java.util.ArrayList;
 

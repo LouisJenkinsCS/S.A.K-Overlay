@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.FloatingFragments;
 
 import android.util.ArrayMap;
 
@@ -29,6 +29,8 @@ public class FloatingFragmentFactory {
                 return GoogleMapsFragment.newInstance();
             case WebBrowserFragment.IDENTIFIER:
                 return WebBrowserFragment.newInstance();
+            case ScreenRecorderFragment.IDENTIFIER:
+                return ScreenRecorderFragment.newInstance();
             default:
                 return null;
         }

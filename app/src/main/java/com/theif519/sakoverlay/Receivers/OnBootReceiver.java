@@ -1,8 +1,10 @@
-package com.theif519.sakoverlay;
+package com.theif519.sakoverlay.Receivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
+import com.theif519.sakoverlay.Services.OverlayService;
 
 /**
  * Created by theif519 on 11/5/2015.

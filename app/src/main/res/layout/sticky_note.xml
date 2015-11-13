@@ -8,7 +8,7 @@
     android:background="@color/sticky_note_background"
     android:orientation="vertical">
 
-    <com.theif519.sakoverlay.TitleBar
+    <com.theif519.sakoverlay.Views.TitleBar
         android:layout_width="wrap_content"
         app:tbTitle="Sticky Note"
         android:layout_height="wrap_content"/>
