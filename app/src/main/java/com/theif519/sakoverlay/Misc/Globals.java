@@ -56,7 +56,7 @@ public final class Globals {
 
             ////////////////////////////////////////////////////////////////////////////////////////////////
             //                                                                                            //
-            //                                          ???                                               //
+            //                                          Keys                                              //
             //                                                                                            //
             ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,7 +65,8 @@ public final class Globals {
                 think Bundle/Intent) or for serialization/deserialization.
              */
             public static final String X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
-                    WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag";
+                    WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag", AUDIO_ENABLED_KEY = "Audio Enabled",
+                    FILENAME_KEY = "Filename";
 
             /*
                 Keys used to identify certain options which can toggle/alter functionality of a view and/or fragment.

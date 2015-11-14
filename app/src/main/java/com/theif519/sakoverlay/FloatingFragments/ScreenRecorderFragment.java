@@ -1,6 +1,7 @@
 package com.theif519.sakoverlay.FloatingFragments;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,6 +13,8 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +46,24 @@ public class ScreenRecorderFragment extends FloatingFragment {
 
     private TextView mStateText;
 
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Toast.makeText(getActivity(), "Bound to RecorderService!", Toast.LENGTH_SHORT).show();
+            mBinder = (RecorderService.RecorderBinder) service;
+            mService = mBinder.getService();
+            mStateText.setText("Bound...");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            mBinder = null;
+            Toast.makeText(getActivity(), "Unbound from RecorderService!", Toast.LENGTH_SHORT).show();
+            mStateText.setText("Unbound...");
+        }
+};
+
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -68,16 +89,14 @@ public class ScreenRecorderFragment extends FloatingFragment {
         getContentView().findViewById(R.id.screen_recorder_record_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mService == null || mBinder == null){
+                if (mService == null || mBinder == null) {
                     startActivityForResult(mManager.createScreenCaptureIntent(), Globals.Immutable.Numbers.RECORDER_PERMISSION_RETVAL);
                     return;
                 }
-                if (mState == RecorderState.DEAD) {
-                    mService.startRecording();
-                } else if (mState == RecorderState.STARTED) {
-                    mService.stopRecording();
+                if (mState != RecorderState.STARTED) {
+                    createDialog();
                 } else {
-                    mStateText.setText((mState = mService.getState()).toString());
+                    mService.stopRecording();
                 }
             }
         });
@@ -105,7 +124,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
                 Toast.makeText(getActivity(), "Bound to RecorderService!", Toast.LENGTH_SHORT).show();
                 mBinder = (RecorderService.RecorderBinder) service;
                 mService = mBinder.getService();
-                mStateText.setText("Bound...");
             }
 
             @Override
@@ -113,9 +131,41 @@ public class ScreenRecorderFragment extends FloatingFragment {
                 mService = null;
                 mBinder = null;
                 Toast.makeText(getActivity(), "Unbound from RecorderService!", Toast.LENGTH_SHORT).show();
-                mStateText.setText("Unbound...");
             }
         }, Context.BIND_AUTO_CREATE);
+    }
+
+    public void createDialog(){
+        final Dialog dialog = new Dialog(getActivity());
+        dialog.setContentView(R.layout.dialog_recorder_details);
+        final EditText width = (EditText) dialog.findViewById(R.id.dialog_recorder_resolution_width);
+        final EditText height = (EditText) dialog.findViewById(R.id.dialog_recorder_resolution_height);
+        final CheckBox audio = (CheckBox) dialog.findViewById(R.id.dialog_recorder_audio_checkbox);
+        final EditText fileName = (EditText) dialog.findViewById(R.id.dialog_recorder_filename_name);
+        dialog.findViewById(R.id.dialog_recorder_button_start).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mService == null) {
+                    Toast.makeText(getActivity(), "Service died!", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    return;
+                }
+                mService.startRecording(
+                        Integer.parseInt(width.getText().toString()),
+                        Integer.parseInt(height.getText().toString()),
+                        audio.isChecked(),
+                        fileName.getText().toString()
+                );
+                dialog.dismiss();
+            }
+        });
+        dialog.findViewById(R.id.dialog_recorder_button_cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 
     @Override
@@ -128,5 +178,11 @@ public class ScreenRecorderFragment extends FloatingFragment {
     public void onPause() {
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mReceiver);
         super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        getActivity().unbindService(mConnection);
+        super.onDestroy();
     }
 }

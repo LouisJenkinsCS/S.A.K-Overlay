@@ -32,6 +32,7 @@ public class RecorderService extends Service {
 
     public enum RecorderState {
         DEAD("Dead"),
+        ALIVE("Alive"),
         INITIALIZED("Initialized"),
         PREPARED("Prepared"),
         STARTED("Recording"),
@@ -69,17 +70,17 @@ public class RecorderService extends Service {
     private static final int DISPLAY_WIDTH = 480;
     private static final int DISPLAY_HEIGHT = 640;
 
-    private void initialize(){
+    private void initialize(int width, int height, boolean audioEnabled, String filename){
         mRecorder = new MediaRecorder();
-        mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+        if(audioEnabled) mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
         mRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         mRecorder.setVideoEncodingBitRate(512 * 1000);
         mRecorder.setVideoFrameRate(30);
-        mRecorder.setVideoSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
-        mRecorder.setOutputFile("/sdcard/capture.mp4");
+        mRecorder.setVideoSize(width, height);
+        mRecorder.setOutputFile("/sdcard/" + filename);
         changeState(RecorderState.INITIALIZED);
 
     }
@@ -87,7 +88,7 @@ public class RecorderService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        android.os.Debug.waitForDebugger();
+        //android.os.Debug.waitForDebugger();
     }
 
     @Nullable
@@ -116,6 +117,7 @@ public class RecorderService extends Service {
                 }
             }, null);
         }
+        if(mState == RecorderState.DEAD) changeState(RecorderState.ALIVE);
         return new RecorderBinder();
     }
 
@@ -177,8 +179,8 @@ public class RecorderService extends Service {
         mLogger.log(Level.INFO, "Sent Broadcast Receiver and State is " + mState.toString());
     }
 
-    public void startRecording(){
-        initialize();
+    public void startRecording(int width, int height, boolean audioEnabled, String filename){
+        initialize(width, height, audioEnabled, filename);
         prepareRecorder();
         try {
             mDisplay = createVirtualDisplay();
