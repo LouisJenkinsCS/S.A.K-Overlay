@@ -1,9 +1,7 @@
 package com.theif519.sakoverlay.Activities;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.FragmentTransaction;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.ArrayMap;
@@ -11,6 +9,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.theif519.sakoverlay.FloatingFragments.FloatingFragment;
 import com.theif519.sakoverlay.FloatingFragments.FloatingFragmentFactory;
@@ -21,10 +20,10 @@ import com.theif519.sakoverlay.FloatingFragments.StickyNoteFragment;
 import com.theif519.sakoverlay.FloatingFragments.WebBrowserFragment;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.OverlayService;
-import com.theif519.utils.JSONDeserializer;
-import com.theif519.utils.JSONSerializer;
-import com.theif519.utils.MutableObject;
-import com.theif519.utils.ServiceTools;
+import com.theif519.utils.Serialization.JSONDeserializer;
+import com.theif519.utils.Serialization.JSONSerializer;
+import com.theif519.utils.Misc.MutableObject;
+import com.theif519.utils.Misc.ServiceTools;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -68,18 +67,7 @@ public class MainActivity extends Activity {
     }*/
 
     private static final String TAG = MainActivity.class.getName();
-    public static final String JSON_FILENAME = "SerializedPopupWindowExtenderInformation.json";
-
-    public void startServiceIfNotRunning(){
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for(ActivityManager.RunningServiceInfo service: manager.getRunningServices(Integer.MAX_VALUE)){
-            if(service.service.getClassName().equals(OverlayService.class.getName())){
-                return;
-            }
-        }
-        Intent intent = new Intent(this, OverlayService.class);
-        startService(intent);
-    }
+    public static final String JSON_FILENAME = "SerializedFloatingFragments.json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +116,10 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = ScreenRecorderFragment.newInstance();
+                if(fragment == null){
+                    Toast.makeText(MainActivity.this, "Only one instance of Screen Recorder may exist at a time!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 mFragments.add(new WeakReference<>(fragment));
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }

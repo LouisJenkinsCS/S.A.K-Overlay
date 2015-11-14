@@ -1,4 +1,4 @@
-package com.theif519.utils;
+package com.theif519.utils.Misc;
 
 /**
  * Created by theif519 on 11/9/2015.

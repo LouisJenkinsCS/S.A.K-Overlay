@@ -1,4 +1,4 @@
-package com.theif519.utils;
+package com.theif519.utils.Misc;
 
 import android.util.Log;
 

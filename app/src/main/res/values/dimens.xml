@@ -11,4 +11,5 @@
     <dimen name="google_maps_width">300dp</dimen>
     <dimen name="google_maps_height">300dp</dimen>
     <dimen name="activity_main_sidebar_width">55dp</dimen>
+    <dimen name="list_view_video_info_thumbnail_dimen">100dp</dimen>
 </resources>

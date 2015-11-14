@@ -28,7 +28,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/record_state"
+            android:id="@+id/screen_recorder_state_text"
             android:textStyle="bold"
             android:textSize="20sp"
             android:text="@string/screen_recorder_state_dead"/>
@@ -45,13 +45,10 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <ListView
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:id="@+id/screen_recorder_videos">
-
-        </LinearLayout>
+            android:id="@+id/screen_recorder_file_list"/>
 
     </ScrollView>
 

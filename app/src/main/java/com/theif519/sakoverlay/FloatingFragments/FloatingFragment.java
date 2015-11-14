@@ -23,6 +23,7 @@ import android.widget.ListView;
 import android.widget.PopupWindow;
 
 import com.theif519.sakoverlay.Activities.MainActivity;
+import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 
 import java.util.ArrayList;
@@ -85,17 +86,6 @@ public class FloatingFragment extends Fragment {
     protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
 
     /*
-        These keys are used to maintain consistency with serialization and deserialization of data.
-     */
-    protected static final String X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
-            WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag";
-
-    /*
-        These constants are for menu options, to maintain consistency.
-     */
-    protected static final String TRANSPARENCY_TOGGLE_OPTION = "Transparency Toggle", BRING_TO_FRONT_OPTION = "Bring to Front";
-
-    /*
         Convenient tag.
      */
     private static final String TAG = FloatingFragment.class.getName();
@@ -135,7 +125,7 @@ public class FloatingFragment extends Fragment {
         mContentView.setVisibility(View.INVISIBLE);
         setupGlobals();
         setupListeners();
-        if (mContext != null && Boolean.valueOf(mContext.get(MINIMIZED_KEY))) {
+        if (mContext != null && Boolean.valueOf(mContext.get(Globals.Immutable.Strings.MINIMIZED_KEY))) {
             minimize();
         } else mContentView.setVisibility(View.VISIBLE);
         mContentView.post(new Runnable() {
@@ -156,8 +146,8 @@ public class FloatingFragment extends Fragment {
         if(mOptions == null){
             mOptions = new ArrayList<String>();
         }
-        mOptions.add(TRANSPARENCY_TOGGLE_OPTION);
-        mOptions.add(BRING_TO_FRONT_OPTION);
+        mOptions.add(Globals.Immutable.Strings.TRANSPARENCY_TOGGLE_OPTION);
+        mOptions.add(Globals.Immutable.Strings.BRING_TO_FRONT_OPTION);
     }
 
     /**
@@ -273,10 +263,10 @@ public class FloatingFragment extends Fragment {
      * It is safe to call getContentView() and should be used to update the view associated with this fragment.
      */
     protected void unpack() {
-        x = Integer.parseInt(mContext.get(X_KEY));
-        y = Integer.parseInt(mContext.get(Y_KEY));
-        width = Integer.parseInt(mContext.get(WIDTH_KEY));
-        height = Integer.parseInt(mContext.get(HEIGHT_KEY));
+        x = Integer.parseInt(mContext.get(Globals.Immutable.Strings.X_KEY));
+        y = Integer.parseInt(mContext.get(Globals.Immutable.Strings.Y_KEY));
+        width = Integer.parseInt(mContext.get(Globals.Immutable.Strings.WIDTH_KEY));
+        height = Integer.parseInt(mContext.get(Globals.Immutable.Strings.HEIGHT_KEY));
         mContentView.setX(x);
         mContentView.setY(y);
         mContentView.setLayoutParams(new LinearLayout.LayoutParams(width, height));
@@ -438,12 +428,12 @@ public class FloatingFragment extends Fragment {
 
     public ArrayMap<String, String> serialize() {
         ArrayMap<String, String> map = new ArrayMap<>();
-        map.put(LAYOUT_TAG_KEY, LAYOUT_TAG);
-        map.put(X_KEY, Integer.toString(x));
-        map.put(Y_KEY, Integer.toString(y));
-        map.put(WIDTH_KEY, Integer.toString(width));
-        map.put(HEIGHT_KEY, Integer.toString(height));
-        map.put(MINIMIZED_KEY, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
+        map.put(Globals.Immutable.Strings.LAYOUT_TAG_KEY, LAYOUT_TAG);
+        map.put(Globals.Immutable.Strings.X_KEY, Integer.toString(x));
+        map.put(Globals.Immutable.Strings.Y_KEY, Integer.toString(y));
+        map.put(Globals.Immutable.Strings.WIDTH_KEY, Integer.toString(width));
+        map.put(Globals.Immutable.Strings.HEIGHT_KEY, Integer.toString(height));
+        map.put(Globals.Immutable.Strings.MINIMIZED_KEY, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
         return map;
     }
 
@@ -469,14 +459,14 @@ public class FloatingFragment extends Fragment {
 
     public void onItemSelected(String string){
         switch(string){
-            case TRANSPARENCY_TOGGLE_OPTION:
+            case Globals.Immutable.Strings.TRANSPARENCY_TOGGLE_OPTION:
                 if(mIsTransparent = !mIsTransparent){
                     mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(android.R.color.transparent));
                 } else {
                     mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(R.color.black));
                 }
                 break;
-            case BRING_TO_FRONT_OPTION:
+            case Globals.Immutable.Strings.BRING_TO_FRONT_OPTION:
                 mContentView.bringToFront();
                 break;
         }

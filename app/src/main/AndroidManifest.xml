@@ -41,6 +41,7 @@
             </intent-filter>
         </activity>
         <service android:name=".Services.OverlayService"/>
+        <service android:name=".Services.RecorderService"/>
         <receiver android:name=".Receivers.OnBootReceiver">
             <intent-filter>
                 <action android:name="ANDROID.INTENT.ACTION.BOOT_COMPLETED"/>

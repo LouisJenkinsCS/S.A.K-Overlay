@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/list_view_video_info_thumbnail"
+        android:layout_width="@dimen/list_view_video_info_thumbnail_dimen"
+        android:layout_height="@dimen/list_view_video_info_thumbnail_dimen"
+        android:src="@android:drawable/gallery_thumb" />
+
+    <HorizontalScrollView
+        android:id="@+id/list_view_video_info_description_scrollview"
+        android:layout_width="125dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/list_view_video_info_thumbnail"
+        android:scrollbarSize="5dp"
+        android:scrollbars="horizontal">
+
+        <TextView
+            android:id="@+id/list_view_video_info_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Video Description"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </HorizontalScrollView>
+
+    <HorizontalScrollView
+        android:id="@+id/list_view_video_info_duration_scrollview"
+        android:layout_width="125dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/list_view_video_info_description_scrollview"
+        android:layout_toEndOf="@id/list_view_video_info_thumbnail"
+        android:scrollbarSize="5dp"
+        android:scrollbars="horizontal">
+
+        <TextView
+            android:id="@+id/list_view_video_info_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="55dp"
+            android:text="Video Duration"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </HorizontalScrollView>
+
+
+    <HorizontalScrollView
+        android:id="@+id/list_view_video_info_timestamp_scrollview"
+        android:layout_width="125dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_toEndOf="@id/list_view_video_info_description_scrollview"
+        android:scrollbarSize="5dp"
+        android:scrollbars="horizontal">
+
+        <TextView
+            android:id="@+id/list_view_video_info_timestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Video Timestamp"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </HorizontalScrollView>
+
+    <HorizontalScrollView
+        android:id="@+id/list_view_video_info_resolution_scrollview"
+        android:layout_width="125dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="25dp"
+        android:layout_below="@id/list_view_video_info_description_scrollview"
+        android:layout_toEndOf="@id/list_view_video_info_duration_scrollview"
+        android:scrollbarSize="5dp"
+        android:scrollbars="horizontal">
+
+        <TextView
+            android:id="@+id/list_view_video_info_resolution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="55dp"
+            android:text="Video Duration"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </HorizontalScrollView>
+
+</RelativeLayout>

@@ -7,7 +7,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.theif519.sakoverlay.R;
-import com.theif519.utils.AttributeRetriever;
+import com.theif519.utils.Misc.AttributeRetriever;
 
 /**
  * Created by theif519 on 11/7/2015.
@@ -28,7 +28,7 @@ public class TitleBar extends RelativeLayout {
         AttributeRetriever.fillAttributes(getClass(), this, context, attrs);
     }
 
-    @com.theif519.utils.AttributeRetriever.AttributeHelper(source = "tbTitle")
+    @AttributeRetriever.AttributeHelper(source = "tbTitle")
     public void setTitle(String title){
         mTitle.setText(title);
         mTitle.invalidate();

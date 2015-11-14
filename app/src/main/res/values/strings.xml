@@ -23,6 +23,7 @@
 
     <!-- For ScreenRecorderFragment -->
     <string name="screen_recorder_state_dead">Dead</string>
+    <string name="screen_recorder_state_initialized">Initialized</string>
     <string name="screen_recorder_state_stopped">Stopped</string>
     <string name="screen_recorder_state_started">Started</string>
     <string name="screen_recorder_state_prepared">Prepared</string>

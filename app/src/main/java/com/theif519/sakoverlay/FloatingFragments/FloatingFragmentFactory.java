@@ -2,6 +2,8 @@ package com.theif519.sakoverlay.FloatingFragments;
 
 import android.util.ArrayMap;
 
+import com.theif519.sakoverlay.Misc.Globals;
+
 /**
  * Created by theif519 on 10/31/2015.
  */
@@ -13,7 +15,7 @@ public class FloatingFragmentFactory {
     }
 
     public FloatingFragment getFragment(ArrayMap<String, String> map) {
-        FloatingFragment fragment = createFragment(map.get(FloatingFragment.LAYOUT_TAG_KEY));
+        FloatingFragment fragment = createFragment(map.get(Globals.Immutable.Strings.LAYOUT_TAG_KEY));
         if(fragment == null) return null;
         fragment.mContext = map;
         return fragment;
