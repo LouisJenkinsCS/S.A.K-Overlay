@@ -3,127 +3,82 @@ package com.theif519.sakoverlay.Misc;
 /**
  * Created by theif519 on 11/13/2015.
  * <p/>
- * This file, inspired by that guy who went last on Thursday (forgot his name, but not his work), is used
- * to keep track of all global constants which are generic enough for other classes to reuse. It should be noted,
- * once again, only ones which are GENERIC are reused. Hence, ones which each class has a specificified value,
- * even if they have the same name (I.E FloatingFragment subclasses IDENTIFIER constant is different for each subclass).
+ * This file, inspired by that guy who went last on Thursday of the first week (forgot his name, but not his work), is used
+ * to keep track of all global constants which are generic enough for other classes to reuse. It is used
+ * to keep an organized track of all variables which are considered global, and/or reusable enough that
+ * other classes may also utilize them. Not all constants go here, certain ones (I.E FloatingFragment and it's
+ * subclasses IDENTIFIER variable) would create conflicts if they were all accessed here.
  * <p/>
- * Global has two roots in the hierarchy, "Mutable" and "Immutable".
- * <p/>
- * Global.Mutable contains globals which can be changed, while Global.Immutable cannot be changed after their declaration.
- * Both are thread-safe.
- * <p/>
- * The overall layout looks like this
- * Globals
- * |->  Immutable
- * |-> Numbers
- * |-> Enumerations
- * |-> Strings
- * |->  Mutable
- * |-> Numbers
- * |-> Enumerations
- * |-> Strings
- * <p/>
- * Hence, while accessing these globals may feel arduous, especially if you do not include the entire package, I.E
- * <p/>
- * com.theif519.sakoverlay.misc.Globals.Immutable.Enumerations.RecorderState
- * <p/>
- * Now that, is a mouthful. However, of course, this can be remedied by importing the Globals package,
- * reducing it to...
- * <p/>
- * Globals.Immutable.Enumerations.RecorderState
- * <p/>
- * Long-Winded, however, it will allow me to add as many constants as I want and allow it to be easily
- * managed in the long-run.
+ * Globals are organized, insofar, by Keys (for key-value pairs) and miscallaneous others. Keys, as of yet,
+ * are split between normal Keys, and Options, both explained below.
  */
 public final class Globals {
 
-    /**
-     * In the conventional sense of the word, a Constant is Immutable by default. In fact, one could argue
-     * that a mutable constant isn't really a constant. Forget those people. Constants, in this use-case,
-     * are used to keep track of global and hence thread-safe primitives and/or objects which can be used
-     * reliably without side-effects. These are immutable.
-     */
-    public final class Immutable {
+    public final class Keys {
 
-        private Immutable() {
+        private Keys() {
         }
 
-        public final class Strings {
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+        //                                                                                            //
+        //                                          Keys                                              //
+        //                                                                                            //
+        ////////////////////////////////////////////////////////////////////////////////////////////////
 
-            private Strings() {
-            }
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////
-            //                                                                                            //
-            //                                          Keys                                              //
-            //                                                                                            //
-            ////////////////////////////////////////////////////////////////////////////////////////////////
-
-            /*
-                Keys used to save key-values for certain attributes, either as a form of IPC (Inter-Process Communication,
+        /*
+                Used to save key-values for certain attributes, either as a form of IPC (Inter-Process Communication,
                 think Bundle/Intent) or for serialization/deserialization.
-             */
-            public static final String X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
-                    WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag", AUDIO_ENABLED_KEY = "Audio Enabled",
-                    FILENAME_KEY = "Filename";
+         */
+        public static final String X_KEY = "X Coordinate", Y_KEY = "Y Coordinate", MINIMIZED_KEY = "Minimized",
+                WIDTH_KEY = "Width", HEIGHT_KEY = "Height", LAYOUT_TAG_KEY = "Layout Tag";
 
-            /*
-                Keys used to identify certain options which can toggle/alter functionality of a view and/or fragment.
-             */
-            public static final String TRANSPARENCY_TOGGLE_OPTION = "Transparency Toggle", BRING_TO_FRONT_OPTION = "Bring to Front";
-        }
 
-        public final class Enumerations {
+        public static final String AUDIO_ENABLED_KEY = "Audio Enabled", FILENAME_KEY = "Filename";
 
-            private Enumerations() {
-            }
+        /*
+            RecorderService's key-values to serve as a form of IPC between the service and the FloatingFragment,
+            in this case, ScreenRecorderFragment.
 
-        }
+            RECORDER_STATE_KEY - Passed through an intent in a bundle as a key for the value state.
 
-        public final class Numbers {
+            RECORDER_STATE_REQUEST_KEY - Sent when ScreenRecorderFragment requests the current state of the recorder.
 
-            private Numbers() {
-            }
+            RECORDER_STATE_RESPONSE_KEY - Response from the RecorderService to broadcast the state to any listeners.
 
-            public static final int RECORDER_PERMISSION_RETVAL = 1;
-        }
+            RECORDER_STATE_CHANGE_KEY - Broadcasted when the state of the RecorderService changes, to all listeners.
 
+            RECORDER_STATE_REQUEST_KEY - When the ScreenRecorderFragment attempts to change the state of the RecorderService.
+
+            RECORDER_STATE_RESPONSE_KEY - Response from the RecorderService regarding whether or not it obliged.
+
+            RECORDER_STATE_END_SERVICE_KEY - Request to end the service.
+
+            RECORDER_STATE_HAS_ENDED_KEY - Broadcast telling that it will be ending.
+         */
+        public static final String RECORDER_STATE_KEY = "Recorder State",RECORDER_STATE_REQUEST_KEY = "Recorder State Request",
+                RECORDER_STATE_RESPONSE_KEY = "Recorder State Response", RECORDER_STATE_CHANGE_KEY = "Recorder State Change",
+                RECORDER_STATE_CHANGE_REQUEST_KEY = "Recorder State Change Request", RECORDER_STATE_CHANGE_RESPONSE_KEY = "Recorder State Change Response",
+                RECORDER_STATE_END_SERVICE_KEY = "Recorder State End Service", RECORDER_STATE_HAS_ENDED_KEY = "Recorder State Has Ended Key";
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+        //                                                                                            //
+        //                                          Options                                           //
+        //                                                                                            //
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /*
+            Base Floating-Fragment options.
+         */
+        public static final String TRANSPARENCY_TOGGLE_OPTION = "Transparency Toggle", BRING_TO_FRONT_OPTION = "Bring to Front";
+
+        /*
+            WebBrowserFragment options.
+         */
+        public static final String HOME_OPTION = "Home", REFRESH_OPTION = "Refresh";
     }
 
-    /**
-     * Converse to the conventional sense of the word, these Constants aren't actually constant, they are just
-     * global declarations of primitives and/or reference objects. They are mutable, however either they are made
-     * thread-safe either through synchronicity, atomicity, or are naturally only accessed from the UI Thread, hence
-     * thread-safety not being an issue.
-     */
-    public final class Mutable {
+    public static final int RECORDER_PERMISSION_RETVAL = 1;
 
-        private Mutable() {
-        }
-
-        public final class Strings {
-
-            private Strings() {
-            }
-
-        }
-
-        public final class Enumerations {
-
-            private Enumerations() {
-            }
-
-        }
-
-        public final class Numbers {
-
-            private Numbers() {
-            }
-
-        }
-
-    }
-
+    public static final int RECORDER_NOTIFICATION_ID = 90;
 
 }

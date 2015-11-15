@@ -40,7 +40,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".Services.OverlayService"/>
+        <service android:name=".Services.NotificationService"/>
         <service android:name=".Services.RecorderService"/>
         <receiver android:name=".Receivers.OnBootReceiver">
             <intent-filter>

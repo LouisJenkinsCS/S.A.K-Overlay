@@ -10,6 +10,7 @@ import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 
 import java.util.ArrayList;
@@ -18,8 +19,6 @@ import java.util.ArrayList;
  * Created by theif519 on 11/6/2015.
  */
 public class WebBrowserFragment extends FloatingFragment {
-
-    private static final String HOME_OPTION = "Home", REFRESH_OPTION = "Refresh";
 
     private static final String DEFAULT_HOMEPAGE = "http://www.google.com";
     public static final String IDENTIFIER = "Web Browser";
@@ -34,8 +33,8 @@ public class WebBrowserFragment extends FloatingFragment {
         fragment.LAYOUT_TAG = IDENTIFIER;
         fragment.ICON_ID = R.drawable.browser;
         fragment.mOptions = new ArrayList<>();
-        fragment.mOptions.add(HOME_OPTION);
-        fragment.mOptions.add(REFRESH_OPTION);
+        fragment.mOptions.add(Globals.Keys.HOME_OPTION);
+        fragment.mOptions.add(Globals.Keys.REFRESH_OPTION);
         return fragment;
     }
 
@@ -112,10 +111,10 @@ public class WebBrowserFragment extends FloatingFragment {
     public void onItemSelected(String string) {
         super.onItemSelected(string);
         switch(string){
-            case HOME_OPTION:
+            case Globals.Keys.HOME_OPTION:
                 mBrowser.loadUrl(DEFAULT_HOMEPAGE);
                 break;
-            case REFRESH_OPTION:
+            case Globals.Keys.REFRESH_OPTION:
                 mBrowser.reload();
                 break;
         }

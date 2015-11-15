@@ -19,7 +19,7 @@ import com.theif519.sakoverlay.FloatingFragments.ScreenRecorderFragment;
 import com.theif519.sakoverlay.FloatingFragments.StickyNoteFragment;
 import com.theif519.sakoverlay.FloatingFragments.WebBrowserFragment;
 import com.theif519.sakoverlay.R;
-import com.theif519.sakoverlay.Services.OverlayService;
+import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.utils.Serialization.JSONDeserializer;
 import com.theif519.utils.Serialization.JSONSerializer;
 import com.theif519.utils.Misc.MutableObject;
@@ -74,10 +74,10 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER);
         setContentView(R.layout.activity_main);
-        ServiceTools.startService(this, OverlayService.class, new ServiceTools.SetupIntent() {
+        ServiceTools.startService(this, NotificationService.class, new ServiceTools.SetupIntent() {
             @Override
             public void setup(Intent intent) {
-                intent.putExtra(OverlayService.START_NOTIFICATION, true);
+                intent.putExtra(NotificationService.START_NOTIFICATION, true);
             }
         });
         findViewById(R.id.home_button).setOnClickListener(new View.OnClickListener() {

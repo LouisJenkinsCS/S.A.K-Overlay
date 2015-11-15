@@ -49,10 +49,10 @@ public class ScreenRecorderFragment extends FloatingFragment {
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Toast.makeText(getActivity(), "Bound to RecorderService!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getActivity(), "Bound to RecorderService!", Toast.LENGTH_SHORT).show();
             mBinder = (RecorderService.RecorderBinder) service;
             mService = mBinder.getService();
-            mStateText.setText("Bound...");
+            //mStateText.setText("Bound...");
         }
 
         @Override
@@ -60,7 +60,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
             mService = null;
             mBinder = null;
             Toast.makeText(getActivity(), "Unbound from RecorderService!", Toast.LENGTH_SHORT).show();
-            mStateText.setText("Unbound...");
+            //mStateText.setText("Unbound...");
         }
 };
 
@@ -69,7 +69,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
         public void onReceive(Context context, Intent intent) {
             mState = (RecorderState) intent.getSerializableExtra(RecorderService.RECORDER_STATE_KEY);
             ((TextView) getContentView().findViewById(R.id.screen_recorder_state_text)).setText(mState.toString());
-            Toast.makeText(getActivity(), "State Changed to: " + mState.toString(), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getActivity(), "State Changed to: " + mState.toString(), Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -90,7 +90,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
             @Override
             public void onClick(View v) {
                 if (mService == null || mBinder == null) {
-                    startActivityForResult(mManager.createScreenCaptureIntent(), Globals.Immutable.Numbers.RECORDER_PERMISSION_RETVAL);
+                    startActivityForResult(mManager.createScreenCaptureIntent(), Globals.RECORDER_PERMISSION_RETVAL);
                     return;
                 }
                 if (mState != RecorderState.STARTED) {
@@ -106,12 +106,12 @@ public class ScreenRecorderFragment extends FloatingFragment {
 
     @Override
     public void onActivityResult(int requestCode, final int resultCode, final Intent data) {
-        if (requestCode != Globals.Immutable.Numbers.RECORDER_PERMISSION_RETVAL) {
+        if (requestCode != Globals.RECORDER_PERMISSION_RETVAL) {
             Toast.makeText(getActivity(), "Received an unknown request code!Aborting!", Toast.LENGTH_LONG).show();
             return;
         }
         if (resultCode != Activity.RESULT_OK) {
-            Toast.makeText(getActivity(), "Permission Denied!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Permission Denied!", Toast.LENGTH_LONG).show();
             return;
         }
         Intent intent = new Intent(getActivity(), com.theif519.sakoverlay.Services.RecorderService.class);
@@ -121,7 +121,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
         getActivity().bindService(intent, new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
-                Toast.makeText(getActivity(), "Bound to RecorderService!", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity(), "Bound to RecorderService!", Toast.LENGTH_SHORT).show();
                 mBinder = (RecorderService.RecorderBinder) service;
                 mService = mBinder.getService();
             }
@@ -130,7 +130,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
             public void onServiceDisconnected(ComponentName name) {
                 mService = null;
                 mBinder = null;
-                Toast.makeText(getActivity(), "Unbound from RecorderService!", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity(), "Unbound from RecorderService!", Toast.LENGTH_SHORT).show();
             }
         }, Context.BIND_AUTO_CREATE);
     }
@@ -170,7 +170,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
 
     @Override
     public void onResume() {
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, new IntentFilter(RecorderService.RECORDER_STATE_CHANGE));
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE_KEY));
         super.onResume();
     }
 
@@ -182,7 +182,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
 
     @Override
     public void onDestroy() {
-        getActivity().unbindService(mConnection);
         super.onDestroy();
     }
 }

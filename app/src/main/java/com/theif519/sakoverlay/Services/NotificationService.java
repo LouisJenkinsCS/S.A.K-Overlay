@@ -15,11 +15,11 @@ import com.theif519.sakoverlay.R;
 /**
  * Created by theif519 on 11/5/2015.
  */
-public class OverlayService extends IntentService {
+public class NotificationService extends IntentService {
 
     public static final String START_NOTIFICATION = "Start Notification";
 
-    public OverlayService() {
+    public NotificationService() {
         super("S.A.K-Overlay Service");
     }
 
@@ -27,7 +27,7 @@ public class OverlayService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if(intent.getBooleanExtra(START_NOTIFICATION, false)){
             setupForegroundNotification();
-        } else Toast.makeText(OverlayService.this, "Was unable to start notification!", Toast.LENGTH_SHORT).show();
+        } else Toast.makeText(NotificationService.this, "Was unable to start notification!", Toast.LENGTH_SHORT).show();
     }
 
     private void setupForegroundNotification(){
