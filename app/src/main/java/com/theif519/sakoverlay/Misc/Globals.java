@@ -43,9 +43,9 @@ public final class Globals {
 
             RECORDER_STATE_REQUEST_KEY - Sent when ScreenRecorderFragment requests the current state of the recorder.
 
-            RECORDER_STATE_RESPONSE_KEY - Response from the RecorderService to broadcast the state to any listeners.
+            RECORDER_COMMAND_REQUEST_KEY - Requests that a command be executed.
 
-            RECORDER_STATE_CHANGE_KEY - Broadcasted when the state of the RecorderService changes, to all listeners.
+            RECORDER_COMMAND_RESPONSE_KEY - Whether or not the command was honored.
 
             RECORDER_STATE_REQUEST_KEY - When the ScreenRecorderFragment attempts to change the state of the RecorderService.
 
@@ -54,12 +54,15 @@ public final class Globals {
             RECORDER_STATE_END_SERVICE_KEY - Request to end the service.
 
             RECORDER_STATE_HAS_ENDED_KEY - Broadcast telling that it will be ending.
+
+            RECORDER_COMMAND_KEY - Command sent to recorder.
          */
         public static final String RECORDER_STATE_KEY = "Recorder State",RECORDER_STATE_REQUEST_KEY = "Recorder State Request",
                 RECORDER_STATE_RESPONSE_KEY = "Recorder State Response", RECORDER_STATE_CHANGE_KEY = "Recorder State Change",
-                RECORDER_STATE_CHANGE_REQUEST_KEY = "Recorder State Change Request", RECORDER_STATE_CHANGE_RESPONSE_KEY = "Recorder State Change Response",
-                RECORDER_STATE_END_SERVICE_KEY = "Recorder State End Service", RECORDER_STATE_HAS_ENDED_KEY = "Recorder State Has Ended Key",
-                RECORDER_PERMISSIONS_REQUEST_KEY = "Recorder Permissions Request", RECORDER_PERMISSIONS_RESPONSE_KEY = "Record Permissions Response";
+                RECORDER_STATE_HAS_ENDED_KEY = "Recorder State Has Ended Key", RECORDER_PERMISSIONS_REQUEST_KEY = "Recorder Permissions Request",
+                RECORDER_PERMISSIONS_RESPONSE_KEY = "Recorder Permissions Response", RECORDER_COMMAND_REQUEST_KEY = "Recorder Command Request Key",
+                RECORDER_COMMAND_RESPONSE_KEY = "Recorder Command Response", RECORDER_COMMAND_KEY = "Recorder Command",
+                RECORDER_EXTRA_MESSAGE_KEY = "Recorder Extra Message";
 
         ////////////////////////////////////////////////////////////////////////////////////////////////
         //                                                                                            //

@@ -44,8 +44,8 @@ public class RecorderService extends Service {
 
     /**
      * Enumerations used to describe the current state of the object, even
-     * having a direct string representation. For this example, my fragment has a
-     * text-view which is updated with each state change.
+     * having a direct string representation. It utilizes bitmasking to allow
+     * more than one state to be compared, specifically for RecorderCommand.
      */
     public enum RecorderState {
         DEAD(1),
@@ -105,6 +105,12 @@ public class RecorderService extends Service {
     /**
      * This enumeration is used to not only represent a command, but also keeps track of the possible states
      * by bitwise OR'ing the states together to make a nice and efficient approach.
+     *
+     * | = Bitwise OR
+     *
+     * & = Bitwise AND
+     *
+     * &~ = Bitwise NAND
      */
     public enum RecorderCommand {
         START(
@@ -229,7 +235,9 @@ public class RecorderService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (!mNotificationRunning) {
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(Globals.Keys.RECORDER_STATE_END_SERVICE_KEY), 0);
+            Intent endIntent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY);
+            endIntent.putExtra(Globals.Keys.RECORDER_COMMAND_KEY, RecorderCommand.DIE);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, endIntent, 0);
             Notification notification = new Notification.Builder(getApplicationContext())
                     .setContentTitle(getString(R.string.app_name))
                     .setContentText(getString(R.string.overlay_notification_text))
@@ -267,6 +275,7 @@ public class RecorderService extends Service {
      */
     private void obtainPermissions(final PermissionsCallback callback) {
         final LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+        // We unregister the previous to prevent having more than one of the same receivers being answered.
         if (mLastPermissionsReceiver != null) manager.unregisterReceiver(mLastPermissionsReceiver);
         manager.registerReceiver(mLastPermissionsReceiver = new BroadcastReceiver() {
             @Override
@@ -320,39 +329,82 @@ public class RecorderService extends Service {
             }
         }, new IntentFilter(Globals.Keys.RECORDER_STATE_REQUEST_KEY));
         /*
-            When we receive a request to change the state, first we check if the state is eligible,
-            and if we are not we send back false with an extra message explaining why we cannot do so.
-            Otherwise we send back true.
-
-            Note: We reuse the Intent-Filter RECORDER_STATE_CHANGE_RESPONSE_KEY for the key to hold
-            whether or not we changed our state or not. Lack of creativity.
+            When we receive a command, we first determine whether or not the command is possible in the current
+            given state. Thanks to the enumerations and clever use of bitmasking (I astound even myself),
+            this is easily possible. If it is not possible to execute the given command, it sends back
+            an extra message describing the error (in this case, the description is the attempted command
+            and the current state). Otherwise, the command is handled.
          */
         broadcastManager.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Intent responseIntent = new Intent(Globals.Keys.RECORDER_STATE_CHANGE_RESPONSE_KEY);
-                RecorderState state = (RecorderState) intent.getSerializableExtra(Globals.Keys.RECORDER_STATE_KEY);
-                responseIntent.putExtra(Globals.Keys.RECORDER_STATE_CHANGE_RESPONSE_KEY, true);
-                broadcastManager.sendBroadcast(intent);
-                handleStateChange(state);
+                Intent responseIntent = new Intent(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY);
+                RecorderCommand command = (RecorderCommand) intent.getSerializableExtra(Globals.Keys.RECORDER_COMMAND_KEY);
+                boolean isPossible = command.isPossible(mState);
+                responseIntent.putExtra(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY, isPossible);
+                if(!isPossible){
+                    responseIntent.putExtra(Globals.Keys.RECORDER_EXTRA_MESSAGE_KEY,
+                            "Cannot execute command " + command.toString() + " during state " + mState.toString());
+                }
+                broadcastManager.sendBroadcast(responseIntent);
+                if(isPossible) handleCommand(command, intent);
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE_REQUEST_KEY));
-        broadcastManager.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                // We end the current service based on state here, then stop self!
-                stopSelf();
-                ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).cancel(Globals.RECORDER_NOTIFICATION_ID);
-                changeState(RecorderState.DEAD);
-
-            }
-        }, new IntentFilter(Globals.Keys.RECORDER_STATE_END_SERVICE_KEY));
+        }, new IntentFilter(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY));
     }
 
-    private void handleStateChange(RecorderState state) {
-        switch (mState) {
-            case DEAD:
-                if ()
+    /**
+     * Handles the command sent if and only if the command is possible. Note that there are no checks here,
+     * as it was already checked before passing. Utilizing a simple switch statement, it is easy to basically
+     * fall through each and handle them accordingly. Note also, in START, we must obtian permissions if we have not
+     * done so already.
+     * @param command
+     * @param extras
+     */
+    private void handleCommand(RecorderCommand command, final Intent extras) {
+        switch (command) {
+            case START:
+                // Remember project is null only after we finish or if this is the first time running. Hence we acquire permissions.
+                if(mProjection == null){
+                    obtainPermissions(new PermissionsCallback() {
+                        @Override
+                        public void permissionsGranted(Intent intent) {
+                            startRecording(extras.getIntExtra(Globals.Keys.WIDTH_KEY, 0),
+                                    extras.getIntExtra(Globals.Keys.HEIGHT_KEY, 0), extras.getBooleanExtra(Globals.Keys.AUDIO_ENABLED_KEY, false),
+                                    extras.getStringExtra(Globals.Keys.FILENAME_KEY));
+                        }
+
+                        @Override
+                        public void permissionsDenied(Intent intent) {
+                            // Nothing.
+                        }
+                    });
+                    return;
+                }
+                /*
+                    Unfortunately I can't think of a better way to do this. We want to have startRecording called
+                    at a later date, which by itself is a function call, but we also want it to call it now if projection
+                    isn't null.
+                 */
+                startRecording(extras.getIntExtra(Globals.Keys.WIDTH_KEY, 0),
+                        extras.getIntExtra(Globals.Keys.HEIGHT_KEY, 0), extras.getBooleanExtra(Globals.Keys.AUDIO_ENABLED_KEY, false),
+                        extras.getStringExtra(Globals.Keys.FILENAME_KEY));
+                break;
+            case STOP:
+                stopRecording();
+                break;
+            case DIE:
+                mRecorder.reset();
+                if(mDisplay != null){
+                    mDisplay.release();
+                    mDisplay = null;
+                }
+                mRecorder.release();
+                mRecorder = null;
+                mProjection.stop();
+                mProjection = null;
+                changeState(RecorderState.DEAD);
+                stopSelf();
+                break;
         }
     }
 
@@ -441,6 +493,7 @@ public class RecorderService extends Service {
      * @param filename     Name of file.
      */
     public void startRecording(int width, int height, boolean audioEnabled, String filename) {
+        mRecorder.reset();
         initialize(width, height, audioEnabled, filename);
         prepareRecorder();
         try {
@@ -472,8 +525,7 @@ public class RecorderService extends Service {
         try {
             mRecorder.stop();
             mDisplay.release();
-            mRecorder.release();
-            mProjection.stop();
+            mDisplay = null;
             changeState(RecorderState.STOPPED);
         } catch (IllegalStateException e) {
             logErrorAndChangeState(e);
