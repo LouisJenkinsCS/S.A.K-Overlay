@@ -58,7 +58,8 @@ public final class Globals {
         public static final String RECORDER_STATE_KEY = "Recorder State",RECORDER_STATE_REQUEST_KEY = "Recorder State Request",
                 RECORDER_STATE_RESPONSE_KEY = "Recorder State Response", RECORDER_STATE_CHANGE_KEY = "Recorder State Change",
                 RECORDER_STATE_CHANGE_REQUEST_KEY = "Recorder State Change Request", RECORDER_STATE_CHANGE_RESPONSE_KEY = "Recorder State Change Response",
-                RECORDER_STATE_END_SERVICE_KEY = "Recorder State End Service", RECORDER_STATE_HAS_ENDED_KEY = "Recorder State Has Ended Key";
+                RECORDER_STATE_END_SERVICE_KEY = "Recorder State End Service", RECORDER_STATE_HAS_ENDED_KEY = "Recorder State Has Ended Key",
+                RECORDER_PERMISSIONS_REQUEST_KEY = "Recorder Permissions Request", RECORDER_PERMISSIONS_RESPONSE_KEY = "Record Permissions Response";
 
         ////////////////////////////////////////////////////////////////////////////////////////////////
         //                                                                                            //

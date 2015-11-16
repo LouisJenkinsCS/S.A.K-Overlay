@@ -64,10 +64,10 @@ public class ScreenRecorderFragment extends FloatingFragment {
         }
 };
 
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mStateChangeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            mState = (RecorderState) intent.getSerializableExtra(RecorderService.RECORDER_STATE_KEY);
+            mState = (RecorderState) intent.getSerializableExtra(Globals.Keys.RECORDER_STATE_KEY);
             ((TextView) getContentView().findViewById(R.id.screen_recorder_state_text)).setText(mState.toString());
             //Toast.makeText(getActivity(), "State Changed to: " + mState.toString(), Toast.LENGTH_SHORT).show();
         }
@@ -170,13 +170,13 @@ public class ScreenRecorderFragment extends FloatingFragment {
 
     @Override
     public void onResume() {
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE_KEY));
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mStateChangeReceiver, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE_KEY));
         super.onResume();
     }
 
     @Override
     public void onPause() {
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mStateChangeReceiver);
         super.onPause();
     }
 
