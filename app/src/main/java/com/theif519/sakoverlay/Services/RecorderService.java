@@ -14,7 +14,6 @@ import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
-import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -48,13 +47,14 @@ public class RecorderService extends Service {
      * more than one state to be compared, specifically for RecorderCommand.
      */
     public enum RecorderState {
-        DEAD(1),
-        ALIVE(1 << 1),
-        INITIALIZED(1 << 2),
-        PREPARED(1 << 3),
-        STARTED(1 << 4),
-        PAUSED(1 << 5),
-        STOPPED(1 << 6);
+        // Examples assume one byte.
+        DEAD(1), // 0000 0001
+        ALIVE(1 << 1), // 0000 0010
+        INITIALIZED(1 << 2), // 0000 0100
+        PREPARED(1 << 3), // 0000 1000
+        STARTED(1 << 4), // 0001 0000
+        PAUSED(1 << 5), // 0010 0000
+        STOPPED(1 << 6); // 0100 0000
 
         private int mMask;
 
@@ -72,7 +72,7 @@ public class RecorderService extends Service {
             for(RecorderState state: values()){
                 totalMask |= state.getMask();
             }
-            return totalMask;
+            return totalMask; // 0111 1111
         }
 
         RecorderState(int bitmask) {
@@ -111,18 +111,23 @@ public class RecorderService extends Service {
      * & = Bitwise AND
      *
      * &~ = Bitwise NAND
+     *
+     * This utilizes a heavily modified version of the Command Design Pattern. It cannot be its own object
+     * as it relies on private members of this service, and it would be a headache and a half to implement
+     * it as one.
      */
     public enum RecorderCommand {
-        START(
+        // Examples assume one byte
+        START( // 0110 1111
                 RecorderState.getAllMask() &~ RecorderState.STARTED.getMask()
         ),
-        PAUSE(
+        PAUSE( // 0001 0000
                 RecorderState.STARTED.getMask()
         ),
-        STOP(
+        STOP( // 0011 0000
                 RecorderState.STARTED.getMask() | RecorderState.PAUSED.getMask()
         ),
-        DIE(
+        DIE( // 0111 1110
                 RecorderState.getAllMask() &~ RecorderState.DEAD.getMask()
         );
 
@@ -168,12 +173,6 @@ public class RecorderService extends Service {
         Whether notification is running or not.
      */
     private boolean mNotificationRunning = false;
-
-    /*
-        Callback to be called after the permission has been granted. As this service runs on the main thread,
-        we do not have to worry about thread safety.
-     */
-    private PermissionsCallback mCallback;
 
     private MediaProjection mProjection;
 
@@ -355,10 +354,10 @@ public class RecorderService extends Service {
     /**
      * Handles the command sent if and only if the command is possible. Note that there are no checks here,
      * as it was already checked before passing. Utilizing a simple switch statement, it is easy to basically
-     * fall through each and handle them accordingly. Note also, in START, we must obtian permissions if we have not
+     * fall through each and handle them accordingly. Note also, in START, we must obtain permissions if we have not
      * done so already.
-     * @param command
-     * @param extras
+     * @param command Command to execute.
+     * @param extras Intent passed along with command.
      */
     private void handleCommand(RecorderCommand command, final Intent extras) {
         switch (command) {
@@ -436,24 +435,6 @@ public class RecorderService extends Service {
 
     public RecorderState getState() {
         return mState;
-    }
-
-    /**
-     * A simple subclass of Binder which allows the user to register onStateChangeListeners, which
-     * are called whenever the state of the recording changes. I.E, can be used to update a text view
-     * with the current state.
-     */
-    public class RecorderBinder extends Binder {
-
-        /**
-         * Returns the instance of the service bound to, singleton style.
-         *
-         * @return Instance of RecorderService bound to.
-         */
-        public RecorderService getService() {
-            return RecorderService.this;
-        }
-
     }
 
     /**
