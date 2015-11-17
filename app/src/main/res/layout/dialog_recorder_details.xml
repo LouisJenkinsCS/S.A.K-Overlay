@@ -27,6 +27,9 @@
         <EditText
             android:id="@+id/dialog_recorder_resolution_height"
             android:layout_width="75dp"
+            android:text="0"
+            android:selectAllOnFocus="true"
+            android:gravity="center_horizontal"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:inputType="number"
@@ -43,6 +46,9 @@
             android:id="@+id/dialog_recorder_resolution_width"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:text="0"
+            android:selectAllOnFocus="true"
             android:layout_marginEnd="5dp"
             android:inputType="number"
             android:maxLength="4" />
@@ -93,6 +99,8 @@
 
         <EditText
             android:layout_width="150dp"
+            android:text=".mp4"
+            android:gravity="center_horizontal"
             android:layout_height="wrap_content"
             android:id="@+id/dialog_recorder_filename_name"
             android:inputType="text"

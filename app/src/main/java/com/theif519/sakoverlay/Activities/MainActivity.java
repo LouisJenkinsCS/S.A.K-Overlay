@@ -3,7 +3,8 @@ package com.theif519.sakoverlay.Activities;
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.os.Bundle;
+import android.os.*;
+import android.os.Process;
 import android.util.ArrayMap;
 import android.util.TypedValue;
 import android.view.View;
@@ -20,10 +21,10 @@ import com.theif519.sakoverlay.FloatingFragments.StickyNoteFragment;
 import com.theif519.sakoverlay.FloatingFragments.WebBrowserFragment;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.NotificationService;
-import com.theif519.utils.Serialization.JSONDeserializer;
-import com.theif519.utils.Serialization.JSONSerializer;
 import com.theif519.utils.Misc.MutableObject;
 import com.theif519.utils.Misc.ServiceTools;
+import com.theif519.utils.Serialization.JSONDeserializer;
+import com.theif519.utils.Serialization.JSONSerializer;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -51,20 +52,20 @@ public class MainActivity extends Activity {
 
     private static final MutableObject<Float> SCALE_X = new MutableObject<>(1.0f), SCALE_Y = new MutableObject<>(1.0f);
 
-    //private static final HandlerThread WORKER_THREAD;
+    public static final HandlerThread WORKER_THREAD;
 
-    //private static final Handler WORKER_HANDLE;
+    public static final Handler WORKER_HANDLE;
 
     /*
         This block of code initializes the handler thread which manages all background tasks,
         and due to the fact the Handler requires the looper of the HandlerThread, we must block
         until it has been initialized, hence the application may be slow to start up, sadly.
      */
-    /*static {
+    static {
         WORKER_THREAD = new HandlerThread("Generic Worker", Process.THREAD_PRIORITY_BACKGROUND);
         WORKER_THREAD.start();
         WORKER_HANDLE = new Handler(WORKER_THREAD.getLooper());
-    }*/
+    }
 
     private static final String TAG = MainActivity.class.getName();
     public static final String JSON_FILENAME = "SerializedFloatingFragments.json";

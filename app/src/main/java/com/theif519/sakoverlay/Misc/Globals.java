@@ -62,7 +62,7 @@ public final class Globals {
                 RECORDER_STATE_HAS_ENDED_KEY = "Recorder State Has Ended Key", RECORDER_PERMISSIONS_REQUEST_KEY = "Recorder Permissions Request",
                 RECORDER_PERMISSIONS_RESPONSE_KEY = "Recorder Permissions Response", RECORDER_COMMAND_REQUEST_KEY = "Recorder Command Request Key",
                 RECORDER_COMMAND_RESPONSE_KEY = "Recorder Command Response", RECORDER_COMMAND_KEY = "Recorder Command",
-                RECORDER_EXTRA_MESSAGE_KEY = "Recorder Extra Message";
+                RECORDER_COMMAND_EXECUTED_KEY = "Recorder Command Executed", RECORDER_ERROR_MESSAGE_KEY = "Recorder Error Message";
 
         ////////////////////////////////////////////////////////////////////////////////////////////////
         //                                                                                            //

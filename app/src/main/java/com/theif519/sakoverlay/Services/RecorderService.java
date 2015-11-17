@@ -1,7 +1,6 @@
 package com.theif519.sakoverlay.Services;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -14,7 +13,6 @@ import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
-import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -23,7 +21,6 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.theif519.sakoverlay.Activities.MainActivity;
 import com.theif519.sakoverlay.FloatingFragments.ScreenRecorderFragment;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
@@ -169,14 +166,7 @@ public class RecorderService extends Service {
      */
     private RecorderState mState = RecorderState.DEAD;
 
-    /*
-        Whether notification is running or not.
-     */
-    private boolean mNotificationRunning = false;
-
     private MediaProjection mProjection;
-
-    private MediaProjectionManager mManager;
 
     private VirtualDisplay mDisplay;
 
@@ -191,6 +181,7 @@ public class RecorderService extends Service {
      * @param filename     Name of file to create.
      */
     private void initialize(int width, int height, boolean audioEnabled, String filename) {
+        Log.i(getClass().getName(), "Initializing Screen Recorder...");
         try {
             mRecorder = new MediaRecorder();
             if (audioEnabled) mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
@@ -201,7 +192,7 @@ public class RecorderService extends Service {
             mRecorder.setVideoEncodingBitRate(512 * 1000);
             mRecorder.setVideoFrameRate(30);
             mRecorder.setVideoSize(width, height);
-            mRecorder.setOutputFile(Environment.getExternalStorageDirectory().getPath() + filename);
+            mRecorder.setOutputFile(getApplicationContext().getExternalFilesDir(null).getPath() + filename);
             changeState(RecorderState.INITIALIZED);
         } catch (RuntimeException ex) {
             logErrorAndChangeState(ex);
@@ -213,6 +204,8 @@ public class RecorderService extends Service {
     public void onCreate() {
         super.onCreate();
         setupReceivers();
+        setupForegroundNotification();
+        changeState(RecorderState.ALIVE);
         //android.os.Debug.waitForDebugger();
     }
 
@@ -223,8 +216,8 @@ public class RecorderService extends Service {
     }
 
     /**
-     * The entry point of our program, which occurs after startService() is called. I merely launch the notifications
-     * if it is not already running, and setup the MediaProject if it is not already.
+     * =Only used to tell the OS that we want to be restarted if we are killed. After the service is created,
+     * any and all IPC is done through broadcasts, not startService().
      *
      * @param intent  Intent
      * @param flags   Flags
@@ -233,33 +226,6 @@ public class RecorderService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (!mNotificationRunning) {
-            Intent endIntent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY);
-            endIntent.putExtra(Globals.Keys.RECORDER_COMMAND_KEY, RecorderCommand.DIE);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, endIntent, 0);
-            Notification notification = new Notification.Builder(getApplicationContext())
-                    .setContentTitle(getString(R.string.app_name))
-                    .setContentText(getString(R.string.overlay_notification_text))
-                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
-                    .setContentIntent(pendingIntent)
-                    .setOngoing(true)
-                    .build();
-            startForeground(Globals.RECORDER_NOTIFICATION_ID, notification);
-            mNotificationRunning = true;
-        }
-        /*
-            If the MediaProject is pointing to null, it means we either A) have just started, or B)
-            ended the service, but the garbage collect hasn't collected us yet, hence we are being reused.
-            So we must obtain permissions here.
-         */
-        if (mProjection == null) {
-            obtainPermissions(null);
-            int resultCode = intent.getIntExtra(ScreenRecorderFragment.RESULT_CODE_KEY, -1);
-            Intent data = (Intent) intent.getExtras().get(Intent.EXTRA_INTENT);
-            mManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-            mProjection = mManager.getMediaProjection(resultCode, data);
-        }
-        if (mState == RecorderState.DEAD) changeState(RecorderState.ALIVE);
         return START_STICKY;
     }
 
@@ -273,6 +239,7 @@ public class RecorderService extends Service {
      * @param callback Callback to be called once received.
      */
     private void obtainPermissions(final PermissionsCallback callback) {
+        Log.i(getClass().getName(), "Asking host to obtain user's permission...");
         final LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
         // We unregister the previous to prevent having more than one of the same receivers being answered.
         if (mLastPermissionsReceiver != null) manager.unregisterReceiver(mLastPermissionsReceiver);
@@ -294,6 +261,7 @@ public class RecorderService extends Service {
                     if (mProjection == null) break badInput;
                     if (callback != null) callback.permissionsGranted(intent);
                     manager.unregisterReceiver(this);
+                    mLastPermissionsReceiver = null;
                     return;
                 }
                 /*
@@ -340,9 +308,11 @@ public class RecorderService extends Service {
                 Intent responseIntent = new Intent(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY);
                 RecorderCommand command = (RecorderCommand) intent.getSerializableExtra(Globals.Keys.RECORDER_COMMAND_KEY);
                 boolean isPossible = command.isPossible(mState);
-                responseIntent.putExtra(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY, isPossible);
+                responseIntent.putExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED_KEY, isPossible);
+                Log.i(getClass().getName(), "Received Command Request: { "
+                + "State : " + mState.toString() + ", Command : " + command.toString() + ", IsPossible: " + isPossible + " }");
                 if(!isPossible){
-                    responseIntent.putExtra(Globals.Keys.RECORDER_EXTRA_MESSAGE_KEY,
+                    responseIntent.putExtra(Globals.Keys.RECORDER_ERROR_MESSAGE_KEY,
                             "Cannot execute command " + command.toString() + " during state " + mState.toString());
                 }
                 broadcastManager.sendBroadcast(responseIntent);
@@ -360,6 +330,7 @@ public class RecorderService extends Service {
      * @param extras Intent passed along with command.
      */
     private void handleCommand(RecorderCommand command, final Intent extras) {
+        Log.i(getClass().getName(), "Handling command: " + command.toString());
         switch (command) {
             case START:
                 // Remember project is null only after we finish or if this is the first time running. Hence we acquire permissions.
@@ -367,6 +338,7 @@ public class RecorderService extends Service {
                     obtainPermissions(new PermissionsCallback() {
                         @Override
                         public void permissionsGranted(Intent intent) {
+                            Log.i(getClass().getName(), "Obtained permissions from user!");
                             startRecording(extras.getIntExtra(Globals.Keys.WIDTH_KEY, 0),
                                     extras.getIntExtra(Globals.Keys.HEIGHT_KEY, 0), extras.getBooleanExtra(Globals.Keys.AUDIO_ENABLED_KEY, false),
                                     extras.getStringExtra(Globals.Keys.FILENAME_KEY));
@@ -374,7 +346,7 @@ public class RecorderService extends Service {
 
                         @Override
                         public void permissionsDenied(Intent intent) {
-                            // Nothing.
+                            Log.i(getClass().getName(), "Permission Denied, most likely due to bad input!");
                         }
                     });
                     return;
@@ -411,6 +383,7 @@ public class RecorderService extends Service {
      * Used to prepare the recorder.
      */
     private void prepareRecorder() {
+        Log.i(getClass().getName(), "Preparing Screen Recorder...");
         try {
             mRecorder.prepare();
             changeState(RecorderState.PREPARED);
@@ -427,6 +400,7 @@ public class RecorderService extends Service {
      * @return Initialized virtual display.
      */
     private VirtualDisplay createVirtualDisplay(int width, int height) {
+        Log.i(getClass().getName(), "Creating VirtualDisplay...");
         DisplayMetrics metrics = new DisplayMetrics();
         ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(metrics);
         return mProjection.createVirtualDisplay(getClass().getName(), width, height,
@@ -474,12 +448,28 @@ public class RecorderService extends Service {
      * @param filename     Name of file.
      */
     public void startRecording(int width, int height, boolean audioEnabled, String filename) {
-        mRecorder.reset();
+        Log.i(getClass().getName(), "Error-Checking parameters...");
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+        Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY);
+        String errMsg = null;
+        if(width == 0 || height == 0){
+            errMsg = "Width and Height cannot be 0!";
+        } else if(filename == null || filename.isEmpty()){
+            errMsg = "Filename cannot be null or empty!";
+        } else intent.putExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED_KEY, true);
+        if(errMsg != null){
+            intent.putExtra(Globals.Keys.RECORDER_ERROR_MESSAGE_KEY, errMsg);
+            manager.sendBroadcast(intent);
+            return;
+        }
+        manager.sendBroadcast(intent);
+        Log.i(getClass().getName(), "Parameter-Check: OKAY!");
         initialize(width, height, audioEnabled, filename);
         prepareRecorder();
         try {
             mDisplay = createVirtualDisplay(width, height);
             mRecorder.start();
+            Log.i(getClass().getName(), "Starting Screen Recorder...");
             changeState(RecorderState.STARTED);
         } catch (IllegalStateException e) {
             logErrorAndChangeState(e);
@@ -503,8 +493,12 @@ public class RecorderService extends Service {
      * and the systemui goes under??? Why.
      */
     public void stopRecording() {
+        Log.i(getClass().getName(), "Stopping Screen Recorder...");
         try {
             mRecorder.stop();
+            Log.i(getClass().getName(), "Resetting Screen Recorder...");
+            mRecorder.reset();
+            Log.i(getClass().getName(), "Releasing VirtualDisplay...");
             mDisplay.release();
             mDisplay = null;
             changeState(RecorderState.STOPPED);
@@ -514,22 +508,17 @@ public class RecorderService extends Service {
     }
 
     private void setupForegroundNotification() {
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        intent.setAction(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        PendingIntent pIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent endIntent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY);
+        endIntent.putExtra(Globals.Keys.RECORDER_COMMAND_KEY, RecorderCommand.DIE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, endIntent, 0);
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setContentTitle(getString(R.string.app_name))
-                .setContentText(getString(R.string.overlay_notification_text))
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentText("Tap to End Service!")
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
-                .setContentIntent(pIntent)
+                .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .build();
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(1, notification);
-        //startForeground(1, notification);
+        startForeground(Globals.RECORDER_NOTIFICATION_ID, notification);
     }
 
 }

@@ -3,13 +3,10 @@ package com.theif519.sakoverlay.FloatingFragments;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.media.projection.MediaProjectionManager;
-import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
@@ -21,7 +18,6 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;
-import com.theif519.sakoverlay.Services.RecorderService.RecorderState;
 
 /**
  * Created by theif519 on 11/12/2015.
@@ -30,8 +26,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
 
     public static Boolean INSTANCE_EXISTS = false;
 
-    private RecorderState mState = RecorderState.DEAD;
-
     public static final String IDENTIFIER = "Screen Recorder";
 
     public static final String RESULT_CODE_KEY = "Result Code", DATA_INTENT_KEY = "Data Intent";
@@ -39,39 +33,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
     private static final int DISPLAY_WIDTH = 480;
     private static final int DISPLAY_HEIGHT = 640;
 
-    private MediaProjectionManager mManager;
-
-    private RecorderService mService;
-    private RecorderService.RecorderBinder mBinder;
-
     private TextView mStateText;
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            //Toast.makeText(getActivity(), "Bound to RecorderService!", Toast.LENGTH_SHORT).show();
-            mBinder = (RecorderService.RecorderBinder) service;
-            mService = mBinder.getService();
-            //mStateText.setText("Bound...");
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mService = null;
-            mBinder = null;
-            Toast.makeText(getActivity(), "Unbound from RecorderService!", Toast.LENGTH_SHORT).show();
-            //mStateText.setText("Unbound...");
-        }
-};
-
-    private BroadcastReceiver mStateChangeReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            mState = (RecorderState) intent.getSerializableExtra(Globals.Keys.RECORDER_STATE_KEY);
-            ((TextView) getContentView().findViewById(R.id.screen_recorder_state_text)).setText(mState.toString());
-            //Toast.makeText(getActivity(), "State Changed to: " + mState.toString(), Toast.LENGTH_SHORT).show();
-        }
-    };
 
     public static ScreenRecorderFragment newInstance() {
         if (INSTANCE_EXISTS) return null;
@@ -83,59 +45,55 @@ public class ScreenRecorderFragment extends FloatingFragment {
         return fragment;
     }
 
+    private boolean mIsRunning = false;
+
     @Override
     protected void setup() {
         super.setup();
+        mStateText = (TextView) getActivity().findViewById(R.id.screen_recorder_state_text);
         getContentView().findViewById(R.id.screen_recorder_record_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mService == null || mBinder == null) {
-                    startActivityForResult(mManager.createScreenCaptureIntent(), Globals.RECORDER_PERMISSION_RETVAL);
-                    return;
-                }
-                if (mState != RecorderState.STARTED) {
-                    createDialog();
+                if (mIsRunning) {
+                    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
+                    Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY);
+                    intent.putExtra(Globals.Keys.RECORDER_COMMAND_KEY, RecorderService.RecorderCommand.STOP);
+                    manager.sendBroadcast(intent);
                 } else {
-                    mService.stopRecording();
+                    createDialog();
+                    mIsRunning = true;
                 }
             }
         });
-        mStateText = (TextView) getContentView().findViewById(R.id.screen_recorder_state_text);
-        mManager = (MediaProjectionManager) getActivity().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        getActivity().startService(new Intent(getActivity(), RecorderService.class));
     }
 
     @Override
     public void onActivityResult(int requestCode, final int resultCode, final Intent data) {
+        Log.i(getClass().getName(), "Asking user for permissions...");
+        /*
+            Note that an empty intent is equivalent to refusing permissions, as we explicitly check
+            in the service whether or not we receive an OKAY and valid input.
+         */
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
         if (requestCode != Globals.RECORDER_PERMISSION_RETVAL) {
-            Toast.makeText(getActivity(), "Received an unknown request code!Aborting!", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), "Received an unknown request code! Aborting!", Toast.LENGTH_LONG).show();
+            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY));
             return;
         }
         if (resultCode != Activity.RESULT_OK) {
             Toast.makeText(getActivity(), "Permission Denied!", Toast.LENGTH_LONG).show();
+            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY));
             return;
         }
-        Intent intent = new Intent(getActivity(), com.theif519.sakoverlay.Services.RecorderService.class);
-        Log.i(getClass().getName(), "Result Code: " + resultCode + "Intent NULL: " + (data == null));
+        Intent intent = new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY);
+        intent.putExtra(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY, true);
         intent.putExtra(RESULT_CODE_KEY, resultCode);
         intent.putExtra(Intent.EXTRA_INTENT, data);
-        getActivity().bindService(intent, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                //Toast.makeText(getActivity(), "Bound to RecorderService!", Toast.LENGTH_SHORT).show();
-                mBinder = (RecorderService.RecorderBinder) service;
-                mService = mBinder.getService();
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                mService = null;
-                mBinder = null;
-                //Toast.makeText(getActivity(), "Unbound from RecorderService!", Toast.LENGTH_SHORT).show();
-            }
-        }, Context.BIND_AUTO_CREATE);
+        manager.sendBroadcast(intent);
     }
 
-    public void createDialog(){
+    public void createDialog() {
         final Dialog dialog = new Dialog(getActivity());
         dialog.setContentView(R.layout.dialog_recorder_details);
         final EditText width = (EditText) dialog.findViewById(R.id.dialog_recorder_resolution_width);
@@ -145,17 +103,13 @@ public class ScreenRecorderFragment extends FloatingFragment {
         dialog.findViewById(R.id.dialog_recorder_button_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mService == null) {
-                    Toast.makeText(getActivity(), "Service died!", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                    return;
-                }
-                mService.startRecording(
-                        Integer.parseInt(width.getText().toString()),
-                        Integer.parseInt(height.getText().toString()),
-                        audio.isChecked(),
-                        fileName.getText().toString()
-                );
+                Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY);
+                intent.putExtra(Globals.Keys.RECORDER_COMMAND_KEY, RecorderService.RecorderCommand.START);
+                intent.putExtra(Globals.Keys.WIDTH_KEY, Integer.parseInt(width.getText().toString()));
+                intent.putExtra(Globals.Keys.HEIGHT_KEY, Integer.parseInt(height.getText().toString()));
+                intent.putExtra(Globals.Keys.AUDIO_ENABLED_KEY, audio.isChecked());
+                intent.putExtra(Globals.Keys.FILENAME_KEY, fileName.getText().toString());
+                LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
                 dialog.dismiss();
             }
         });
@@ -168,20 +122,78 @@ public class ScreenRecorderFragment extends FloatingFragment {
         dialog.show();
     }
 
-    @Override
-    public void onResume() {
-        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mStateChangeReceiver, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE_KEY));
-        super.onResume();
+    private BroadcastReceiver mStateChange, mCommandResponse, mServiceHasEnded, mPermissionAsked;
+
+    private void setupReceivers() {
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
+        manager.registerReceiver(mStateChange = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                mStateText.setText(intent.getSerializableExtra(Globals.Keys.RECORDER_STATE_KEY).toString());
+            }
+        }, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE_KEY));
+        manager.registerReceiver(mCommandResponse = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (!intent.getBooleanExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED_KEY, false)) {
+                    Toast.makeText(getActivity(), "Command Error: " + intent.getStringExtra(Globals.Keys.RECORDER_ERROR_MESSAGE_KEY), Toast.LENGTH_SHORT).show();
+                    mIsRunning = !mIsRunning;
+                }
+            }
+        }, new IntentFilter(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY));
+        manager.registerReceiver(mServiceHasEnded = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Toast.makeText(getActivity(), "RecorderService has ended!", Toast.LENGTH_SHORT).show();
+            }
+        }, new IntentFilter(Globals.Keys.RECORDER_STATE_HAS_ENDED_KEY));
+        manager.registerReceiver(mPermissionAsked = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                startActivityForResult(
+                        ((MediaProjectionManager) getActivity().getSystemService(Context.MEDIA_PROJECTION_SERVICE))
+                                .createScreenCaptureIntent(), Globals.RECORDER_PERMISSION_RETVAL
+                );
+            }
+        }, new IntentFilter(Globals.Keys.RECORDER_PERMISSIONS_REQUEST_KEY));
+    }
+
+    private void destroyReceivers() {
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
+        manager.unregisterReceiver(mStateChange);
+        manager.unregisterReceiver(mCommandResponse);
+        manager.unregisterReceiver(mServiceHasEnded);
+        manager.unregisterReceiver(mPermissionAsked);
+    }
+
+    private boolean mReceivedMissedChange = false;
+
+    private void receiveMissedChange() {
+        if (mReceivedMissedChange) {
+            final LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
+            manager.registerReceiver(new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    mStateText.setText(intent.getStringExtra(Globals.Keys.RECORDER_STATE_KEY));
+                    manager.unregisterReceiver(this);
+                    mReceivedMissedChange = true;
+                }
+            }, new IntentFilter(Globals.Keys.RECORDER_STATE_RESPONSE_KEY));
+            mReceivedMissedChange = false;
+            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_STATE_REQUEST_KEY));
+        }
     }
 
     @Override
-    public void onPause() {
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mStateChangeReceiver);
-        super.onPause();
+    public void onStart() {
+        super.onStart();
+        setupReceivers();
+        receiveMissedChange();
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
+        super.onStop();
+        destroyReceivers();
     }
 }
