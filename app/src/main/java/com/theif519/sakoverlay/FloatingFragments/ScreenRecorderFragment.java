@@ -56,12 +56,13 @@ public class ScreenRecorderFragment extends FloatingFragment {
             public void onClick(View v) {
                 if (mIsRunning) {
                     LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
-                    Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY);
-                    intent.putExtra(Globals.Keys.RECORDER_COMMAND_KEY, RecorderService.RecorderCommand.STOP);
+                    Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST);
+                    intent.putExtra(Globals.Keys.RECORDER_COMMAND, RecorderService.RecorderCommand.STOP);
                     manager.sendBroadcast(intent);
+                    mIsRunning = false;
                 } else {
-                    createDialog();
                     mIsRunning = true;
+                    createDialog();
                 }
             }
         });
@@ -78,16 +79,18 @@ public class ScreenRecorderFragment extends FloatingFragment {
         LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
         if (requestCode != Globals.RECORDER_PERMISSION_RETVAL) {
             Toast.makeText(getActivity(), "Received an unknown request code! Aborting!", Toast.LENGTH_LONG).show();
-            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY));
+            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE));
+            mIsRunning = false;
             return;
         }
         if (resultCode != Activity.RESULT_OK) {
             Toast.makeText(getActivity(), "Permission Denied!", Toast.LENGTH_LONG).show();
-            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY));
+            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE));
+            mIsRunning = false;
             return;
         }
-        Intent intent = new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY);
-        intent.putExtra(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY, true);
+        Intent intent = new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE);
+        intent.putExtra(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE, true);
         intent.putExtra(RESULT_CODE_KEY, resultCode);
         intent.putExtra(Intent.EXTRA_INTENT, data);
         manager.sendBroadcast(intent);
@@ -103,10 +106,10 @@ public class ScreenRecorderFragment extends FloatingFragment {
         dialog.findViewById(R.id.dialog_recorder_button_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY);
-                intent.putExtra(Globals.Keys.RECORDER_COMMAND_KEY, RecorderService.RecorderCommand.START);
-                intent.putExtra(Globals.Keys.WIDTH_KEY, Integer.parseInt(width.getText().toString()));
-                intent.putExtra(Globals.Keys.HEIGHT_KEY, Integer.parseInt(height.getText().toString()));
+                Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST);
+                intent.putExtra(Globals.Keys.RECORDER_COMMAND, RecorderService.RecorderCommand.START);
+                intent.putExtra(Globals.Keys.WIDTH, Integer.parseInt(width.getText().toString()));
+                intent.putExtra(Globals.Keys.HEIGHT, Integer.parseInt(height.getText().toString()));
                 intent.putExtra(Globals.Keys.AUDIO_ENABLED_KEY, audio.isChecked());
                 intent.putExtra(Globals.Keys.FILENAME_KEY, fileName.getText().toString());
                 LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
@@ -116,6 +119,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
         dialog.findViewById(R.id.dialog_recorder_button_cancel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mIsRunning = false;
                 dialog.dismiss();
             }
         });
@@ -129,24 +133,24 @@ public class ScreenRecorderFragment extends FloatingFragment {
         manager.registerReceiver(mStateChange = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mStateText.setText(intent.getSerializableExtra(Globals.Keys.RECORDER_STATE_KEY).toString());
+                mStateText.setText(intent.getSerializableExtra(Globals.Keys.RECORDER_STATE).toString());
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE_KEY));
+        }, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE));
         manager.registerReceiver(mCommandResponse = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (!intent.getBooleanExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED_KEY, false)) {
-                    Toast.makeText(getActivity(), "Command Error: " + intent.getStringExtra(Globals.Keys.RECORDER_ERROR_MESSAGE_KEY), Toast.LENGTH_SHORT).show();
+                if (!intent.getBooleanExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED, false)) {
+                    Toast.makeText(getActivity(), "Command Error: " + intent.getStringExtra(Globals.Keys.RECORDER_ERROR_MESSAGE), Toast.LENGTH_SHORT).show();
                     mIsRunning = !mIsRunning;
                 }
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY));
+        }, new IntentFilter(Globals.Keys.RECORDER_COMMAND_RESPONSE));
         manager.registerReceiver(mServiceHasEnded = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Toast.makeText(getActivity(), "RecorderService has ended!", Toast.LENGTH_SHORT).show();
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_STATE_HAS_ENDED_KEY));
+        }, new IntentFilter(Globals.Keys.RECORDER_STATE_HAS_ENDED));
         manager.registerReceiver(mPermissionAsked = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -155,7 +159,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
                                 .createScreenCaptureIntent(), Globals.RECORDER_PERMISSION_RETVAL
                 );
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_PERMISSIONS_REQUEST_KEY));
+        }, new IntentFilter(Globals.Keys.RECORDER_PERMISSIONS_REQUEST));
     }
 
     private void destroyReceivers() {
@@ -174,13 +178,13 @@ public class ScreenRecorderFragment extends FloatingFragment {
             manager.registerReceiver(new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    mStateText.setText(intent.getStringExtra(Globals.Keys.RECORDER_STATE_KEY));
+                    mStateText.setText(intent.getStringExtra(Globals.Keys.RECORDER_STATE));
                     manager.unregisterReceiver(this);
                     mReceivedMissedChange = true;
                 }
-            }, new IntentFilter(Globals.Keys.RECORDER_STATE_RESPONSE_KEY));
+            }, new IntentFilter(Globals.Keys.RECORDER_STATE_RESPONSE));
             mReceivedMissedChange = false;
-            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_STATE_REQUEST_KEY));
+            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_STATE_REQUEST));
         }
     }
 
@@ -195,5 +199,11 @@ public class ScreenRecorderFragment extends FloatingFragment {
     public void onStop() {
         super.onStop();
         destroyReceivers();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        INSTANCE_EXISTS = false;
     }
 }

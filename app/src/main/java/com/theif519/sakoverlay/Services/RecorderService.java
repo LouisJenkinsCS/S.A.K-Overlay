@@ -192,7 +192,7 @@ public class RecorderService extends Service {
             mRecorder.setVideoEncodingBitRate(512 * 1000);
             mRecorder.setVideoFrameRate(30);
             mRecorder.setVideoSize(width, height);
-            mRecorder.setOutputFile(getApplicationContext().getExternalFilesDir(null).getPath() + filename);
+            mRecorder.setOutputFile("/sdcard/" + filename);
             changeState(RecorderState.INITIALIZED);
         } catch (RuntimeException ex) {
             logErrorAndChangeState(ex);
@@ -226,7 +226,7 @@ public class RecorderService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     private BroadcastReceiver mLastPermissionsReceiver;
@@ -250,7 +250,7 @@ public class RecorderService extends Service {
                     Labeled break for if we get bad input, it will skip this block straight to the bottom.
                  */
                 badInput:
-                if (intent.getBooleanExtra(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY, false)) {
+                if (intent.getBooleanExtra(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE, false)) {
                     int resultCode = intent.getIntExtra(ScreenRecorderFragment.RESULT_CODE_KEY, -1);
                     Intent data = (Intent) intent.getExtras().get(Intent.EXTRA_INTENT);
                     // If we get bad input, we count it as a permission failure.
@@ -273,12 +273,12 @@ public class RecorderService extends Service {
                 // We already processed our permission request, remove it so it will not be unregistered twice.
                 mLastPermissionsReceiver = null;
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE_KEY));
+        }, new IntentFilter(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE));
         /*
             We send the broadcast after to prevent any race conditions where we do not register a listener before we send
             the broadcast to receive one.
          */
-        manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_REQUEST_KEY));
+        manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_REQUEST));
     }
 
     private void setupReceivers() {
@@ -290,11 +290,11 @@ public class RecorderService extends Service {
         broadcastManager.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Intent responseIntent = new Intent(Globals.Keys.RECORDER_STATE_RESPONSE_KEY);
-                responseIntent.putExtra(Globals.Keys.RECORDER_STATE_KEY, mState);
+                Intent responseIntent = new Intent(Globals.Keys.RECORDER_STATE_RESPONSE);
+                responseIntent.putExtra(Globals.Keys.RECORDER_STATE, mState);
                 broadcastManager.sendBroadcast(intent);
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_STATE_REQUEST_KEY));
+        }, new IntentFilter(Globals.Keys.RECORDER_STATE_REQUEST));
         /*
             When we receive a command, we first determine whether or not the command is possible in the current
             given state. Thanks to the enumerations and clever use of bitmasking (I astound even myself),
@@ -305,20 +305,20 @@ public class RecorderService extends Service {
         broadcastManager.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Intent responseIntent = new Intent(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY);
-                RecorderCommand command = (RecorderCommand) intent.getSerializableExtra(Globals.Keys.RECORDER_COMMAND_KEY);
+                Intent responseIntent = new Intent(Globals.Keys.RECORDER_COMMAND_RESPONSE);
+                RecorderCommand command = (RecorderCommand) intent.getSerializableExtra(Globals.Keys.RECORDER_COMMAND);
                 boolean isPossible = command.isPossible(mState);
-                responseIntent.putExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED_KEY, isPossible);
+                responseIntent.putExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED, isPossible);
                 Log.i(getClass().getName(), "Received Command Request: { "
                 + "State : " + mState.toString() + ", Command : " + command.toString() + ", IsPossible: " + isPossible + " }");
                 if(!isPossible){
-                    responseIntent.putExtra(Globals.Keys.RECORDER_ERROR_MESSAGE_KEY,
+                    responseIntent.putExtra(Globals.Keys.RECORDER_ERROR_MESSAGE,
                             "Cannot execute command " + command.toString() + " during state " + mState.toString());
                 }
                 broadcastManager.sendBroadcast(responseIntent);
                 if(isPossible) handleCommand(command, intent);
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY));
+        }, new IntentFilter(Globals.Keys.RECORDER_COMMAND_REQUEST));
     }
 
     /**
@@ -339,8 +339,8 @@ public class RecorderService extends Service {
                         @Override
                         public void permissionsGranted(Intent intent) {
                             Log.i(getClass().getName(), "Obtained permissions from user!");
-                            startRecording(extras.getIntExtra(Globals.Keys.WIDTH_KEY, 0),
-                                    extras.getIntExtra(Globals.Keys.HEIGHT_KEY, 0), extras.getBooleanExtra(Globals.Keys.AUDIO_ENABLED_KEY, false),
+                            startRecording(extras.getIntExtra(Globals.Keys.WIDTH, 0),
+                                    extras.getIntExtra(Globals.Keys.HEIGHT, 0), extras.getBooleanExtra(Globals.Keys.AUDIO_ENABLED_KEY, false),
                                     extras.getStringExtra(Globals.Keys.FILENAME_KEY));
                         }
 
@@ -356,8 +356,8 @@ public class RecorderService extends Service {
                     at a later date, which by itself is a function call, but we also want it to call it now if projection
                     isn't null.
                  */
-                startRecording(extras.getIntExtra(Globals.Keys.WIDTH_KEY, 0),
-                        extras.getIntExtra(Globals.Keys.HEIGHT_KEY, 0), extras.getBooleanExtra(Globals.Keys.AUDIO_ENABLED_KEY, false),
+                startRecording(extras.getIntExtra(Globals.Keys.WIDTH, 0),
+                        extras.getIntExtra(Globals.Keys.HEIGHT, 0), extras.getBooleanExtra(Globals.Keys.AUDIO_ENABLED_KEY, false),
                         extras.getStringExtra(Globals.Keys.FILENAME_KEY));
                 break;
             case STOP:
@@ -433,8 +433,8 @@ public class RecorderService extends Service {
      */
     private void changeState(RecorderState state) {
         mState = state;
-        Intent intent = new Intent(Globals.Keys.RECORDER_STATE_CHANGE_KEY);
-        intent.putExtra(Globals.Keys.RECORDER_STATE_KEY, mState);
+        Intent intent = new Intent(Globals.Keys.RECORDER_STATE_CHANGE);
+        intent.putExtra(Globals.Keys.RECORDER_STATE, mState);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         Log.i(getClass().getName(), "Sent Broadcast Receiver and State is " + mState.toString());
     }
@@ -450,15 +450,15 @@ public class RecorderService extends Service {
     public void startRecording(int width, int height, boolean audioEnabled, String filename) {
         Log.i(getClass().getName(), "Error-Checking parameters...");
         LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
-        Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_RESPONSE_KEY);
+        Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_RESPONSE);
         String errMsg = null;
         if(width == 0 || height == 0){
             errMsg = "Width and Height cannot be 0!";
         } else if(filename == null || filename.isEmpty()){
             errMsg = "Filename cannot be null or empty!";
-        } else intent.putExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED_KEY, true);
+        } else intent.putExtra(Globals.Keys.RECORDER_COMMAND_EXECUTED, true);
         if(errMsg != null){
-            intent.putExtra(Globals.Keys.RECORDER_ERROR_MESSAGE_KEY, errMsg);
+            intent.putExtra(Globals.Keys.RECORDER_ERROR_MESSAGE, errMsg);
             manager.sendBroadcast(intent);
             return;
         }
@@ -493,9 +493,13 @@ public class RecorderService extends Service {
      * and the systemui goes under??? Why.
      */
     public void stopRecording() {
-        Log.i(getClass().getName(), "Stopping Screen Recorder...");
         try {
-            mRecorder.stop();
+            /*
+                For some strange reason, when I stop, then reset, instead of just throwing an
+                illegal state exception, meaning that this is actually a valid combination of state switching,
+                the entire OS locks up. Hence by just resetting it works fine.
+             */
+            //mRecorder.stop();
             Log.i(getClass().getName(), "Resetting Screen Recorder...");
             mRecorder.reset();
             Log.i(getClass().getName(), "Releasing VirtualDisplay...");
@@ -508,8 +512,8 @@ public class RecorderService extends Service {
     }
 
     private void setupForegroundNotification() {
-        Intent endIntent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST_KEY);
-        endIntent.putExtra(Globals.Keys.RECORDER_COMMAND_KEY, RecorderCommand.DIE);
+        Intent endIntent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST);
+        endIntent.putExtra(Globals.Keys.RECORDER_COMMAND, RecorderCommand.DIE);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, endIntent, 0);
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setContentTitle(getString(R.string.app_name))

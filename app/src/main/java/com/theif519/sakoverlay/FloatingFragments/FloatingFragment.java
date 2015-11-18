@@ -91,6 +91,11 @@ public class FloatingFragment extends Fragment {
     private static final String TAG = FloatingFragment.class.getName();
 
     /*
+        Menu Options
+     */
+    protected static final String TRANSPARENCY_TOGGLE = "Transparency Toggle", BRING_TO_FRONT = "Bring to Front";
+
+    /*
         The list of options to be shown in the list view when the options menu is to be displayed
         If left null, it will create a new one, and have the default options available, else the default
         options are appended to the list view.
@@ -125,7 +130,7 @@ public class FloatingFragment extends Fragment {
         mContentView.setVisibility(View.INVISIBLE);
         setupGlobals();
         setupListeners();
-        if (mContext != null && Boolean.valueOf(mContext.get(Globals.Keys.MINIMIZED_KEY))) {
+        if (mContext != null && Boolean.valueOf(mContext.get(Globals.Keys.MINIMIZED))) {
             minimize();
         } else mContentView.setVisibility(View.VISIBLE);
         mContentView.post(new Runnable() {
@@ -146,8 +151,8 @@ public class FloatingFragment extends Fragment {
         if(mOptions == null){
             mOptions = new ArrayList<String>();
         }
-        mOptions.add(Globals.Keys.TRANSPARENCY_TOGGLE_OPTION);
-        mOptions.add(Globals.Keys.BRING_TO_FRONT_OPTION);
+        mOptions.add(TRANSPARENCY_TOGGLE);
+        mOptions.add(BRING_TO_FRONT);
     }
 
     /**
@@ -263,10 +268,10 @@ public class FloatingFragment extends Fragment {
      * It is safe to call getContentView() and should be used to update the view associated with this fragment.
      */
     protected void unpack() {
-        x = Integer.parseInt(mContext.get(Globals.Keys.X_KEY));
-        y = Integer.parseInt(mContext.get(Globals.Keys.Y_KEY));
-        width = Integer.parseInt(mContext.get(Globals.Keys.WIDTH_KEY));
-        height = Integer.parseInt(mContext.get(Globals.Keys.HEIGHT_KEY));
+        x = Integer.parseInt(mContext.get(Globals.Keys.X_COORDINATE));
+        y = Integer.parseInt(mContext.get(Globals.Keys.Y_COORDINATE));
+        width = Integer.parseInt(mContext.get(Globals.Keys.WIDTH));
+        height = Integer.parseInt(mContext.get(Globals.Keys.HEIGHT));
         mContentView.setX(x);
         mContentView.setY(y);
         mContentView.setLayoutParams(new LinearLayout.LayoutParams(width, height));
@@ -428,12 +433,12 @@ public class FloatingFragment extends Fragment {
 
     public ArrayMap<String, String> serialize() {
         ArrayMap<String, String> map = new ArrayMap<>();
-        map.put(Globals.Keys.LAYOUT_TAG_KEY, LAYOUT_TAG);
-        map.put(Globals.Keys.X_KEY, Integer.toString(x));
-        map.put(Globals.Keys.Y_KEY, Integer.toString(y));
-        map.put(Globals.Keys.WIDTH_KEY, Integer.toString(width));
-        map.put(Globals.Keys.HEIGHT_KEY, Integer.toString(height));
-        map.put(Globals.Keys.MINIMIZED_KEY, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
+        map.put(Globals.Keys.LAYOUT_TAG, LAYOUT_TAG);
+        map.put(Globals.Keys.X_COORDINATE, Integer.toString(x));
+        map.put(Globals.Keys.Y_COORDINATE, Integer.toString(y));
+        map.put(Globals.Keys.WIDTH, Integer.toString(width));
+        map.put(Globals.Keys.HEIGHT, Integer.toString(height));
+        map.put(Globals.Keys.MINIMIZED, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
         return map;
     }
 
@@ -459,14 +464,14 @@ public class FloatingFragment extends Fragment {
 
     public void onItemSelected(String string){
         switch(string){
-            case Globals.Keys.TRANSPARENCY_TOGGLE_OPTION:
+            case TRANSPARENCY_TOGGLE:
                 if(mIsTransparent = !mIsTransparent){
                     mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(android.R.color.transparent));
                 } else {
                     mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(R.color.black));
                 }
                 break;
-            case Globals.Keys.BRING_TO_FRONT_OPTION:
+            case BRING_TO_FRONT:
                 mContentView.bringToFront();
                 break;
         }
