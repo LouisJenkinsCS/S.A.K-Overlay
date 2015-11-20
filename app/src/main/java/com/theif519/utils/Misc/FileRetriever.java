@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Created by theif519 on 10/12/2015.
@@ -65,5 +67,14 @@ public final class FileRetriever {
         int lineCount = fSize.getLineNumber();
         fSize.close();
         return lineCount;
+    }
+
+    public static ArrayList<File> getFiles(String dir){
+        ArrayList<File> files = new ArrayList<>();
+        File f = new File(dir);
+        f.mkdirs();
+        File[] arr = f.listFiles();
+        Collections.addAll(files, arr);
+        return files;
     }
 }

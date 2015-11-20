@@ -68,7 +68,7 @@
     </HorizontalScrollView>
 
     <HorizontalScrollView
-        android:id="@+id/list_view_video_info_resolution_scrollview"
+        android:id="@+id/list_view_video_info_size_scrollview"
         android:layout_width="125dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="25dp"
@@ -78,11 +78,11 @@
         android:scrollbars="horizontal">
 
         <TextView
-            android:id="@+id/list_view_video_info_resolution"
+            android:id="@+id/list_view_video_info_size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="55dp"
-            android:text="Video Duration"
+            android:text="Video Size"
             android:textSize="20sp"
             android:textStyle="bold" />
     </HorizontalScrollView>

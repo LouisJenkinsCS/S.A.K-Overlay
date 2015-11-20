@@ -1,23 +1,35 @@
 package com.theif519.sakoverlay.FloatingFragments;
 
 import android.app.Activity;
-import android.app.Dialog;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.projection.MediaProjectionManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.theif519.sakoverlay.Adapters.VideoInfoAdapter;
+import com.theif519.sakoverlay.Async.MediaThumbnailGenerator;
 import com.theif519.sakoverlay.Misc.Globals;
+import com.theif519.sakoverlay.Misc.VideoInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;
+import com.theif519.sakoverlay.Views.ListViewVideoInfo;
+import com.theif519.utils.Misc.FileRetriever;
+
+import java.io.File;
+import java.util.List;
 
 /**
  * Created by theif519 on 11/12/2015.
@@ -66,6 +78,21 @@ public class ScreenRecorderFragment extends FloatingFragment {
                 }
             }
         });
+        final ListView listView = (ListView) getContentView().findViewById(R.id.screen_recorder_file_list);
+        new MediaThumbnailGenerator() {
+            @Override
+            protected void onPostExecute(List<VideoInfo> videoInfos) {
+                listView.setEmptyView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.list_view_video_info_empty, null));
+                listView.setAdapter(new VideoInfoAdapter(getActivity(), R.layout.list_view_video_info, videoInfos));
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Toast.makeText(getActivity(), "You selected: "
+                                + ((ListViewVideoInfo) parent.getItemAtPosition(position)).getDescription(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }.execute(FileRetriever.getFiles(Globals.RECORDER_FILE_SAVE_PATH).toArray(new File[0]));
         getActivity().startService(new Intent(getActivity(), RecorderService.class));
     }
 
@@ -97,32 +124,30 @@ public class ScreenRecorderFragment extends FloatingFragment {
     }
 
     public void createDialog() {
-        final Dialog dialog = new Dialog(getActivity());
-        dialog.setContentView(R.layout.dialog_recorder_details);
-        final EditText width = (EditText) dialog.findViewById(R.id.dialog_recorder_resolution_width);
-        final EditText height = (EditText) dialog.findViewById(R.id.dialog_recorder_resolution_height);
-        final CheckBox audio = (CheckBox) dialog.findViewById(R.id.dialog_recorder_audio_checkbox);
-        final EditText fileName = (EditText) dialog.findViewById(R.id.dialog_recorder_filename_name);
-        dialog.findViewById(R.id.dialog_recorder_button_start).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST);
-                intent.putExtra(Globals.Keys.RECORDER_COMMAND, RecorderService.RecorderCommand.START);
-                intent.putExtra(Globals.Keys.WIDTH, Integer.parseInt(width.getText().toString()));
-                intent.putExtra(Globals.Keys.HEIGHT, Integer.parseInt(height.getText().toString()));
-                intent.putExtra(Globals.Keys.AUDIO_ENABLED_KEY, audio.isChecked());
-                intent.putExtra(Globals.Keys.FILENAME_KEY, fileName.getText().toString());
-                LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
-                dialog.dismiss();
-            }
-        });
-        dialog.findViewById(R.id.dialog_recorder_button_cancel).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mIsRunning = false;
-                dialog.dismiss();
-            }
-        });
+        final AlertDialog dialog = new AlertDialog.Builder(getActivity()).setView(R.layout.dialog_recorder_details)
+                .setTitle("Recorder Info").setPositiveButton("Start", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        EditText width = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_resolution_width);
+                        EditText height = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_resolution_height);
+                        CheckBox audio = (CheckBox) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_audio_checkbox);
+                        EditText fileName = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_filename_name);
+                        Intent intent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST);
+                        intent.putExtra(Globals.Keys.RECORDER_COMMAND, RecorderService.RecorderCommand.START);
+                        intent.putExtra(Globals.Keys.WIDTH, Integer.parseInt(width.getText().toString()));
+                        intent.putExtra(Globals.Keys.HEIGHT, Integer.parseInt(height.getText().toString()));
+                        intent.putExtra(Globals.Keys.AUDIO_ENABLED_KEY, audio.isChecked());
+                        intent.putExtra(Globals.Keys.FILENAME_KEY, fileName.getText().toString());
+                        LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
+                        dialog.dismiss();
+                    }
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mIsRunning = false;
+                        dialog.dismiss();
+                    }
+                }).show();
         dialog.show();
     }
 

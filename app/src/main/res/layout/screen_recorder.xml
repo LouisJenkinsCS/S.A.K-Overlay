@@ -15,8 +15,9 @@
         app:tbTitle="Screen Recorder" />
 
     <LinearLayout
+        android:layout_weight="1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_gravity="center_horizontal">
 
         <TextView
@@ -34,27 +35,22 @@
             android:text="@string/screen_recorder_state_dead"/>
     </LinearLayout>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/screen_recorder_record_button"
-        android:text="Record"
-        style="@android:style/Widget.Holo.Button.Borderless"/>
-
-    <ScrollView
+    <LinearLayout
+        android:layout_weight="5"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="0dp">
 
         <ListView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/screen_recorder_file_list"/>
 
-    </ScrollView>
+    </LinearLayout>
 
     <RelativeLayout
+        android:layout_weight="1"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:orientation="horizontal">
 
         <Button
@@ -63,6 +59,16 @@
             style="@android:style/Widget.Holo.Button.Borderless"
             android:text="Play"
             android:id="@+id/screen_recorder_play_button"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/screen_recorder_play_button"
+            android:id="@+id/screen_recorder_record_button"
+            android:layout_toStartOf="@+id/screen_recorder_delete_button"
+            android:text="Record"
+            style="@android:style/Widget.Holo.Button.Borderless"/>
+
 
         <Button
             android:layout_width="wrap_content"

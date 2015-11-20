@@ -66,4 +66,6 @@ public final class Globals {
 
     public static final int RECORDER_NOTIFICATION_ID = 90;
 
+    public static final String RECORDER_FILE_SAVE_PATH = "/sdcard/Recordings/";
+
 }
