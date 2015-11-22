@@ -13,6 +13,8 @@ import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -172,6 +174,10 @@ public class RecorderService extends Service {
 
     private MediaRecorder mRecorder;
 
+    private HandlerThread mWorker;
+
+    private Handler mHandler;
+
     /**
      * Basic initialization block, mostly obtained from a guide which I modified from.
      *
@@ -192,7 +198,7 @@ public class RecorderService extends Service {
             mRecorder.setVideoEncodingBitRate(512 * 1000);
             mRecorder.setVideoFrameRate(30);
             mRecorder.setVideoSize(width, height);
-            mRecorder.setOutputFile("/sdcard/" + filename);
+            mRecorder.setOutputFile(Globals.RECORDER_FILE_SAVE_PATH + filename);
             changeState(RecorderState.INITIALIZED);
         } catch (RuntimeException ex) {
             logErrorAndChangeState(ex);
@@ -203,6 +209,9 @@ public class RecorderService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        mWorker = new HandlerThread("Recorder Service Worker", android.os.Process.THREAD_PRIORITY_BACKGROUND);
+        mWorker.start();
+        mHandler = new Handler(mWorker.getLooper());
         setupReceivers();
         setupForegroundNotification();
         changeState(RecorderState.ALIVE);
@@ -292,7 +301,7 @@ public class RecorderService extends Service {
             public void onReceive(Context context, Intent intent) {
                 Intent responseIntent = new Intent(Globals.Keys.RECORDER_STATE_RESPONSE);
                 responseIntent.putExtra(Globals.Keys.RECORDER_STATE, mState);
-                broadcastManager.sendBroadcast(intent);
+                broadcastManager.sendBroadcast(responseIntent);
             }
         }, new IntentFilter(Globals.Keys.RECORDER_STATE_REQUEST));
         /*
@@ -518,7 +527,7 @@ public class RecorderService extends Service {
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText("Tap to End Service!")
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.sak_overlay_icon))
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .build();

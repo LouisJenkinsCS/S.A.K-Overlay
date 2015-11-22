@@ -26,7 +26,7 @@
                 android:background="@drawable/settings"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/home_button"/>
+                android:id="@+id/menu_launcher_button_home"/>
 
             <Button
                 android:layout_width="wrap_content"
@@ -34,14 +34,14 @@
                 android:background="@drawable/maps"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/google_maps_button"/>
+                android:id="@+id/menu_launcher_button_google_maps"/>
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/sticky_note_button"
+                android:id="@+id/menu_launcher_button_sticky_note"
                 android:background="@drawable/sticky_note"/>
 
             <Button
@@ -58,7 +58,7 @@
                 android:background="@drawable/screen_recorder"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/record_screen_button"/>
+                android:id="@+id/menu_launcher_button_screen_recorder"/>
 
 
         </LinearLayout>

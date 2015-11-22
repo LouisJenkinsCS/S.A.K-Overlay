@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="40dp"
+    android:orientation="horizontal"
+    android:background="@color/transparent_fragment">
+
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:scaleType="fitCenter"
+        android:background="@android:color/transparent"
+        android:src="@drawable/sak_overlay_icon_greyscale"
+        android:id="@+id/menu_bar_icon" />
+
+    <HorizontalScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_toEndOf="@id/menu_bar_icon"
+        android:layout_toStartOf="@+id/menu_bar_clock">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_toEndOf="@id/menu_bar_icon"
+            android:background="@color/transparent_fragment"
+            android:id="@+id/menu_bar_options_layout"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
+
+    <TextClock
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:id="@+id/menu_bar_clock"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_alignParentEnd="true"
+        android:format12Hour="hh:mm a\nMM/dd/yyyy"/>
+
+
+</RelativeLayout>

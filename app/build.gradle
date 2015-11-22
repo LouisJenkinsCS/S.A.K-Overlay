@@ -28,4 +28,6 @@ dependencies {
     compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/aspectjrt-1.7.3-javadoc.jar')
     compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/aspectjrt-1.7.3-sources.jar')
     compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/isoparser-1.1.17.jar')
+    compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/rxjava-1.0.16.jar')
+    compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/rxjava-1.0.16-javadoc.jar')
 }

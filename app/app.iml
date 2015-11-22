@@ -130,6 +130,7 @@
     <orderEntry type="library" exported="" name="play-services-cast-8.1.0" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="aspectjrt-1.7.3" level="project" />
+    <orderEntry type="library" exported="" name="rxjava-1.0.16-javadoc" level="project" />
     <orderEntry type="library" exported="" name="play-services-appinvite-8.1.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-ads-8.1.0" level="project" />
     <orderEntry type="library" exported="" name="isoparser-1.1.17" level="project" />
@@ -142,6 +143,7 @@
     <orderEntry type="library" exported="" name="play-services-wallet-8.1.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-basement-8.1.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-maps-8.1.0" level="project" />
+    <orderEntry type="library" exported="" name="rxjava-1.0.16" level="project" />
     <orderEntry type="library" exported="" name="play-services-nearby-8.1.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-panorama-8.1.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-fitness-8.1.0" level="project" />

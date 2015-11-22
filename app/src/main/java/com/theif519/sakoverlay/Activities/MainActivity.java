@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
                 intent.putExtra(NotificationService.START_NOTIFICATION, true);
             }
         });
-        findViewById(R.id.home_button).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.menu_launcher_button_home).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
                 FloatingFragment fragment = IntroductionFragment.newInstance();
@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
         });
-        findViewById(R.id.sticky_note_button).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.menu_launcher_button_sticky_note).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = StickyNoteFragment.newInstance();
@@ -97,7 +97,7 @@ public class MainActivity extends Activity {
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
         });
-        findViewById(R.id.google_maps_button).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.menu_launcher_button_google_maps).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = GoogleMapsFragment.newInstance();
@@ -113,7 +113,7 @@ public class MainActivity extends Activity {
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
         });
-        findViewById(R.id.record_screen_button).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.menu_launcher_button_screen_recorder).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = ScreenRecorderFragment.newInstance();

@@ -43,6 +43,8 @@
         <ListView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:choiceMode="singleChoice"
+            android:listSelector="@color/transparent_fragment"
             android:id="@+id/screen_recorder_file_list"/>
 
     </LinearLayout>

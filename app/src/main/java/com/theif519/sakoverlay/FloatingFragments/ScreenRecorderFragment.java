@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Point;
 import android.media.projection.MediaProjectionManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -57,7 +58,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
         return fragment;
     }
 
-    private boolean mIsRunning = false;
+    private boolean mIsRunning = false, mFinishedSetup = false;
 
     @Override
     protected void setup() {
@@ -94,6 +95,8 @@ public class ScreenRecorderFragment extends FloatingFragment {
             }
         }.execute(FileRetriever.getFiles(Globals.RECORDER_FILE_SAVE_PATH).toArray(new File[0]));
         getActivity().startService(new Intent(getActivity(), RecorderService.class));
+        mFinishedSetup = true;
+        LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(new Intent(Globals.Keys.RECORDER_STATE_REQUEST));
     }
 
     @Override
@@ -148,19 +151,24 @@ public class ScreenRecorderFragment extends FloatingFragment {
                         dialog.dismiss();
                     }
                 }).show();
-        dialog.show();
+        Point size = new Point();
+        getActivity().getWindowManager().getDefaultDisplay().getRealSize(size);
+        ((EditText) dialog.findViewById(R.id.dialog_recorder_resolution_width)).setText(Integer.toString(size.x));
+        ((EditText) dialog.findViewById(R.id.dialog_recorder_resolution_height)).setText(Integer.toString(size.y));
     }
 
-    private BroadcastReceiver mStateChange, mCommandResponse, mServiceHasEnded, mPermissionAsked;
+    private BroadcastReceiver mStateChange, mCommandResponse, mServiceHasEnded, mPermissionAsked, mStateResponse;
 
     private void setupReceivers() {
         LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
+        IntentFilter stateFilter = new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE);
+        stateFilter.addAction(Globals.Keys.RECORDER_STATE_RESPONSE);
         manager.registerReceiver(mStateChange = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 mStateText.setText(intent.getSerializableExtra(Globals.Keys.RECORDER_STATE).toString());
             }
-        }, new IntentFilter(Globals.Keys.RECORDER_STATE_CHANGE));
+        }, stateFilter);
         manager.registerReceiver(mCommandResponse = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -195,29 +203,12 @@ public class ScreenRecorderFragment extends FloatingFragment {
         manager.unregisterReceiver(mPermissionAsked);
     }
 
-    private boolean mReceivedMissedChange = false;
-
-    private void receiveMissedChange() {
-        if (mReceivedMissedChange) {
-            final LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
-            manager.registerReceiver(new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    mStateText.setText(intent.getStringExtra(Globals.Keys.RECORDER_STATE));
-                    manager.unregisterReceiver(this);
-                    mReceivedMissedChange = true;
-                }
-            }, new IntentFilter(Globals.Keys.RECORDER_STATE_RESPONSE));
-            mReceivedMissedChange = false;
-            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_STATE_REQUEST));
-        }
-    }
-
     @Override
     public void onStart() {
         super.onStart();
         setupReceivers();
-        receiveMissedChange();
+        // In the case that we missed a state change, we ask for it here.
+        if(mFinishedSetup) LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(new Intent(Globals.Keys.RECORDER_STATE_REQUEST));
     }
 
     @Override

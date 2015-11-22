@@ -40,7 +40,7 @@ public class NotificationService extends IntentService {
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.overlay_notification_text))
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.sak_overlay_icon))
                 .setContentIntent(pIntent)
                 .setOngoing(true)
                 .build();
