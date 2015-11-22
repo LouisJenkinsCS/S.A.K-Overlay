@@ -27,6 +27,7 @@ public class MenuBar extends RelativeLayout {
         inflater.inflate(R.layout.menu_bar, this);
         mClock = (TextClock) findViewById(R.id.menu_bar_clock);
         mIcon = (ImageButton) findViewById(R.id.menu_bar_icon);
+        mClock.setFormat12Hour("hh:mm a\nMM/dd/yyyy");
     }
 
 

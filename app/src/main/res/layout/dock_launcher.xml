@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
+    android:background="@color/transparent_fragment"
     android:orientation="horizontal">
 
     <HorizontalScrollView
@@ -10,35 +11,35 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:layout_gravity="center_horizontal"
             android:orientation="horizontal"
-            android:id="@+id/menu_launcher_button_layout">
+            android:id="@+id/dock_launcher_button_layout">
 
             <Button
-                android:layout_width="55dp"
+                android:layout_width="50dp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/settings"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/menu_launcher_button_home"
+                android:id="@+id/dock_launcher_button_home"
                 style="@style/Base.Widget.AppCompat.Button.Borderless"/>
 
             <Button
-                android:layout_width="55dp"
+                android:layout_width="50dp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/maps"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/menu_launcher_button_google_maps"
+                android:id="@+id/dock_launcher_button_google_maps"
                 style="@style/Base.Widget.AppCompat.Button.Borderless"/>
 
             <Button
-                android:layout_width="55dp"
+                android:layout_width="50dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/menu_launcher_button_sticky_note"
+                android:id="@+id/dock_launcher_button_sticky_note"
                 android:background="@drawable/sticky_note"
                 style="@style/Base.Widget.AppCompat.Button.Borderless"/>
 
@@ -48,16 +49,16 @@
                 android:background="@drawable/browser"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/web_browser_button"
+                android:id="@+id/dock_launcher_web_browser_button"
                 style="@style/Base.Widget.AppCompat.Button.Borderless"/>
 
             <Button
-                android:layout_width="55dp"
+                android:layout_width="50dp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/screen_recorder"
                 android:layout_marginBottom="10dp"
                 android:layout_marginEnd="3dp"
-                android:id="@+id/menu_launcher_button_screen_recorder"
+                android:id="@+id/dock_launcher_button_screen_recorder"
                 style="@style/Base.Widget.AppCompat.Button.Borderless"/>
 
         </LinearLayout>

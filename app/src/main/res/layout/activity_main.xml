@@ -2,91 +2,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:background="@color/transparent_fragment"
     android:id="@+id/main_root"
     tools:context=".MainActivity">
 
-    <ScrollView
-        android:layout_width="@dimen/activity_main_sidebar_width"
-        android:layout_height="fill_parent"
-        android:scaleX="@dimen/default_scale_x"
-        android:scaleY="@dimen/default_scale_y">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:orientation="vertical">
-
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/settings"
-                android:layout_marginBottom="10dp"
-                android:layout_marginEnd="3dp"
-                android:id="@+id/menu_launcher_button_home"/>
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/maps"
-                android:layout_marginBottom="10dp"
-                android:layout_marginEnd="3dp"
-                android:id="@+id/menu_launcher_button_google_maps"/>
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:layout_marginEnd="3dp"
-                android:id="@+id/menu_launcher_button_sticky_note"
-                android:background="@drawable/sticky_note"/>
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/browser"
-                android:layout_marginBottom="10dp"
-                android:layout_marginEnd="3dp"
-                android:id="@+id/web_browser_button"/>
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/screen_recorder"
-                android:layout_marginBottom="10dp"
-                android:layout_marginEnd="3dp"
-                android:id="@+id/menu_launcher_button_screen_recorder"/>
-
-
-        </LinearLayout>
-    </ScrollView>
+    <com.theif519.sakoverlay.Views.MenuBar
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"/>
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="fill_parent"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
         android:layout_weight="10"
         android:orientation="vertical"
         android:id="@+id/main_layout"/>
 
-    <ScrollView
-        android:layout_width="@dimen/activity_main_sidebar_width"
-        android:layout_height="fill_parent"
-        android:scaleX="@dimen/default_scale_x"
-        android:scaleY="@dimen/default_scale_y">
-
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:orientation="vertical"
-            android:id="@+id/minimized_fragments">
+    <com.theif519.sakoverlay.Views.DockLauncher
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"/>
 
 
-
-        </LinearLayout>
-    </ScrollView>
 
 </LinearLayout>

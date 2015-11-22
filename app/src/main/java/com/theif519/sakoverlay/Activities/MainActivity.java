@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
                 intent.putExtra(NotificationService.START_NOTIFICATION, true);
             }
         });
-        findViewById(R.id.menu_launcher_button_home).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.dock_launcher_button_home).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
                 FloatingFragment fragment = IntroductionFragment.newInstance();
@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
         });
-        findViewById(R.id.menu_launcher_button_sticky_note).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.dock_launcher_button_sticky_note).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = StickyNoteFragment.newInstance();
@@ -97,7 +97,7 @@ public class MainActivity extends Activity {
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
         });
-        findViewById(R.id.menu_launcher_button_google_maps).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.dock_launcher_button_google_maps).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = GoogleMapsFragment.newInstance();
@@ -105,7 +105,7 @@ public class MainActivity extends Activity {
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
         });
-        findViewById(R.id.web_browser_button).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.dock_launcher_web_browser_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = WebBrowserFragment.newInstance();
@@ -113,7 +113,7 @@ public class MainActivity extends Activity {
                 getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
         });
-        findViewById(R.id.menu_launcher_button_screen_recorder).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.dock_launcher_button_screen_recorder).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = ScreenRecorderFragment.newInstance();

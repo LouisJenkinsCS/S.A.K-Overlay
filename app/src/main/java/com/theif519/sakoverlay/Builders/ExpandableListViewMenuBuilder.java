@@ -1,13 +1,14 @@
 package com.theif519.sakoverlay.Builders;
 
 import android.content.Context;
+import android.view.View;
 
 import com.theif519.sakoverlay.Views.ExpandableListViewMenu;
 
 /**
  * Created by theif519 on 11/21/2015.
  */
-public class MenuBuilder {
+public class ExpandableListViewMenuBuilder {
 
     interface OnOptionSelectedListener {
         void onOptionSelected(String option);
@@ -15,16 +16,36 @@ public class MenuBuilder {
 
     private Context mContext;
 
-    public MenuBuilder(Context context) {
+    public ExpandableListViewMenuBuilder(Context context) {
         mContext = context;
     }
 
-    public MenuBuilder addOption(String option, OnOptionSelectedListener listener){
+    public ExpandableListViewMenuBuilder setView(int resourceId){
+        // TODO: Implement this so it sets the menu's main view.
+        return this;
+    }
+
+    public ExpandableListViewMenuBuilder setView(View view){
+        // TODO: Implement this so it sets the menu's main view.
+        return this;
+    }
+
+    public ExpandableListViewMenuBuilder setNestedView(View view){
+        // TODO: Implement this so it sets the current nested view to the passed view.
+        return this;
+    }
+
+    public ExpandableListViewMenuBuilder setNestedView(int resourceId){
+        // TODO: Implement this so it sets the current nested view to the passed view.
+        return this;
+    }
+
+    public ExpandableListViewMenuBuilder addOption(String option, OnOptionSelectedListener listener){
         // TODO: Implement this so it sets up a new root menu.
         return this;
     }
 
-    public MenuBuilder addNestedOption(String option, OnOptionSelectedListener listener){
+    public ExpandableListViewMenuBuilder addNestedOption(String option, int resourceId){
         // TODO: Implement this so it sets up a nested root menu for the last selected menu. Should have same functionality as addMenu if there is none.
         return this;
     }

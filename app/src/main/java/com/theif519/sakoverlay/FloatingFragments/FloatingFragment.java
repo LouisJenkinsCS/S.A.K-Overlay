@@ -413,7 +413,8 @@ public class FloatingFragment extends Fragment {
 
     private void minimize() {
         mContentView.setVisibility(View.INVISIBLE);
-        final LinearLayout layout = (LinearLayout) getActivity().findViewById(R.id.minimized_fragments);
+        // TODO: Fix this!
+        final LinearLayout layout = (LinearLayout) getActivity().findViewById(-1);
         final ImageView view = new ImageView(getActivity());
         view.setImageResource(ICON_ID);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
