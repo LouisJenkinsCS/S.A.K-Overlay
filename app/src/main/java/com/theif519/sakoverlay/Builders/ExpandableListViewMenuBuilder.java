@@ -8,10 +8,22 @@ import com.theif519.sakoverlay.Views.ExpandableListViewMenu;
 /**
  * Created by theif519 on 11/21/2015.
  */
-public class ExpandableListViewMenuBuilder {
+public class ExpandableListViewMenuBuilder{
 
-    interface OnOptionSelectedListener {
-        void onOptionSelected(String option);
+    /**
+     * Any and all menu options must implement this.
+     */
+    interface MenuOption {
+        /**
+         * When the adapter must inflate this option, this is called.
+         * @return Inflated view.
+         */
+        View inflate(Context context);
+
+        /**
+         * When this option is selected, this callback is invoked.
+         */
+        void onSelected();
     }
 
     private Context mContext;
@@ -40,12 +52,12 @@ public class ExpandableListViewMenuBuilder {
         return this;
     }
 
-    public ExpandableListViewMenuBuilder addOption(String option, OnOptionSelectedListener listener){
+    public ExpandableListViewMenuBuilder addOption(MenuOption option){
         // TODO: Implement this so it sets up a new root menu.
         return this;
     }
 
-    public ExpandableListViewMenuBuilder addNestedOption(String option, int resourceId){
+    public ExpandableListViewMenuBuilder addNestedOption(MenuOption option){
         // TODO: Implement this so it sets up a nested root menu for the last selected menu. Should have same functionality as addMenu if there is none.
         return this;
     }
@@ -57,10 +69,9 @@ public class ExpandableListViewMenuBuilder {
 
     /*
         ExpandableListViewMenu menu = ExpandableListViewMenu.Builder(getActivity())
-            .addNestedOption("New")
-                .addOption("Project", callback)
-                .addOption("Document", callback)
-                .back()
+            .addOption(new CustomMenuOption("New"), null)
+                .addNestedOption("Project", callback)
+                .addNestedOption("Document", callback)
             .addOption("Open", callback)
             .addOption("Close", callback)
         .build();
