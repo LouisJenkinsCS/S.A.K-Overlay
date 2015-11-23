@@ -14,6 +14,8 @@ import com.theif519.sakoverlay.R;
  */
 public class MenuBar extends RelativeLayout {
 
+
+
     private TextClock mClock;
     private ImageButton mIcon;
 
@@ -21,13 +23,20 @@ public class MenuBar extends RelativeLayout {
         this(context, null);
     }
 
+    private ExpandableMenu mIconMenu;
+
     public MenuBar(Context context, AttributeSet attrs) {
         super(context, attrs);
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.menu_bar, this);
         mClock = (TextClock) findViewById(R.id.menu_bar_clock);
-        mIcon = (ImageButton) findViewById(R.id.menu_bar_icon);
         mClock.setFormat12Hour("hh:mm a\nMM/dd/yyyy");
+        mIcon = (ImageButton) findViewById(R.id.menu_bar_icon);
+
+    }
+
+    private void showDropDownMenu(){
+
     }
 
 

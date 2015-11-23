@@ -235,6 +235,7 @@ public class FloatingFragment extends Fragment {
                         p.y + scaleToInt(mContentView.findViewById(R.id.title_bar_options).getHeight(), scaleY));
             }
         });
+        // TODO: Figure a way to setup ReactiveX events to handle this more elegantly, using filters (?)
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {

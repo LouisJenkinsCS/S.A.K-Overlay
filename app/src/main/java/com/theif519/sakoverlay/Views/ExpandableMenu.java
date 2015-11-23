@@ -7,21 +7,21 @@ import android.widget.ExpandableListView;
 /**
  * Created by theif519 on 11/21/2015.
  */
-public class ExpandableListViewMenu extends ExpandableListView {
+public class ExpandableMenu extends ExpandableListView {
 
-    public ExpandableListViewMenu(Context context) {
+    public ExpandableMenu(Context context) {
         super(context);
     }
 
-    public ExpandableListViewMenu(Context context, AttributeSet attrs) {
+    public ExpandableMenu(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public ExpandableListViewMenu(Context context, AttributeSet attrs, int defStyleAttr) {
+    public ExpandableMenu(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
-    public ExpandableListViewMenu(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public ExpandableMenu(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 }

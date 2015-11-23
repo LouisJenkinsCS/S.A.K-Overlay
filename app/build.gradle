@@ -24,10 +24,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile 'com.google.android.gms:play-services:8.1.0'
     compile fileTree(include: '*.jar', dir: 'libs')
-    compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/aspectjrt-1.7.3.jar')
-    compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/aspectjrt-1.7.3-javadoc.jar')
-    compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/aspectjrt-1.7.3-sources.jar')
-    compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/isoparser-1.1.17.jar')
-    compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/rxjava-1.0.16.jar')
-    compile files('C:/Users/theif519/Documents/GitHub/S.A.K-Overlay/libs/rxjava-1.0.16-javadoc.jar')
+    compile files('libs/aspectjrt-1.7.3.jar')
+    compile files('libs/isoparser-1.1.17.jar')
+    compile files('libs/rxjava-1.0.16.jar')
 }

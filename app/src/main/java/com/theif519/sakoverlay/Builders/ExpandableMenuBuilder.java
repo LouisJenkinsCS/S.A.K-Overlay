@@ -3,66 +3,60 @@ package com.theif519.sakoverlay.Builders;
 import android.content.Context;
 import android.view.View;
 
-import com.theif519.sakoverlay.Views.ExpandableListViewMenu;
+import com.theif519.sakoverlay.Views.ExpandableMenu;
 
 /**
  * Created by theif519 on 11/21/2015.
  */
-public class ExpandableListViewMenuBuilder{
+public class ExpandableMenuBuilder {
 
     /**
      * Any and all menu options must implement this.
      */
     interface MenuOption {
         /**
-         * When the adapter must inflate this option, this is called.
-         * @return Inflated view.
-         */
-        View inflate(Context context);
-
-        /**
          * When this option is selected, this callback is invoked.
          */
-        void onSelected();
+        View inflateOnSelected();
     }
 
     private Context mContext;
 
-    public ExpandableListViewMenuBuilder(Context context) {
+    public ExpandableMenuBuilder(Context context) {
         mContext = context;
     }
 
-    public ExpandableListViewMenuBuilder setView(int resourceId){
+    public ExpandableMenuBuilder setView(int resourceId){
         // TODO: Implement this so it sets the menu's main view.
         return this;
     }
 
-    public ExpandableListViewMenuBuilder setView(View view){
+    public ExpandableMenuBuilder setView(View view){
         // TODO: Implement this so it sets the menu's main view.
         return this;
     }
 
-    public ExpandableListViewMenuBuilder setNestedView(View view){
+    public ExpandableMenuBuilder setNestedView(View view){
         // TODO: Implement this so it sets the current nested view to the passed view.
         return this;
     }
 
-    public ExpandableListViewMenuBuilder setNestedView(int resourceId){
+    public ExpandableMenuBuilder setNestedView(int resourceId){
         // TODO: Implement this so it sets the current nested view to the passed view.
         return this;
     }
 
-    public ExpandableListViewMenuBuilder addOption(MenuOption option){
+    public ExpandableMenuBuilder addOption(MenuOption option){
         // TODO: Implement this so it sets up a new root menu.
         return this;
     }
 
-    public ExpandableListViewMenuBuilder addNestedOption(MenuOption option){
+    public ExpandableMenuBuilder addNestedOption(MenuOption option){
         // TODO: Implement this so it sets up a nested root menu for the last selected menu. Should have same functionality as addMenu if there is none.
         return this;
     }
 
-    public ExpandableListViewMenu build(){
+    public ExpandableMenu build(){
         // TODO: Implement this so it sets up the new menu.
         return null;
     }

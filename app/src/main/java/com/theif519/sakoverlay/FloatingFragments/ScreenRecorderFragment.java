@@ -23,7 +23,7 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Adapters.VideoInfoAdapter;
 import com.theif519.sakoverlay.Async.MediaThumbnailGenerator;
 import com.theif519.sakoverlay.Misc.Globals;
-import com.theif519.sakoverlay.Misc.VideoInfo;
+import com.theif519.sakoverlay.Beans.VideoInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;
 import com.theif519.sakoverlay.Views.ListViewVideoInfo;
@@ -84,7 +84,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
             @Override
             protected void onPostExecute(List<VideoInfo> videoInfos) {
                 listView.setEmptyView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.list_view_video_info_empty, null));
-                listView.setAdapter(new VideoInfoAdapter(getActivity(), R.layout.list_view_video_info, videoInfos));
+                listView.setAdapter(new VideoInfoAdapter(getActivity(), videoInfos));
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

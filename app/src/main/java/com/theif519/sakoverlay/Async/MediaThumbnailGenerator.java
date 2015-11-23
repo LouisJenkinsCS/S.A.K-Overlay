@@ -7,7 +7,7 @@ import android.util.Log;
 
 import com.coremedia.iso.IsoFile;
 import com.googlecode.mp4parser.FileDataSourceImpl;
-import com.theif519.sakoverlay.Misc.VideoInfo;
+import com.theif519.sakoverlay.Beans.VideoInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,13 +46,13 @@ public abstract class MediaThumbnailGenerator extends AsyncTask<File, Void, List
         for(File file: params){
             try {
                 IsoFile mp4 = new IsoFile(new FileDataSourceImpl(file));
-                list.add(new VideoInfo(
-                        file.getName(),
-                        prettyDuration((int)((double) mp4.getMovieBox().getMovieHeaderBox().getDuration() / mp4.getMovieBox().getMovieHeaderBox().getTimescale())),
-                        mp4.getMovieBox().getMovieHeaderBox().getCreationTime().toString(),
-                        prettyFileSize(file.length()),
-                        ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MICRO_KIND)
-                ));
+                list.add(new VideoInfo()
+                        .setDescription(file.getName())
+                        .setDuration(prettyDuration((int) ((double) mp4.getMovieBox().getMovieHeaderBox().getDuration() / mp4.getMovieBox().getMovieHeaderBox().getTimescale())))
+                        .setTimestamp(mp4.getMovieBox().getMovieHeaderBox().getCreationTime().toString())
+                        .setFileSize(prettyFileSize(file.length()))
+                        .setThumbnail(ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MICRO_KIND))
+                );
             } catch (IOException e) {
                 Log.w(getClass().getName(), "Error while parsing info from video: " + (e.getMessage() == null ? "" : e.getMessage()));
             }
