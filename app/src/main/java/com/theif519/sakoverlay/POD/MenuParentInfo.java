@@ -1,7 +1,5 @@
-package com.theif519.sakoverlay.Beans;
+package com.theif519.sakoverlay.POD;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -9,40 +7,12 @@ import java.util.ArrayList;
 /**
  * Created by theif519 on 11/23/2015.
  */
-public class MenuParentInfo implements Parcelable {
+public class MenuParentInfo {
     private String mDescription;
     ArrayList<MenuChildInfo> mChildren;
 
     public MenuParentInfo() {
 
-    }
-
-    protected MenuParentInfo(Parcel in) {
-        mDescription = in.readString();
-        mChildren = in.createTypedArrayList(MenuChildInfo.CREATOR);
-    }
-
-    public static final Creator<MenuParentInfo> CREATOR = new Creator<MenuParentInfo>() {
-        @Override
-        public MenuParentInfo createFromParcel(Parcel in) {
-            return new MenuParentInfo(in);
-        }
-
-        @Override
-        public MenuParentInfo[] newArray(int size) {
-            return new MenuParentInfo[size];
-        }
-    };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(mDescription);
-        dest.writeTypedList(mChildren);
     }
 
     public MenuParentInfo addChild(MenuChildInfo child){

@@ -24,7 +24,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile 'com.google.android.gms:play-services:8.1.0'
     compile fileTree(include: '*.jar', dir: 'libs')
-    compile files('libs/aspectjrt-1.7.3.jar')
-    compile files('libs/isoparser-1.1.17.jar')
-    compile files('libs/rxjava-1.0.16.jar')
+    compile files('libs/ISOParser/isoparser-1.1.17.jar')
+    compile files('libs/ReactiveX/rxandroid-1.0.1.jar')
+    compile files('libs/ReactiveX/rxjava-1.0.16.jar')
+    compile files('libs/ReactiveX/rxbindings-0.3.0.jar')
 }

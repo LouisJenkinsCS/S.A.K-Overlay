@@ -12,7 +12,7 @@
         android:layout_height="40dp"
         android:layout_marginBottom="5dp"
         android:layout_marginStart="5dp"
-        android:layout_above="@id/list_view_default_child_separator"
+        android:layout_above="@+id/list_view_default_child_separator"
         android:id="@+id/list_view_default_child_icon" />
 
     <TextView
@@ -28,7 +28,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
         android:gravity="center"
-        android:layout_above="@id/list_view_default_child_separator"/>
+        android:layout_above="@+id/list_view_default_child_separator"/>
 
     <View
         android:layout_width="fill_parent"

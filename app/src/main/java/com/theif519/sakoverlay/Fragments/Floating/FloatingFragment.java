@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.FloatingFragments;
+package com.theif519.sakoverlay.Fragments.Floating;
 
 
 import android.app.Fragment;
@@ -22,11 +22,14 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
+import com.jakewharton.rxbinding.view.RxView;
 import com.theif519.sakoverlay.Activities.MainActivity;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 
 import java.util.ArrayList;
+
+import rx.functions.Action1;
 
 /**
  * Created by theif519 on 10/29/2015.
@@ -186,6 +189,23 @@ public class FloatingFragment extends Fragment {
                     return handleMove(event);
                 } else {
                     return mFinishedMultiTouch = handleResize(event);
+                }
+            }
+        });
+        RxView.draws(mContentView).subscribe(new Action1<Void>() {
+            @Override
+            public void call(Void aVoid) {
+                if (mContentView.getX() + scaleToInt(mContentView.getWidth(), scaleX) > MainActivity.getMaxX()) {
+                    mContentView.setX(MainActivity.getMaxX() - mContentView.getWidth());
+                }
+                if (mContentView.getY() + scaleToInt(mContentView.getHeight(), scaleY) > MainActivity.getMaxY()) {
+                    mContentView.setY(MainActivity.getMaxY() - mContentView.getHeight());
+                }
+                if (scaleToInt(mContentView.getWidth(), scaleX) > MainActivity.getMaxX()) {
+                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(MainActivity.getMaxX(), mContentView.getHeight()));
+                }
+                if (scaleToInt(mContentView.getHeight(), scaleY) > MainActivity.getMaxY()) {
+                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), MainActivity.getMaxY()));
                 }
             }
         });

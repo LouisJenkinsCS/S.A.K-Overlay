@@ -9,7 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.theif519.sakoverlay.Beans.VideoInfo;
+import com.theif519.sakoverlay.POD.VideoInfo;
 import com.theif519.sakoverlay.R;
 
 import java.util.ArrayList;

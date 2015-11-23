@@ -23,7 +23,7 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.theif519.sakoverlay.FloatingFragments.ScreenRecorderFragment;
+import com.theif519.sakoverlay.Fragments.Floating.ScreenRecorderFragment;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 

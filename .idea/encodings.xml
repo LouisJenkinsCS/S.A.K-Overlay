@@ -2,10 +2,10 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Activities/MainActivity.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/FloatingFragments/FloatingFragment.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/FloatingFragments/FloatingFragmentFactory.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/FloatingFragments/IntroductionFragment.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/FloatingFragments/StickyNoteFragment.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/FloatingFragment.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/FloatingFragmentFactory.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/IntroductionFragment.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/StickyNoteFragment.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/AttributeRetriever.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/Callbacks.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/FileRetriever.java" charset="windows-1252" />

@@ -8,8 +8,8 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.theif519.sakoverlay.Beans.MenuChildInfo;
-import com.theif519.sakoverlay.Beans.MenuParentInfo;
+import com.theif519.sakoverlay.POD.MenuChildInfo;
+import com.theif519.sakoverlay.POD.MenuParentInfo;
 import com.theif519.sakoverlay.R;
 
 import java.util.ArrayList;
@@ -29,6 +29,7 @@ public class ExpandableMenuAdapter extends BaseExpandableListAdapter {
     public ExpandableMenuAdapter(Context context, ArrayList<MenuParentInfo> parents) {
         mParents = parents;
         mContext = context;
+
     }
 
     @Override
@@ -100,7 +101,7 @@ public class ExpandableMenuAdapter extends BaseExpandableListAdapter {
 
     @Override
     public boolean isChildSelectable(int groupPosition, int childPosition) {
-        return mParents.get(groupPosition).getChildAt(childPosition).isSelectable();
+        return true;
     }
 
     private class MenuParentInfoHolder {
@@ -124,20 +125,19 @@ public class ExpandableMenuAdapter extends BaseExpandableListAdapter {
         private TextView mDescription;
         private ImageView mIcon;
 
-        public MenuChildInfoHolder(View view, MenuChildInfo info){
+        public MenuChildInfoHolder(View view, MenuChildInfo info) {
             this(view);
             setup(info);
         }
 
-        public MenuChildInfoHolder(View view){
+        public MenuChildInfoHolder(View view) {
             mDescription = (TextView) view.findViewById(R.id.list_view_default_child_description);
             mIcon = (ImageView) view.findViewById(R.id.list_view_default_child_icon);
         }
 
-        public void setup(MenuChildInfo info){
+        public void setup(final MenuChildInfo info) {
             mDescription.setText(info.getDescription());
             mIcon.setImageBitmap(info.getIcon());
         }
     }
-
 }

@@ -7,6 +7,7 @@
     <ExpandableListView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        android:choiceMode="singleChoice"
         android:id="@+id/list_view_default_menu_list"
         android:groupIndicator="@null"/>
 

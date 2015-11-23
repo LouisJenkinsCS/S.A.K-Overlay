@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.FloatingFragments;
+package com.theif519.sakoverlay.Fragments.Floating;
 
 import android.util.ArrayMap;
 

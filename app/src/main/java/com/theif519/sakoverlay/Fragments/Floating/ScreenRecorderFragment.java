@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.FloatingFragments;
+package com.theif519.sakoverlay.Fragments.Floating;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -23,7 +23,7 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Adapters.VideoInfoAdapter;
 import com.theif519.sakoverlay.Async.MediaThumbnailGenerator;
 import com.theif519.sakoverlay.Misc.Globals;
-import com.theif519.sakoverlay.Beans.VideoInfo;
+import com.theif519.sakoverlay.POD.VideoInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;
 import com.theif519.sakoverlay.Views.ListViewVideoInfo;
