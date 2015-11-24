@@ -12,24 +12,21 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
 import com.jakewharton.rxbinding.view.RxView;
-import com.theif519.sakoverlay.Activities.MainActivity;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
+import com.theif519.utils.Misc.MeasureTools;
 
 import java.util.ArrayList;
 
 import rx.functions.Action1;
+import rx.functions.Func1;
 
 /**
  * Created by theif519 on 10/29/2015.
@@ -71,11 +68,6 @@ public class FloatingFragment extends Fragment {
         Required to keep track of the position and size of the view between each onTouchEvent.
      */
     private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY, sidebarDimen;
-
-    /*
-        Shortcut to retrieve the float to scale all views and view elements by.
-     */
-    private float scaleX = MainActivity.getScaleX(), scaleY = MainActivity.getScaleY();
 
     /*
         Keeps track of the tag to be
@@ -130,12 +122,12 @@ public class FloatingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(LAYOUT_ID, container, false);
-        mContentView.setVisibility(View.INVISIBLE);
+        //mContentView.setVisibility(View.INVISIBLE);
         setupGlobals();
         setupListeners();
-        if (mContext != null && Boolean.valueOf(mContext.get(Globals.Keys.MINIMIZED))) {
+        /*f (mContext != null && Boolean.valueOf(mContext.get(Globals.Keys.MINIMIZED))) {
             minimize();
-        } else mContentView.setVisibility(View.VISIBLE);
+        } else mContentView.setVisibility(View.VISIBLE);*/
         mContentView.post(new Runnable() {
             @Override
             public void run() {
@@ -152,7 +144,7 @@ public class FloatingFragment extends Fragment {
     private void setupGlobals(){
         sidebarDimen = (int) getResources().getDimension(R.dimen.activity_main_sidebar_width);
         if(mOptions == null){
-            mOptions = new ArrayList<String>();
+            mOptions = new ArrayList<>();
         }
         mOptions.add(TRANSPARENCY_TOGGLE);
         mOptions.add(BRING_TO_FRONT);
@@ -192,20 +184,22 @@ public class FloatingFragment extends Fragment {
                 }
             }
         });
-        RxView.draws(mContentView).subscribe(new Action1<Void>() {
+        setupReactiveTouches();
+
+        /*RxView.draws(mContentView).subscribe(new Action1<Void>() {
             @Override
             public void call(Void aVoid) {
-                if (mContentView.getX() + scaleToInt(mContentView.getWidth(), scaleX) > MainActivity.getMaxX()) {
-                    mContentView.setX(MainActivity.getMaxX() - mContentView.getWidth());
+                if (mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
+                    mContentView.setX(Globals.MAX_X.get() - mContentView.getWidth());
                 }
-                if (mContentView.getY() + scaleToInt(mContentView.getHeight(), scaleY) > MainActivity.getMaxY()) {
-                    mContentView.setY(MainActivity.getMaxY() - mContentView.getHeight());
+                if (mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
+                    mContentView.setY(Globals.MAX_Y.get() - mContentView.getHeight());
                 }
-                if (scaleToInt(mContentView.getWidth(), scaleX) > MainActivity.getMaxX()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(MainActivity.getMaxX(), mContentView.getHeight()));
+                if (MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
+                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(Globals.MAX_X.get(), mContentView.getHeight()));
                 }
-                if (scaleToInt(mContentView.getHeight(), scaleY) > MainActivity.getMaxY()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), MainActivity.getMaxY()));
+                if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
+                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
                 }
             }
         });
@@ -213,27 +207,30 @@ public class FloatingFragment extends Fragment {
             This adds an observer to the layout all floating fragments belong to, to ensure that on orientation change
             that all floating fragments are within the boundaries of this app, making changes if need be.
          */
+
+        /*
         getActivity().findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                if (mContentView.getX() + scaleToInt(mContentView.getWidth(), scaleX) > MainActivity.getMaxX()) {
-                    mContentView.setX(MainActivity.getMaxX() - mContentView.getWidth());
+                if (mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
+                    mContentView.setX(Globals.MAX_X.get() - mContentView.getWidth());
                 }
-                if (mContentView.getY() + scaleToInt(mContentView.getHeight(), scaleY) > MainActivity.getMaxY()) {
-                    mContentView.setY(MainActivity.getMaxY() - mContentView.getHeight());
+                if (mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
+                    mContentView.setY(Globals.MAX_Y.get() - mContentView.getHeight());
                 }
-                if (scaleToInt(mContentView.getWidth(), scaleX) > MainActivity.getMaxX()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(MainActivity.getMaxX(), mContentView.getHeight()));
+                if (MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
+                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(Globals.MAX_X.get(), mContentView.getHeight()));
                 }
-                if (scaleToInt(mContentView.getHeight(), scaleY) > MainActivity.getMaxY()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), MainActivity.getMaxY()));
+                if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
+                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
                 }
             }
-        });
+        });*/
         mContentView.findViewById(R.id.title_bar_options).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final PopupWindow window = new PopupWindow(null, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);;
+                final PopupWindow window = new PopupWindow(null, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+                ;
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, mOptions);
                 ListView listView = new ListView(getActivity());
                 listView.setAdapter(adapter);
@@ -244,17 +241,16 @@ public class FloatingFragment extends Fragment {
                         window.dismiss();
                     }
                 });
-                listView.setScaleX(scaleX);
-                listView.setScaleY(scaleY);
-                Point p = getScaledCoordinates();
+                Point p = MeasureTools.getScaledCoordinates(mContentView);
                 window.setContentView(listView);
-                window.setWidth(measureContentWidth(adapter));
+                window.setWidth(MeasureTools.measureContentWidth(getActivity(), adapter));
                 window.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparent_fragment)));
                 window.showAtLocation(getActivity().findViewById(R.id.main_layout), Gravity.NO_GRAVITY,
-                        p.x + scaleToInt(mContentView.findViewById(R.id.title_bar_options).getWidth(), scaleX),
-                        p.y + scaleToInt(mContentView.findViewById(R.id.title_bar_options).getHeight(), scaleY));
+                        p.x + MeasureTools.scaleToInt(mContentView.findViewById(R.id.title_bar_options).getWidth(), Globals.SCALE_X.get()),
+                        p.y + MeasureTools.scaleToInt(mContentView.findViewById(R.id.title_bar_options).getHeight(), Globals.SCALE_Y.get()));
             }
         });
+        /*
         // TODO: Figure a way to setup ReactiveX events to handle this more elegantly, using filters (?)
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -265,11 +261,11 @@ public class FloatingFragment extends Fragment {
                 if (mContentView.getY() < 0) {
                     mContentView.setY(0);
                 }
-                if (mContentView.getX() > MainActivity.getMaxX()) {
-                    mContentView.setX(MainActivity.getMaxX());
+                if (mContentView.getX() > Globals.MAX_X.get()) {
+                    mContentView.setX(Globals.MAX_X.get());
                 }
-                if (mContentView.getY() > MainActivity.getMaxY()) {
-                    mContentView.setY(MainActivity.getMaxY());
+                if (mContentView.getY() > Globals.MAX_Y.get()) {
+                    mContentView.setY(Globals.MAX_Y.get());
                 }
                 if (mContentView.getVisibility() != View.INVISIBLE) {
                     height = mContentView.getHeight();
@@ -279,6 +275,55 @@ public class FloatingFragment extends Fragment {
                 }
             }
         });
+        */
+    }
+
+    private void setupReactiveTouches(){
+        RxView.globalLayouts(getActivity().findViewById(R.id.main_layout)).subscribe(new Action1<Void>() {
+            @Override
+            public void call(Void aVoid) {
+                mContentView.invalidate();
+            }
+        });
+        RxView.touches(mContentView.findViewById(R.id.title_bar_move)).filter(new Func1<MotionEvent, Boolean>() {
+            @Override
+            public Boolean call(MotionEvent event) {
+                return event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE
+                        || event.getAction() == MotionEvent.ACTION_UP;
+            }
+        }).subscribe(new Action1<MotionEvent>() {
+            @Override
+            public void call(MotionEvent event) {
+                switch(event.getAction()){
+                    case MotionEvent.ACTION_DOWN:
+                        initialX = (int) event.getRawX() - (int) mContentView.getX();
+                        initialY = (int) event.getRawY() - (int) mContentView.getY();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        tmpX = (int) event.getRawX();
+                        tmpY = (int) event.getRawY();
+                        width = mContentView.getWidth();
+                        height = mContentView.getHeight();
+                        int scaleDiffX = (width - (int) (width * Globals.SCALE_X.get())) / 2;
+                        int scaleDiffY = (height - (int) (height * Globals.SCALE_Y.get())) / 2;
+                        int moveX = tmpX - initialX;
+                        int moveY = tmpY - initialY;
+                        mContentView.setX(moveX);
+                        mContentView.setY(moveY);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        boundsCheck();
+                        break;
+                }
+            }
+        });
+        RxView.globalLayouts(getActivity().findViewById(R.id.main_layout)).concatWith(RxView.globalLayouts(mContentView))
+                .subscribe(new Action1<Void>() {
+                    @Override
+                    public void call(Void aVoid) {
+                        boundsCheck();
+                    }
+                });
     }
 
     /**
@@ -299,40 +344,6 @@ public class FloatingFragment extends Fragment {
         // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
     }
 
-    private int measureContentWidth(ListAdapter listAdapter) {
-        ViewGroup mMeasureParent = null;
-        int maxWidth = 0;
-        View itemView = null;
-        int itemType = 0;
-
-        final ListAdapter adapter = listAdapter;
-        final int widthMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-        final int heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-        final int count = adapter.getCount();
-        for (int i = 0; i < count; i++) {
-            final int positionType = adapter.getItemViewType(i);
-            if (positionType != itemType) {
-                itemType = positionType;
-                itemView = null;
-            }
-
-            if (mMeasureParent == null) {
-                mMeasureParent = new FrameLayout(getActivity());
-            }
-
-            itemView = adapter.getView(i, itemView, mMeasureParent);
-            itemView.measure(widthMeasureSpec, heightMeasureSpec);
-
-            final int itemWidth = itemView.getMeasuredWidth();
-
-            if (itemWidth > maxWidth) {
-                maxWidth = itemWidth;
-            }
-        }
-
-        return maxWidth;
-    }
-
     private int initialX, initialY;
 
     private boolean handleMove(MotionEvent event) {
@@ -343,26 +354,27 @@ public class FloatingFragment extends Fragment {
                 //Log.d(TAG, "Tapped... (" + x + ", " + y + ") : < " + width + "x" + height + " >");
                 return false;
             case MotionEvent.ACTION_MOVE:
-                if ((int) event.getRawX() >= tmpX && (int) event.getRawX() >= MainActivity.getMaxX())
+                if ((int) event.getRawX() >= tmpX && (int) event.getRawX() >= Globals.MAX_X.get())
                     mMinimizeHint = true;
                 else mMinimizeHint = false;
                 tmpX = (int) event.getRawX();
                 tmpY = (int) event.getRawY();
                 width = mContentView.getWidth();
                 height = mContentView.getHeight();
-                int scaleDiffX = (width - (int) (width * scaleX)) / 2;
-                int scaleDiffY = (height - (int) (height * scaleY)) / 2;
-                int moveX = Math.min(Math.max(tmpX - initialX, -scaleDiffX), MainActivity.getMaxX() - width + scaleDiffX);
-                int moveY = Math.min(Math.max(tmpY - initialY, -scaleDiffY), MainActivity.getMaxY() - height + scaleDiffY);
-                /*Log.d(TAG, "Moving... (" + moveX + ", " + moveY + ")\nCoordinates: (" + tmpX + ", " + tmpY + ")\nScaled Coordinates: (" + tmpX * scaleX + ", " + tmpY * scaleY + ")\n" +
-                        "Size: <" + width + ", " + height + ">\nScale Size: <" + (int)(width * scaleX) + ", " + (int)(height * scaleY) + ")\nScale Difference: (" + scaleDiffX + ", " + scaleDiffY + ")" );
+                int scaleDiffX = (width - (int) (width * Globals.SCALE_X.get())) / 2;
+                int scaleDiffY = (height - (int) (height * Globals.SCALE_Y.get())) / 2;
+                int moveX = tmpX - initialX;
+                int moveY = tmpY - initialY;
+                /*Log.d(TAG, "Moving... (" + moveX + ", " + moveY + ")\nCoordinates: (" + tmpX + ", " + tmpY + ")\nScaled Coordinates: (" + tmpX * Globals.SCALE_X.get() + ", " + tmpY * Globals.SCALE_Y.get() + ")\n" +
+                        "Size: <" + width + ", " + height + ">\nScale Size: <" + (int)(width * Globals.SCALE_X.get()) + ", " + (int)(height * Globals.SCALE_Y.get()) + ")\nScale Difference: (" + scaleDiffX + ", " + scaleDiffY + ")" );
                 */
                 mContentView.setX(moveX);
                 mContentView.setY(moveY);
                 return false;
             case MotionEvent.ACTION_UP:
-                if (tmpX >= MainActivity.getMaxX() && mMinimizeHint) minimize();
+                //if (tmpX >= Globals.MAX_X.get() && mMinimizeHint) minimize();
                 //Log.d(TAG, "Released... (" + x + ", " + y + ")");
+                mContentView.invalidate();
                 return true;
         }
         return false;
@@ -375,8 +387,8 @@ public class FloatingFragment extends Fragment {
             case MotionEvent.ACTION_POINTER_DOWN:
                 tmpX = (int) event.getX(0);
                 tmpY = (int) event.getY(0);
-                tmpWidth = (int) (width * scaleX);
-                tmpHeight = (int) (height * scaleY);
+                tmpWidth = (int) (width * Globals.SCALE_X.get());
+                tmpHeight = (int) (height * Globals.SCALE_Y.get());
                 tmpX2 = (int) event.getX(1);
                 tmpY2 = (int) event.getY(1);
                 return false;
@@ -398,8 +410,8 @@ public class FloatingFragment extends Fragment {
                  */
                 int xPointerDist = firstPointerDiffX - secondPointerDiffX;
                 int yPointerDist = firstPointerDiffY - secondPointerDiffY;
-                int resizeX = Math.min(Math.max(tmpWidth + xPointerDist, 0), MainActivity.getMaxX());
-                int resizeY = Math.min(Math.max(tmpHeight + yPointerDist, 0), MainActivity.getMaxY());
+                int resizeX = Math.min(Math.max(tmpWidth + xPointerDist, 0), Globals.MAX_X.get());
+                int resizeY = Math.min(Math.max(tmpHeight + yPointerDist, 0), Globals.MAX_Y.get());
                 mContentView.setLayoutParams(new LinearLayout.LayoutParams(resizeX, resizeY));
                 //Log.d(TAG, "Resizing... (" + resizeX + "x" + resizeY + ")");
                 return false;
@@ -411,29 +423,8 @@ public class FloatingFragment extends Fragment {
         return false;
     }
 
-    private float scaleDiff(float num, float ratio) {
-        return num - (num * ratio);
-    }
-
-    private float scale(float num, float ratio) {
-        return num * ratio;
-    }
-
-    private int scaleDiffToInt(float num, float ratio) {
-        return (int) scaleDiff(num, ratio);
-    }
-
-    private int scaleToInt(float num, float ratio) {
-        return (int) scale(num, ratio);
-    }
-
-    private Point getScaledCoordinates(){
-        return new Point((int) mContentView.getX() + scaleDiffToInt(mContentView.getWidth(), scaleX)/2,
-                (int) mContentView.getY() + scaleDiffToInt(mContentView.getHeight(), scaleY)/2);
-    }
-
     private void minimize() {
-        mContentView.setVisibility(View.INVISIBLE);
+        /*mContentView.setVisibility(View.INVISIBLE);
         // TODO: Fix this!
         final LinearLayout layout = (LinearLayout) getActivity().findViewById(-1);
         final ImageView view = new ImageView(getActivity());
@@ -450,7 +441,7 @@ public class FloatingFragment extends Fragment {
                 mContentView.setVisibility(View.VISIBLE);
                 layout.removeView(view);
             }
-        });
+        });*/
     }
 
     public ArrayMap<String, String> serialize() {
@@ -464,6 +455,27 @@ public class FloatingFragment extends Fragment {
         return map;
     }
 
+    private void boundsCheck() {
+        if (mContentView.getX() < 0) {
+            mContentView.setX(0);
+        }
+        if (mContentView.getY() < 0) {
+            mContentView.setY(0);
+        }
+        if (mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
+            mContentView.setX(Globals.MAX_X.get() - mContentView.getWidth());
+        }
+        if (mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
+            mContentView.setY(Globals.MAX_Y.get() - mContentView.getHeight());
+        }
+        if (MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
+            mContentView.setLayoutParams(new LinearLayout.LayoutParams(Globals.MAX_X.get(), mContentView.getHeight()));
+        }
+        if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
+            mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
+        }
+    };
+    
     /**
      * For subclasses to override to setup their own additional needed information. Not abstract as it is not
      * necessary to setup.

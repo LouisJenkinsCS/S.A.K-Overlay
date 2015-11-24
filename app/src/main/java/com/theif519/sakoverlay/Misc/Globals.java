@@ -1,5 +1,7 @@
 package com.theif519.sakoverlay.Misc;
 
+import com.theif519.utils.Misc.MutableObject;
+
 /**
  * Created by theif519 on 11/13/2015.
  * <p/>
@@ -61,6 +63,10 @@ public final class Globals {
                 RECORDER_COMMAND_RESPONSE = "Recorder Command Response", RECORDER_COMMAND = "Recorder Command",
                 RECORDER_COMMAND_EXECUTED = "Recorder Command Executed", RECORDER_ERROR_MESSAGE = "Recorder Error Message";
     }
+
+    public static final MutableObject<Float> SCALE_X = new MutableObject<>(1f), SCALE_Y = new MutableObject<>(1f);
+
+    public static final MutableObject<Integer> MAX_X = new MutableObject<>(0), MAX_Y = new MutableObject<>(0);
 
     public static final int RECORDER_PERMISSION_RETVAL = 1;
 

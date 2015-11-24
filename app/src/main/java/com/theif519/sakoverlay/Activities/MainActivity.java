@@ -3,8 +3,7 @@ package com.theif519.sakoverlay.Activities;
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.os.*;
-import android.os.Process;
+import android.os.Bundle;
 import android.util.ArrayMap;
 import android.util.TypedValue;
 import android.view.View;
@@ -19,9 +18,9 @@ import com.theif519.sakoverlay.Fragments.Floating.IntroductionFragment;
 import com.theif519.sakoverlay.Fragments.Floating.ScreenRecorderFragment;
 import com.theif519.sakoverlay.Fragments.Floating.StickyNoteFragment;
 import com.theif519.sakoverlay.Fragments.Floating.WebBrowserFragment;
+import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.NotificationService;
-import com.theif519.utils.Misc.MutableObject;
 import com.theif519.utils.Misc.ServiceTools;
 import com.theif519.utils.Serialization.JSONDeserializer;
 import com.theif519.utils.Serialization.JSONSerializer;
@@ -48,11 +47,7 @@ public class MainActivity extends Activity {
      */
     private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
 
-    private static final MutableObject<Integer> MAX_X = new MutableObject<>(0), MAX_Y = new MutableObject<>(0);
-
-    private static final MutableObject<Float> SCALE_X = new MutableObject<>(1.0f), SCALE_Y = new MutableObject<>(1.0f);
-
-    public static final HandlerThread WORKER_THREAD;
+    /*public static final HandlerThread WORKER_THREAD;
 
     public static final Handler WORKER_HANDLE;
 
@@ -61,11 +56,12 @@ public class MainActivity extends Activity {
         and due to the fact the Handler requires the looper of the HandlerThread, we must block
         until it has been initialized, hence the application may be slow to start up, sadly.
      */
+    /*
     static {
         WORKER_THREAD = new HandlerThread("Generic Worker", Process.THREAD_PRIORITY_BACKGROUND);
         WORKER_THREAD.start();
         WORKER_HANDLE = new Handler(WORKER_THREAD.getLooper());
-    }
+    }*/
 
     private static final String TAG = MainActivity.class.getName();
     public static final String JSON_FILENAME = "SerializedFloatingFragments.json";
@@ -117,7 +113,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 FloatingFragment fragment = ScreenRecorderFragment.newInstance();
-                if(fragment == null){
+                if (fragment == null) {
                     Toast.makeText(MainActivity.this, "Only one instance of Screen Recorder may exist at a time!", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -128,15 +124,15 @@ public class MainActivity extends Activity {
         findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                MAX_X.value = findViewById(R.id.main_layout).getWidth();
-                MAX_Y.value = findViewById(R.id.main_layout).getHeight();
+                Globals.MAX_X.set(findViewById(R.id.main_layout).getWidth());
+                Globals.MAX_Y.set(findViewById(R.id.main_layout).getHeight());
             }
         });
         TypedValue value = new TypedValue();
         getResources().getValue(R.dimen.default_scale_x, value, true);
-        SCALE_X.value = value.getFloat();
+        Globals.SCALE_X.set(value.getFloat());
         getResources().getValue(R.dimen.default_scale_y, value, true);
-        SCALE_Y.value = value.getFloat();
+        Globals.SCALE_Y.set(value.getFloat());
         final File jsonFile = new File(getExternalFilesDir(null), JSON_FILENAME);
         if(jsonFile.exists()){
             new JSONDeserializer() {
@@ -177,22 +173,6 @@ public class MainActivity extends Activity {
                 this.file = new File(getExternalFilesDir(null), JSON_FILENAME);
             }
         }.execute(mapList.toArray(new ArrayMap[0]));
-    }
-
-    public static int getMaxX(){
-        return MAX_X.value;
-    }
-
-    public static int getMaxY(){
-        return MAX_Y.value;
-    }
-
-    public static float getScaleX(){
-        return SCALE_X.value;
-    }
-
-    public static float getScaleY(){
-        return SCALE_Y.value;
     }
 
     @Override

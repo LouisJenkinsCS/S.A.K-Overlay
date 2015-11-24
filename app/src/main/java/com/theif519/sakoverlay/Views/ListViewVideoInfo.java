@@ -28,7 +28,6 @@ public class ListViewVideoInfo extends RelativeLayout {
         mTimeStamp.setText(info.getTimestamp());
         mThumbnail.setImageBitmap(mBitmap = info.getThumbnail());
     }
-
     public ListViewVideoInfo(Context context) {
         super(context);
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
