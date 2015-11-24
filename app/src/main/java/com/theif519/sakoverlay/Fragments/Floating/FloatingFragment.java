@@ -22,11 +22,15 @@ import com.jakewharton.rxbinding.view.RxView;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 import com.theif519.utils.Misc.MeasureTools;
+import com.theif519.utils.Misc.MutableObject;
 
 import java.util.ArrayList;
 
+import rx.Scheduler;
+import rx.Subscription;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by theif519 on 10/29/2015.
@@ -285,6 +289,8 @@ public class FloatingFragment extends Fragment {
                 mContentView.invalidate();
             }
         });
+        final Scheduler.Worker worker = Schedulers.computation().createWorker();
+        final MutableObject<Subscription> workerSubscription = new MutableObject<>(null);
         RxView.touches(mContentView.findViewById(R.id.title_bar_move)).filter(new Func1<MotionEvent, Boolean>() {
             @Override
             public Boolean call(MotionEvent event) {
@@ -294,7 +300,7 @@ public class FloatingFragment extends Fragment {
         }).subscribe(new Action1<MotionEvent>() {
             @Override
             public void call(MotionEvent event) {
-                switch(event.getAction()){
+                switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         initialX = (int) event.getRawX() - (int) mContentView.getX();
                         initialY = (int) event.getRawY() - (int) mContentView.getY();
@@ -304,10 +310,10 @@ public class FloatingFragment extends Fragment {
                         tmpY = (int) event.getRawY();
                         width = mContentView.getWidth();
                         height = mContentView.getHeight();
-                        int scaleDiffX = (width - (int) (width * Globals.SCALE_X.get())) / 2;
-                        int scaleDiffY = (height - (int) (height * Globals.SCALE_Y.get())) / 2;
-                        int moveX = tmpX - initialX;
-                        int moveY = tmpY - initialY;
+                        int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
+                        int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
+                        int moveX = Math.min(Math.max(tmpX - initialX, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
+                        int moveY = Math.min(Math.max(tmpY - initialY, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
                         mContentView.setX(moveX);
                         mContentView.setY(moveY);
                         break;
@@ -455,12 +461,20 @@ public class FloatingFragment extends Fragment {
         return map;
     }
 
+    private boolean backgroundViewInBounds(){
+        return mContentView.getX() < 0 || mContentView.getY() < 0 ||
+                mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()
+                || mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()
+                || MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()
+                || MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get();
+    }
+
     private void boundsCheck() {
-        if (mContentView.getX() < 0) {
-            mContentView.setX(0);
+        if (mContentView.getX() - MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 2   < 0) {
+            mContentView.setX(-MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 2);
         }
-        if (mContentView.getY() < 0) {
-            mContentView.setY(0);
+        if (mContentView.getY() - MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 2 < 0) {
+            mContentView.setY(-MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 2);
         }
         if (mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
             mContentView.setX(Globals.MAX_X.get() - mContentView.getWidth());

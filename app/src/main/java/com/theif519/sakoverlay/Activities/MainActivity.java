@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Process;
 import android.util.ArrayMap;
 import android.util.TypedValue;
 import android.view.View;
@@ -47,7 +50,7 @@ public class MainActivity extends Activity {
      */
     private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
 
-    /*public static final HandlerThread WORKER_THREAD;
+    public static final HandlerThread WORKER_THREAD;
 
     public static final Handler WORKER_HANDLE;
 
@@ -56,12 +59,11 @@ public class MainActivity extends Activity {
         and due to the fact the Handler requires the looper of the HandlerThread, we must block
         until it has been initialized, hence the application may be slow to start up, sadly.
      */
-    /*
     static {
         WORKER_THREAD = new HandlerThread("Generic Worker", Process.THREAD_PRIORITY_BACKGROUND);
         WORKER_THREAD.start();
         WORKER_HANDLE = new Handler(WORKER_THREAD.getLooper());
-    }*/
+    }
 
     private static final String TAG = MainActivity.class.getName();
     public static final String JSON_FILENAME = "SerializedFloatingFragments.json";
