@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -20,17 +21,17 @@ import android.widget.PopupWindow;
 
 import com.jakewharton.rxbinding.view.RxView;
 import com.theif519.sakoverlay.Misc.Globals;
+import com.theif519.sakoverlay.POD.TouchEventInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.utils.Misc.MeasureTools;
-import com.theif519.utils.Misc.MutableObject;
 
 import java.util.ArrayList;
 
-import rx.Scheduler;
-import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 /**
  * Created by theif519 on 10/29/2015.
@@ -71,7 +72,7 @@ public class FloatingFragment extends Fragment {
     /*
         Required to keep track of the position and size of the view between each onTouchEvent.
      */
-    private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY, sidebarDimen;
+    private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY, tmpX2, tmpY2, sidebarDimen;
 
     /*
         Keeps track of the tag to be
@@ -145,9 +146,9 @@ public class FloatingFragment extends Fragment {
     /**
      * Where we initialize, retrieve and setup our global variables.
      */
-    private void setupGlobals(){
+    private void setupGlobals() {
         sidebarDimen = (int) getResources().getDimension(R.dimen.activity_main_sidebar_width);
-        if(mOptions == null){
+        if (mOptions == null) {
             mOptions = new ArrayList<>();
         }
         mOptions.add(TRANSPARENCY_TOGGLE);
@@ -157,7 +158,7 @@ public class FloatingFragment extends Fragment {
     /**
      * Where we initialize all of our listeners.
      */
-    private void setupListeners(){
+    private void setupListeners() {
         mContentView.findViewById(R.id.title_bar_close).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -165,71 +166,7 @@ public class FloatingFragment extends Fragment {
                 mIsDead = true;
             }
         });
-        /*
-            This listener handles moving and resizing the floating fragment. How it is handled depends
-            on the current action of the touch event, and how many fingers are used.
-
-            Currently, one finger means move, two fingers means resizing.
-         */
-        mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                /*
-                    Due to the issue of flinging when letting go of one pointer, I disable any touch events
-                    after one of the pointers is let up. This ensures that moving is very smooth and consistent.
-                 */
-                if (mFinishedMultiTouch) {
-                    return mFinishedMultiTouch = (event.getAction() != MotionEvent.ACTION_UP && event.getAction() != MotionEvent.ACTION_POINTER_UP);
-                }
-                if (event.getPointerCount() == 1) {
-                    return handleMove(event);
-                } else {
-                    return mFinishedMultiTouch = handleResize(event);
-                }
-            }
-        });
         setupReactiveTouches();
-
-        /*RxView.draws(mContentView).subscribe(new Action1<Void>() {
-            @Override
-            public void call(Void aVoid) {
-                if (mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
-                    mContentView.setX(Globals.MAX_X.get() - mContentView.getWidth());
-                }
-                if (mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
-                    mContentView.setY(Globals.MAX_Y.get() - mContentView.getHeight());
-                }
-                if (MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(Globals.MAX_X.get(), mContentView.getHeight()));
-                }
-                if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
-                }
-            }
-        });
-        /*
-            This adds an observer to the layout all floating fragments belong to, to ensure that on orientation change
-            that all floating fragments are within the boundaries of this app, making changes if need be.
-         */
-
-        /*
-        getActivity().findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                if (mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
-                    mContentView.setX(Globals.MAX_X.get() - mContentView.getWidth());
-                }
-                if (mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
-                    mContentView.setY(Globals.MAX_Y.get() - mContentView.getHeight());
-                }
-                if (MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(Globals.MAX_X.get(), mContentView.getHeight()));
-                }
-                if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
-                }
-            }
-        });*/
         mContentView.findViewById(R.id.title_bar_options).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -254,73 +191,53 @@ public class FloatingFragment extends Fragment {
                         p.y + MeasureTools.scaleToInt(mContentView.findViewById(R.id.title_bar_options).getHeight(), Globals.SCALE_Y.get()));
             }
         });
-        /*
-        // TODO: Figure a way to setup ReactiveX events to handle this more elegantly, using filters (?)
-        mContentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                if (mContentView.getX() < 0) {
-                    mContentView.setX(0);
-                }
-                if (mContentView.getY() < 0) {
-                    mContentView.setY(0);
-                }
-                if (mContentView.getX() > Globals.MAX_X.get()) {
-                    mContentView.setX(Globals.MAX_X.get());
-                }
-                if (mContentView.getY() > Globals.MAX_Y.get()) {
-                    mContentView.setY(Globals.MAX_Y.get());
-                }
-                if (mContentView.getVisibility() != View.INVISIBLE) {
-                    height = mContentView.getHeight();
-                    width = mContentView.getWidth();
-                    x = (int) mContentView.getX();
-                    y = (int) mContentView.getY();
-                }
-            }
-        });
-        */
     }
 
-    private void setupReactiveTouches(){
-        RxView.globalLayouts(getActivity().findViewById(R.id.main_layout)).subscribe(new Action1<Void>() {
+    private void setupReactiveTouches() {
+        /*
+            RxView allows us to transform normal listeners into a much more flexible and extremely
+            powerful observables. Each time this listener is triggered (I.E, onTouch or onClick) it will
+            alert any and all observers observing this particular event.
+
+            How does this differ from normal listeners? It allows us to filter out events we do not want (filter),
+            transform these events into other types (map), and even set which thread we do background processing
+            and which thread we wish to handle the finally processed event on, like an Async Task.
+         */
+        final PublishSubject<MotionEvent> onTouch = PublishSubject.create();
+        mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void call(Void aVoid) {
-                mContentView.invalidate();
+            public boolean onTouch(View v, MotionEvent event) {
+                onTouch.onNext(event);
+                return true;
             }
         });
-        final Scheduler.Worker worker = Schedulers.computation().createWorker();
-        final MutableObject<Subscription> workerSubscription = new MutableObject<>(null);
-        RxView.touches(mContentView.findViewById(R.id.title_bar_move)).filter(new Func1<MotionEvent, Boolean>() {
+        //RxView.touches(mContentView.findViewById(R.id.title_bar_move)) // Create observable from touch event.
+        onTouch
+                .observeOn(AndroidSchedulers.mainThread()) // Processing goes on in background, non-I/O bound thread.
+                .subscribeOn(Schedulers.computation()) // Handling of fully processed event is done on main thread (I.E, update view)
+                .map(new Func1<MotionEvent, TouchEventInfo>() { // Handle calculations and map each event to the Point it has to move.
+                    @Override
+                    public TouchEventInfo call(MotionEvent event) {
+                        return event.getPointerCount() == 1 ? moveCalculation(event) : resizeCalculation(event);
+                    }
+                }).filter(new Func1<TouchEventInfo, Boolean>() { // If it returns null, it does not have to move at all.
             @Override
-            public Boolean call(MotionEvent event) {
-                return event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE
-                        || event.getAction() == MotionEvent.ACTION_UP;
+            public Boolean call(TouchEventInfo info) {
+                return info != null;
             }
-        }).subscribe(new Action1<MotionEvent>() {
+        }).subscribe(new Action1<TouchEventInfo>() { // On the main thread, set the new X and Y coordinate.
             @Override
-            public void call(MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        initialX = (int) event.getRawX() - (int) mContentView.getX();
-                        initialY = (int) event.getRawY() - (int) mContentView.getY();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        tmpX = (int) event.getRawX();
-                        tmpY = (int) event.getRawY();
-                        width = mContentView.getWidth();
-                        height = mContentView.getHeight();
-                        int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
-                        int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
-                        int moveX = Math.min(Math.max(tmpX - initialX, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
-                        int moveY = Math.min(Math.max(tmpY - initialY, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
-                        mContentView.setX(moveX);
-                        mContentView.setY(moveY);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        boundsCheck();
-                        break;
+            public void call(TouchEventInfo info) {
+                if (info.isMultiTouch()) {
+                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(info.getWidth(), info.getHeight()));
+                } else {
+                    mContentView.setX(info.getX());
+                    mContentView.setY(info.getY());
                 }
+                Log.d(TAG, "Coordinates... (" + MeasureTools.getScaledCoordinates(mContentView).x + "," +
+                        MeasureTools.getScaledCoordinates(mContentView).y + ")\n" +
+                        "Resolution... <" + MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) +
+                        "x" + MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) + ">");
             }
         });
         RxView.globalLayouts(getActivity().findViewById(R.id.main_layout)).concatWith(RxView.globalLayouts(mContentView))
@@ -352,44 +269,29 @@ public class FloatingFragment extends Fragment {
 
     private int initialX, initialY;
 
-    private boolean handleMove(MotionEvent event) {
+    public TouchEventInfo moveCalculation(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 initialX = (int) event.getRawX() - (int) mContentView.getX();
                 initialY = (int) event.getRawY() - (int) mContentView.getY();
-                //Log.d(TAG, "Tapped... (" + x + ", " + y + ") : < " + width + "x" + height + " >");
-                return false;
+                return null;
             case MotionEvent.ACTION_MOVE:
-                if ((int) event.getRawX() >= tmpX && (int) event.getRawX() >= Globals.MAX_X.get())
-                    mMinimizeHint = true;
-                else mMinimizeHint = false;
                 tmpX = (int) event.getRawX();
                 tmpY = (int) event.getRawY();
                 width = mContentView.getWidth();
                 height = mContentView.getHeight();
-                int scaleDiffX = (width - (int) (width * Globals.SCALE_X.get())) / 2;
-                int scaleDiffY = (height - (int) (height * Globals.SCALE_Y.get())) / 2;
-                int moveX = tmpX - initialX;
-                int moveY = tmpY - initialY;
-                /*Log.d(TAG, "Moving... (" + moveX + ", " + moveY + ")\nCoordinates: (" + tmpX + ", " + tmpY + ")\nScaled Coordinates: (" + tmpX * Globals.SCALE_X.get() + ", " + tmpY * Globals.SCALE_Y.get() + ")\n" +
-                        "Size: <" + width + ", " + height + ">\nScale Size: <" + (int)(width * Globals.SCALE_X.get()) + ", " + (int)(height * Globals.SCALE_Y.get()) + ")\nScale Difference: (" + scaleDiffX + ", " + scaleDiffY + ")" );
-                */
-                mContentView.setX(moveX);
-                mContentView.setY(moveY);
-                return false;
-            case MotionEvent.ACTION_UP:
-                //if (tmpX >= Globals.MAX_X.get() && mMinimizeHint) minimize();
-                //Log.d(TAG, "Released... (" + x + ", " + y + ")");
-                mContentView.invalidate();
-                return true;
+                int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
+                int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
+                int moveX = Math.min(Math.max(tmpX - initialX, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
+                int moveY = Math.min(Math.max(tmpY - initialY, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
+                return new TouchEventInfo(moveX, moveY, 0, 0, false);
+            default:
+                return null;
         }
-        return false;
     }
 
-    private int tmpX2, tmpY2;
-
-    private boolean handleResize(MotionEvent event) {
-        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+    public TouchEventInfo resizeCalculation(MotionEvent event) {
+        switch (event.getAction()) {
             case MotionEvent.ACTION_POINTER_DOWN:
                 tmpX = (int) event.getX(0);
                 tmpY = (int) event.getY(0);
@@ -397,9 +299,8 @@ public class FloatingFragment extends Fragment {
                 tmpHeight = (int) (height * Globals.SCALE_Y.get());
                 tmpX2 = (int) event.getX(1);
                 tmpY2 = (int) event.getY(1);
-                return false;
+                return null;
             case MotionEvent.ACTION_MOVE:
-                if (event.getPointerCount() != 2) return true;
                 // TODO: Make resizing it at negative coordinates rebound
                 /*
                     We capture the difference between this and the originally captured coordinates. The reason
@@ -416,38 +317,12 @@ public class FloatingFragment extends Fragment {
                  */
                 int xPointerDist = firstPointerDiffX - secondPointerDiffX;
                 int yPointerDist = firstPointerDiffY - secondPointerDiffY;
-                int resizeX = Math.min(Math.max(tmpWidth + xPointerDist, 0), Globals.MAX_X.get());
-                int resizeY = Math.min(Math.max(tmpHeight + yPointerDist, 0), Globals.MAX_Y.get());
-                mContentView.setLayoutParams(new LinearLayout.LayoutParams(resizeX, resizeY));
-                //Log.d(TAG, "Resizing... (" + resizeX + "x" + resizeY + ")");
-                return false;
-            case MotionEvent.ACTION_POINTER_UP:
-            case MotionEvent.ACTION_UP:
-                //Log.d(TAG, "Released... <" + width + "x" + height + ">");
-                return true;
+                int resizeX = Math.min(Math.max(tmpWidth + (int) (xPointerDist * Globals.SCALE_X.get()), 150), Globals.MAX_X.get());
+                int resizeY = Math.min(Math.max(tmpHeight + (int) (yPointerDist * Globals.SCALE_Y.get()), 150), Globals.MAX_Y.get());
+                return new TouchEventInfo(0, 0, resizeX, resizeY, true);
+            default:
+                return null;
         }
-        return false;
-    }
-
-    private void minimize() {
-        /*mContentView.setVisibility(View.INVISIBLE);
-        // TODO: Fix this!
-        final LinearLayout layout = (LinearLayout) getActivity().findViewById(-1);
-        final ImageView view = new ImageView(getActivity());
-        view.setImageResource(ICON_ID);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        layoutParams.setMarginEnd(3);
-        layoutParams.setMargins(0, 0, 0, 10);
-        layout.addView(view, layoutParams);
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mContentView.setVisibility(View.VISIBLE);
-                layout.removeView(view);
-            }
-        });*/
     }
 
     public ArrayMap<String, String> serialize() {
@@ -461,16 +336,8 @@ public class FloatingFragment extends Fragment {
         return map;
     }
 
-    private boolean backgroundViewInBounds(){
-        return mContentView.getX() < 0 || mContentView.getY() < 0 ||
-                mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()
-                || mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()
-                || MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()
-                || MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get();
-    }
-
     private void boundsCheck() {
-        if (mContentView.getX() - MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 2   < 0) {
+        if (mContentView.getX() - MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 2 < 0) {
             mContentView.setX(-MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 2);
         }
         if (mContentView.getY() - MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 2 < 0) {
@@ -488,18 +355,14 @@ public class FloatingFragment extends Fragment {
         if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
             mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
         }
-    };
-    
+    }
+
     /**
      * For subclasses to override to setup their own additional needed information. Not abstract as it is not
      * necessary to setup.
      */
     protected void setup() {
 
-    }
-
-    public String getLayoutTag() {
-        return LAYOUT_TAG;
     }
 
     protected View getContentView() {
@@ -510,10 +373,10 @@ public class FloatingFragment extends Fragment {
         return mIsDead;
     }
 
-    public void onItemSelected(String string){
-        switch(string){
+    public void onItemSelected(String string) {
+        switch (string) {
             case TRANSPARENCY_TOGGLE:
-                if(mIsTransparent = !mIsTransparent){
+                if (mIsTransparent = !mIsTransparent) {
                     mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(android.R.color.transparent));
                 } else {
                     mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(R.color.black));
