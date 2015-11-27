@@ -21,7 +21,7 @@ public class ExpandableMenuAdapter extends BaseExpandableListAdapter {
 
     private static final int PARENT_RESOURCE_ID = R.layout.list_view_default_parent;
 
-    private static final int CHILD_RESOURCE_ID = R.layout.list_view_default_child;
+    private static final int CHILD_RESOURCE_ID = R.layout.menu_child_item;
 
     private Context mContext;
     private ArrayList<MenuParentInfo> mParents;
@@ -131,8 +131,8 @@ public class ExpandableMenuAdapter extends BaseExpandableListAdapter {
         }
 
         public MenuChildInfoHolder(View view) {
-            mDescription = (TextView) view.findViewById(R.id.list_view_default_child_description);
-            mIcon = (ImageView) view.findViewById(R.id.list_view_default_child_icon);
+            mDescription = (TextView) view.findViewById(R.id.menu_child_item_description);
+            mIcon = (ImageView) view.findViewById(R.id.menu_child_item_icon);
         }
 
         public void setup(final MenuChildInfo info) {

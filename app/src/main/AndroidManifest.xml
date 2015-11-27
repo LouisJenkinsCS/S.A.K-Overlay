@@ -30,7 +30,8 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.Transparent" >
+        android:logo="@android:color/transparent"
+        android:theme="@style/Theme.FloatingWindow.Popup" >
         <activity
             android:name=".Activities.MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"

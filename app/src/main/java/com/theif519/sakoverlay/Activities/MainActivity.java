@@ -1,17 +1,18 @@
 package com.theif519.sakoverlay.Activities;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Process;
 import android.util.ArrayMap;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.WindowManager;
+import android.widget.PopupWindow;
 import android.widget.Toast;
 
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
@@ -49,30 +50,16 @@ public class MainActivity extends Activity {
         Well, it was a way I could experiment, so why not?
      */
     private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
-
-    public static final HandlerThread WORKER_THREAD;
-
-    public static final Handler WORKER_HANDLE;
-
-    /*
-        This block of code initializes the handler thread which manages all background tasks,
-        and due to the fact the Handler requires the looper of the HandlerThread, we must block
-        until it has been initialized, hence the application may be slow to start up, sadly.
-     */
-    static {
-        WORKER_THREAD = new HandlerThread("Generic Worker", Process.THREAD_PRIORITY_BACKGROUND);
-        WORKER_THREAD.start();
-        WORKER_HANDLE = new Handler(WORKER_THREAD.getLooper());
-    }
-
-    private static final String TAG = MainActivity.class.getName();
     public static final String JSON_FILENAME = "SerializedFloatingFragments.json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER);
+        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         setContentView(R.layout.activity_main);
+        setupActionBar();
         ServiceTools.startService(this, NotificationService.class, new ServiceTools.SetupIntent() {
             @Override
             public void setup(Intent intent) {
@@ -156,6 +143,37 @@ public class MainActivity extends Activity {
                 }
             }.execute();
         }
+    }
+
+    private void setupActionBar(){
+        ActionBar actionbar = getActionBar();
+        if(actionbar == null) throw new RuntimeException("ActionBar is null!");
+        actionbar.setDisplayShowCustomEnabled(true);
+        actionbar.setHomeButtonEnabled(false);
+        actionbar.setCustomView(R.layout.menu_bar);
+        final View icon = actionbar.getCustomView().findViewById(R.id.menu_bar_icon);
+        icon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "Clicked icon!", Toast.LENGTH_SHORT).show();
+                View view = getLayoutInflater().inflate(R.layout.menu_icon_dropdown, null);
+                view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                PopupWindow window = new PopupWindow(view);
+                window.setFocusable(true);
+                window.setBackgroundDrawable(new BitmapDrawable());
+                window.setOutsideTouchable(true);
+                window.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                window.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, 0);
+            }
+        });
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
     @SuppressWarnings("unchecked")

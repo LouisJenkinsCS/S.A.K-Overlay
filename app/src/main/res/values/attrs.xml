@@ -4,4 +4,9 @@
         <attr name="tbTitle" format="string"/>
         <attr name="tbOptions" format="reference"/>
     </declare-styleable>
+    
+    <declare-styleable name="MenuChildItem">
+        <attr name="mciIcon" format="reference"/>
+        <attr name="mciDescription" format="string"/>
+    </declare-styleable>
 </resources>

@@ -2,6 +2,9 @@ package com.theif519.utils.Misc;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
 
@@ -122,6 +125,12 @@ public final class AttributeRetriever {
                     m.invoke(self, arr.getBoolean(f.getInt(null), false));
                 } else if(type == String.class){
                     m.invoke(self, arr.getString(f.getInt(null)));
+                } else if(type == Bitmap.class){
+                    Drawable d = arr.getDrawable(f.getInt(null));
+                    if(d == null) continue;
+                    Bitmap b = ((BitmapDrawable)d).getBitmap();
+                    if(b == null) continue;
+                    m.invoke(self, b);
                 }
             } catch (InvocationTargetException | IllegalAccessException | NoSuchFieldException e) {
                 if (e.getMessage() != null) Log.v(TAG, e.getMessage());

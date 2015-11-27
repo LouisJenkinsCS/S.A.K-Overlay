@@ -72,7 +72,7 @@ public class RecorderService extends Service {
             for (RecorderState state : values()) {
                 totalMask |= state.getMask();
             }
-            return totalMask; // 0111 1111
+            return totalMask;
         }
 
         RecorderState(int bitmask) {
@@ -154,12 +154,12 @@ public class RecorderService extends Service {
         }
     }
 
-    class RecorderBinder extends Binder {
-        RecorderService getService() {
+    public class RecorderBinder extends Binder {
+        public RecorderService getService() {
             return RecorderService.this;
         }
 
-        Observable<RecorderState> observeStateChanges(){
+        public Observable<RecorderState> observeStateChanges(){
             return mStateChangeObserver.asObservable();
         }
     }
@@ -191,12 +191,10 @@ public class RecorderService extends Service {
         Log.i(getClass().getName(), "Initializing Screen Recorder...");
         try {
             mRecorder = new MediaRecorder();
-            if (audioEnabled) {
-                mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
-                mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            }
+            if (audioEnabled) mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
             mRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
             mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            if(audioEnabled) mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
             mRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
             mRecorder.setVideoEncodingBitRate(512 * 1000);
             mRecorder.setVideoFrameRate(30);
@@ -256,7 +254,7 @@ public class RecorderService extends Service {
      * @return Initialized virtual display.
      */
     private VirtualDisplay createVirtualDisplay(int width, int height) {
-        Log.i(getClass().getName(), "Creating VirtualDisplay...");
+        Log.i(getClass().getName(), "Creating Virtual Display...");
         DisplayMetrics metrics = new DisplayMetrics();
         ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(metrics);
         return mProjection.createVirtualDisplay(getClass().getName(), width, height,
@@ -314,7 +312,7 @@ public class RecorderService extends Service {
     }
 
     public void die(){
-        if(mState == RecorderState.DEAD) return;
+        if(!RecorderCommand.DIE.isPossible(mState)) return;
         if(mRecorder != null){
             mRecorder.reset();
             mRecorder.release();
@@ -330,6 +328,7 @@ public class RecorderService extends Service {
     }
 
     public boolean stop(){
+        if(!RecorderCommand.STOP.isPossible(mState)) return false;
         try {
             Log.i(getClass().getName(), "Stopping recorder...");
             mRecorder.stop();
@@ -347,14 +346,17 @@ public class RecorderService extends Service {
     }
 
     public boolean start(int width, int height, boolean audioEnabled, String fileName) {
+        if(!RecorderCommand.START.isPossible(mState)) return false;
         Log.i(getClass().getName(), "Checking for permissions...");
         if (mProjection == null) {
             Log.i(getClass().getName(), "Starting activity for permission...");
-            startActivity(new Intent(this, PermissionActivity.class));
+            Intent intent = new Intent(this, PermissionActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             return false;
         }
         String errMsg;
-        if((errMsg = checkStartParameters(width, height, fileName)) != null){
+        if(!(errMsg = checkStartParameters(width, height, fileName)).isEmpty()){
             Toast.makeText(RecorderService.this, errMsg, Toast.LENGTH_LONG).show();
             return false;
         }
@@ -364,10 +366,10 @@ public class RecorderService extends Service {
         try {
             Log.i(getClass().getName(), "Preparing Recorder...");
             mRecorder.prepare();
-            Log.i(getClass().getName(), "Creating Virtual Display...");
             mDisplay = createVirtualDisplay(width, height);
             Log.i(getClass().getName(), "Started!");
             mRecorder.start();
+            changeState(RecorderState.STARTED);
         } catch (IOException | IllegalStateException e) {
             logErrorAndChangeState(e);
             return false;

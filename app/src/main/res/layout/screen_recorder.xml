@@ -68,7 +68,7 @@
             android:layout_toEndOf="@+id/screen_recorder_play_button"
             android:id="@+id/screen_recorder_record_button"
             android:layout_toStartOf="@+id/screen_recorder_delete_button"
-            android:text="Record"
+            android:text="Start"
             style="@android:style/Widget.Holo.Button.Borderless"/>
 
 

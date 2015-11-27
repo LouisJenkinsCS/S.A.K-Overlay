@@ -7,7 +7,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -122,6 +121,12 @@ public class FloatingFragment extends Fragment {
         return fragment;
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
     @SuppressWarnings("unchecked")
     @Nullable
     @Override
@@ -171,7 +176,6 @@ public class FloatingFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 final PopupWindow window = new PopupWindow(null, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
-                ;
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, mOptions);
                 ListView listView = new ListView(getActivity());
                 listView.setAdapter(adapter);
@@ -211,7 +215,6 @@ public class FloatingFragment extends Fragment {
                 return true;
             }
         });
-        //RxView.touches(mContentView.findViewById(R.id.title_bar_move)) // Create observable from touch event.
         onTouch
                 .observeOn(AndroidSchedulers.mainThread()) // Processing goes on in background, non-I/O bound thread.
                 .subscribeOn(Schedulers.computation()) // Handling of fully processed event is done on main thread (I.E, update view)
@@ -234,10 +237,10 @@ public class FloatingFragment extends Fragment {
                     mContentView.setX(info.getX());
                     mContentView.setY(info.getY());
                 }
-                Log.d(TAG, "Coordinates... (" + MeasureTools.getScaledCoordinates(mContentView).x + "," +
-                        MeasureTools.getScaledCoordinates(mContentView).y + ")\n" +
-                        "Resolution... <" + MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) +
-                        "x" + MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) + ">");
+                //Log.d(TAG, "Coordinates... (" + MeasureTools.getScaledCoordinates(mContentView).x + "," +
+                        //MeasureTools.getScaledCoordinates(mContentView).y + ")\n" +
+                        //"Resolution... <" + MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) +
+                        //"x" + MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) + ">");
             }
         });
         RxView.globalLayouts(getActivity().findViewById(R.id.main_layout)).concatWith(RxView.globalLayouts(mContentView))
