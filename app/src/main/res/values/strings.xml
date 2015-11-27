@@ -27,4 +27,5 @@
     <string name="screen_recorder_state_stopped">Stopped</string>
     <string name="screen_recorder_state_started">Started</string>
     <string name="screen_recorder_state_prepared">Prepared</string>
+    <string name="title_activity_permission">PermissionActivity</string>
 </resources>

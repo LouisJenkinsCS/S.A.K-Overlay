@@ -1,6 +1,5 @@
 package com.theif519.sakoverlay.Fragments.Floating;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,7 +9,6 @@ import android.content.IntentFilter;
 import android.graphics.Point;
 import android.media.projection.MediaProjectionManager;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -40,11 +38,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
     public static Boolean INSTANCE_EXISTS = false;
 
     public static final String IDENTIFIER = "Screen Recorder";
-
-    public static final String RESULT_CODE_KEY = "Result Code", DATA_INTENT_KEY = "Data Intent";
-
-    private static final int DISPLAY_WIDTH = 480;
-    private static final int DISPLAY_HEIGHT = 640;
 
     private TextView mStateText;
 
@@ -99,32 +92,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
         LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(new Intent(Globals.Keys.RECORDER_STATE_REQUEST));
     }
 
-    @Override
-    public void onActivityResult(int requestCode, final int resultCode, final Intent data) {
-        Log.i(getClass().getName(), "Asking user for permissions...");
-        /*
-            Note that an empty intent is equivalent to refusing permissions, as we explicitly check
-            in the service whether or not we receive an OKAY and valid input.
-         */
-        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(getActivity());
-        if (requestCode != Globals.RECORDER_PERMISSION_RETVAL) {
-            Toast.makeText(getActivity(), "Received an unknown request code! Aborting!", Toast.LENGTH_LONG).show();
-            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE));
-            mIsRunning = false;
-            return;
-        }
-        if (resultCode != Activity.RESULT_OK) {
-            Toast.makeText(getActivity(), "Permission Denied!", Toast.LENGTH_LONG).show();
-            manager.sendBroadcast(new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE));
-            mIsRunning = false;
-            return;
-        }
-        Intent intent = new Intent(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE);
-        intent.putExtra(Globals.Keys.RECORDER_PERMISSIONS_RESPONSE, true);
-        intent.putExtra(RESULT_CODE_KEY, resultCode);
-        intent.putExtra(Intent.EXTRA_INTENT, data);
-        manager.sendBroadcast(intent);
-    }
 
     public void createDialog() {
         final AlertDialog dialog = new AlertDialog.Builder(getActivity()).setView(R.layout.dialog_recorder_details)
