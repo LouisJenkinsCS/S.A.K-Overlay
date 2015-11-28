@@ -12,7 +12,7 @@ public class StickyNoteFragment extends FloatingFragment {
 
 
     protected static final String CONTENTS_KEY = "Contents";
-    public static final String IDENTIFIER = "Sticky Note";
+    protected static final String IDENTIFIER = "Sticky Note";
 
     public static StickyNoteFragment newInstance(){
         StickyNoteFragment fragment = new StickyNoteFragment();

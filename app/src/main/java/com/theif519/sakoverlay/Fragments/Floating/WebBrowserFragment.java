@@ -21,7 +21,7 @@ public class WebBrowserFragment extends FloatingFragment {
 
     private static final String DEFAULT_HOMEPAGE = "http://www.google.com", HOME = "Home", REFRESH = "Refresh";
 
-    public static final String IDENTIFIER = "Web Browser";
+    protected static final String IDENTIFIER = "Web Browser";
 
     private WebView mBrowser;
 

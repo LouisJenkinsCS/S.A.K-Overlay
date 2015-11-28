@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
@@ -114,6 +116,8 @@ public class FloatingFragment extends Fragment {
      */
     protected ArrayMap<String, String> mContext;
 
+    private ImageButton mTaskBarButton;
+
     public static FloatingFragment newInstance(int layoutId, String layoutTag) {
         FloatingFragment fragment = new FloatingFragment();
         fragment.LAYOUT_TAG = layoutTag;
@@ -135,6 +139,7 @@ public class FloatingFragment extends Fragment {
         //mContentView.setVisibility(View.INVISIBLE);
         setupGlobals();
         setupListeners();
+        setupTaskItem();
         /*f (mContext != null && Boolean.valueOf(mContext.get(Globals.Keys.MINIMIZED))) {
             minimize();
         } else mContentView.setVisibility(View.VISIBLE);*/
@@ -146,6 +151,12 @@ public class FloatingFragment extends Fragment {
             }
         });
         return mContentView;
+    }
+
+    private void setupTaskItem(){
+        mTaskBarButton = new ImageButton(getActivity());
+        mTaskBarButton.setImageResource(ICON_ID);
+        ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).addView(mTaskBarButton);
     }
 
     /**
@@ -232,7 +243,7 @@ public class FloatingFragment extends Fragment {
             @Override
             public void call(TouchEventInfo info) {
                 if (info.isMultiTouch()) {
-                    mContentView.setLayoutParams(new LinearLayout.LayoutParams(info.getWidth(), info.getHeight()));
+                    mContentView.setLayoutParams(new FrameLayout.LayoutParams(info.getWidth(), info.getHeight()));
                 } else {
                     mContentView.setX(info.getX());
                     mContentView.setY(info.getY());
@@ -266,7 +277,7 @@ public class FloatingFragment extends Fragment {
         height = Integer.parseInt(mContext.get(Globals.Keys.HEIGHT));
         mContentView.setX(x);
         mContentView.setY(y);
-        mContentView.setLayoutParams(new LinearLayout.LayoutParams(width, height));
+        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
         // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
     }
 
@@ -353,10 +364,10 @@ public class FloatingFragment extends Fragment {
             mContentView.setY(Globals.MAX_Y.get() - mContentView.getHeight());
         }
         if (MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
-            mContentView.setLayoutParams(new LinearLayout.LayoutParams(Globals.MAX_X.get(), mContentView.getHeight()));
+            mContentView.setLayoutParams(new FrameLayout.LayoutParams(Globals.MAX_X.get(), mContentView.getHeight()));
         }
         if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
-            mContentView.setLayoutParams(new LinearLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
+            mContentView.setLayoutParams(new FrameLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
         }
     }
 
@@ -366,6 +377,20 @@ public class FloatingFragment extends Fragment {
      */
     protected void setup() {
 
+    }
+
+    /**
+     * For any subclasses that need to clean up extra resources, they may do so here.
+     */
+    protected void cleanUp(){
+        ((LinearLayout)getActivity().findViewById(R.id.main_task_bar)).removeView(mTaskBarButton);
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        cleanUp();
     }
 
     protected View getContentView() {

@@ -18,7 +18,6 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
 import com.theif519.sakoverlay.Fragments.Floating.GoogleMapsFragment;
-import com.theif519.sakoverlay.Fragments.Floating.IntroductionFragment;
 import com.theif519.sakoverlay.Fragments.Floating.ScreenRecorderFragment;
 import com.theif519.sakoverlay.Fragments.Floating.StickyNoteFragment;
 import com.theif519.sakoverlay.Fragments.Floating.WebBrowserFragment;
@@ -38,6 +37,8 @@ import java.util.List;
 // TODO: Find a better way to register callbacks for button press, and menu options!
 // TODO: Change from popup menu to a dialog menu.
 public class MainActivity extends Activity {
+
+    private PopupWindow mMenuPopup;
 
     /*
         WeakReference - Allows me to keep track of fragments, without keeping them around after they are removed
@@ -59,55 +60,12 @@ public class MainActivity extends Activity {
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                 View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         setContentView(R.layout.activity_main);
+        setupPopupWindow();
         setupActionBar();
         ServiceTools.startService(this, NotificationService.class, new ServiceTools.SetupIntent() {
             @Override
             public void setup(Intent intent) {
                 intent.putExtra(NotificationService.START_NOTIFICATION, true);
-            }
-        });
-        findViewById(R.id.dock_launcher_button_home).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                FloatingFragment fragment = IntroductionFragment.newInstance();
-                mFragments.add(new WeakReference<>(fragment));
-                getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
-            }
-        });
-        findViewById(R.id.dock_launcher_button_sticky_note).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FloatingFragment fragment = StickyNoteFragment.newInstance();
-                mFragments.add(new WeakReference<>(fragment));
-                getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
-            }
-        });
-        findViewById(R.id.dock_launcher_button_google_maps).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FloatingFragment fragment = GoogleMapsFragment.newInstance();
-                mFragments.add(new WeakReference<>(fragment));
-                getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
-            }
-        });
-        findViewById(R.id.dock_launcher_web_browser_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FloatingFragment fragment = WebBrowserFragment.newInstance();
-                mFragments.add(new WeakReference<>(fragment));
-                getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
-            }
-        });
-        findViewById(R.id.dock_launcher_button_screen_recorder).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FloatingFragment fragment = ScreenRecorderFragment.newInstance();
-                if (fragment == null) {
-                    Toast.makeText(MainActivity.this, "Only one instance of Screen Recorder may exist at a time!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                mFragments.add(new WeakReference<>(fragment));
-                getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
             }
         });
         findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -123,7 +81,7 @@ public class MainActivity extends Activity {
         getResources().getValue(R.dimen.default_scale_y, value, true);
         Globals.SCALE_Y.set(value.getFloat());
         final File jsonFile = new File(getExternalFilesDir(null), JSON_FILENAME);
-        if(jsonFile.exists()){
+        if (jsonFile.exists()) {
             new JSONDeserializer() {
                 @Override
                 protected void onPreExecute() {
@@ -134,7 +92,7 @@ public class MainActivity extends Activity {
                 protected void onPostExecute(List<ArrayMap<String, String>> mapList) {
                     FloatingFragmentFactory factory = FloatingFragmentFactory.getInstance();
                     FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                    for(ArrayMap<String, String> map: mapList){
+                    for (ArrayMap<String, String> map : mapList) {
                         FloatingFragment fragment = factory.getFragment(map);
                         mFragments.add(new WeakReference<>(fragment));
                         transaction.add(R.id.main_layout, fragment);
@@ -145,9 +103,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void setupActionBar(){
+    private void setupActionBar() {
         ActionBar actionbar = getActionBar();
-        if(actionbar == null) throw new RuntimeException("ActionBar is null!");
+        if (actionbar == null) throw new RuntimeException("ActionBar is null!");
         actionbar.setDisplayShowCustomEnabled(true);
         actionbar.setHomeButtonEnabled(false);
         actionbar.setCustomView(R.layout.menu_bar);
@@ -156,15 +114,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, "Clicked icon!", Toast.LENGTH_SHORT).show();
-                View view = getLayoutInflater().inflate(R.layout.menu_icon_dropdown, null);
-                view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-                PopupWindow window = new PopupWindow(view);
-                window.setFocusable(true);
-                window.setBackgroundDrawable(new BitmapDrawable());
-                window.setOutsideTouchable(true);
-                window.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                window.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, 0);
+                mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight());
             }
         });
     }
@@ -177,13 +127,13 @@ public class MainActivity extends Activity {
     }
 
     @SuppressWarnings("unchecked")
-    private void serializeFloatingFragments(){
+    private void serializeFloatingFragments() {
         List<ArrayMap<String, String>> mapList = new ArrayList<>();
-        for(WeakReference<FloatingFragment> fragmentWeakReference: mFragments){
+        for (WeakReference<FloatingFragment> fragmentWeakReference : mFragments) {
             // Atomic operation, once obtained as strong reference, it is safe to dereference.
             FloatingFragment fragment = fragmentWeakReference.get();
             // A fragment is dead when it is dismissed and is still contained in this list.
-            if(fragment != null && !fragment.isDead()){
+            if (fragment != null && !fragment.isDead()) {
                 mapList.add(fragment.serialize());
             }
         }
@@ -205,5 +155,59 @@ public class MainActivity extends Activity {
     public void onBackPressed() {
         serializeFloatingFragments();
         moveTaskToBack(true);
+    }
+
+    private void addFragment(FloatingFragment fragment) {
+        if(fragment == null) {
+            Toast.makeText(MainActivity.this, "There can only be one instance of this widget!", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mFragments.add(new WeakReference<>(fragment));
+        getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
+    }
+
+    private int getActionBarHeight() {
+        TypedValue val = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.actionBarSize, val, true);
+        return TypedValue.complexToDimensionPixelSize(val.data, getResources().getDisplayMetrics());
+    }
+
+    private void setupPopupWindow() {
+        View view = getLayoutInflater().inflate(R.layout.menu_icon_dropdown, null);
+        view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        mMenuPopup = new PopupWindow(view);
+        mMenuPopup.getContentView().findViewById(R.id.menu_bar_browser_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addFragment(WebBrowserFragment.newInstance());
+                mMenuPopup.dismiss();
+            }
+        });
+        mMenuPopup.getContentView().findViewById(R.id.menu_bar_maps_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addFragment(GoogleMapsFragment.newInstance());
+                mMenuPopup.dismiss();
+            }
+        });
+        mMenuPopup.getContentView().findViewById(R.id.menu_bar_recorder_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addFragment(ScreenRecorderFragment.newInstance());
+                mMenuPopup.dismiss();
+            }
+        });
+        mMenuPopup.getContentView().findViewById(R.id.menu_bar_sticky_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addFragment(StickyNoteFragment.newInstance());
+                mMenuPopup.dismiss();
+            }
+        });
+        mMenuPopup.setFocusable(true);
+        mMenuPopup.setBackgroundDrawable(new BitmapDrawable());
+        mMenuPopup.setOutsideTouchable(true);
+        mMenuPopup.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 }

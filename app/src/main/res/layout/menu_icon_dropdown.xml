@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="250dp"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@color/transparent_fragment"
     android:orientation="vertical">
 
     <ScrollView
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
         <LinearLayout
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
@@ -26,24 +26,32 @@
             <com.theif519.sakoverlay.Views.MenuChildItem
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/menu_bar_browser_option"
+                android:clickable="true"
                 app:mciDescription="Web Browser"
                 app:mciIcon="@drawable/browser"/>
 
             <com.theif519.sakoverlay.Views.MenuChildItem
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/menu_bar_maps_option"
+                android:clickable="true"
                 app:mciDescription="Google Maps"
                 app:mciIcon="@drawable/maps"/>
 
             <com.theif519.sakoverlay.Views.MenuChildItem
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/menu_bar_sticky_option"
                 app:mciDescription="Sticky Note"
+                android:clickable="true"
                 app:mciIcon="@drawable/sticky_note"/>
 
             <com.theif519.sakoverlay.Views.MenuChildItem
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/menu_bar_recorder_option"
+                android:clickable="true"
                 app:mciDescription="Screen Recorder"
                 app:mciIcon="@drawable/screen_recorder"/>
 

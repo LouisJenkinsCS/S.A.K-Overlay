@@ -39,7 +39,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
 
     public static Boolean INSTANCE_EXISTS = false;
 
-    public static final String IDENTIFIER = "Screen Recorder";
+    protected static final String IDENTIFIER = "Screen Recorder";
 
     private TextView mStateText;
 

@@ -7,7 +7,7 @@ import com.theif519.sakoverlay.R;
  */
 public class IntroductionFragment extends FloatingFragment {
 
-    public static final String IDENTIFIER = "Introduction";
+    protected static final String IDENTIFIER = "Introduction";
 
     public static IntroductionFragment newInstance(){
         IntroductionFragment fragment = new IntroductionFragment();

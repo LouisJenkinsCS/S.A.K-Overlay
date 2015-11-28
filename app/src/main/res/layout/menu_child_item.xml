@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    android:layout_width="200dp"
     android:layout_height="50dp"
     android:background="@color/transparent_fragment"
-    android:clickable="true"
+    android:id="@+id/menu_child_item_root"
     android:orientation="horizontal">
 
     <View
@@ -12,9 +12,23 @@
         android:background="@color/white"
         android:id="@+id/menu_child_item_top_separator" />
 
+    <View
+        android:layout_width="1dp"
+        android:layout_height="fill_parent"
+        android:background="@color/white"
+        android:layout_below="@id/menu_child_item_top_separator"
+        android:id="@+id/menu_child_item_left_separator" />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@android:color/transparent"
+        android:id="@+id/menu_child_item_clickable"/>
+
     <ImageView
         android:layout_width="45dp"
         android:layout_height="45dp"
+        android:layout_marginStart="5dp"
         android:layout_below="@id/menu_child_item_top_separator"
         android:layout_above="@+id/menu_child_item_bottom_separator"
         android:id="@+id/menu_child_item_icon" />
@@ -23,15 +37,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/menu_child_item_description"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:text="@string/hello_world"
         android:layout_toEndOf="@id/menu_child_item_icon"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
+        android:ellipsize="end"
         android:gravity="center"
         android:layout_below="@id/menu_child_item_top_separator"
         android:layout_above="@+id/menu_child_item_bottom_separator"/>
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="fill_parent"
+        android:background="@color/white"
+        android:layout_below="@id/menu_child_item_top_separator"
+        android:id="@+id/menu_child_item_right_separator"
+        android:layout_alignParentEnd="true"/>
 
     <View
         android:layout_width="fill_parent"

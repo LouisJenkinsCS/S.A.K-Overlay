@@ -9,4 +9,9 @@
         <attr name="mciIcon" format="reference"/>
         <attr name="mciDescription" format="string"/>
     </declare-styleable>
+
+    <declare-styleable name="TaskBarItem">
+        <attr name="tbiIcon" format="reference"/>
+        <attr name="tbiDescription" format="string"/>
+    </declare-styleable>
 </resources>

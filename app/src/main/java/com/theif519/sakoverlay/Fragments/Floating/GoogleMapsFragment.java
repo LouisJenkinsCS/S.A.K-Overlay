@@ -14,7 +14,7 @@ import com.theif519.sakoverlay.R;
  */
 public class GoogleMapsFragment extends FloatingFragment {
 
-    public static final String IDENTIFIER = "Google Maps";
+    protected static final String IDENTIFIER = "Google Maps";
 
     private GoogleMap map;
 
