@@ -1,4 +1,4 @@
-package com.theif519.utils.Serialization;
+package com.theif519.sakoverlay.Async;
 
 import android.os.AsyncTask;
 import android.util.ArrayMap;
@@ -18,7 +18,7 @@ import java.util.List;
  * A simple, yet very powerful utilities which converts serialized key-value pairs into ArrayMaps.
  * JSONObjects get turned into ArrayMaps, and the root, JSONArray, is the actual mapList.
  */
-abstract public class JSONDeserializer extends AsyncTask<Void, Void, List<ArrayMap<String, String>>> {
+abstract public class FloatingFragmentDeserializer extends AsyncTask<Void, Void, List<ArrayMap<String, String>>> {
 
     protected File file;
 

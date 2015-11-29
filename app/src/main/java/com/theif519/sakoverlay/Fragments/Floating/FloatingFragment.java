@@ -46,12 +46,12 @@ import rx.subjects.PublishSubject;
  * <p/>
  * -> OnPause(): Signifies that the user may never leave, hence we should serialize all data.
  * -> Serialize(): Maps information used to restore the state of the fragment at a later date.
- * -> JSONSerializer: Flushes the data to disk in JSON format.
+ * -> FloatingFragmentSerializer: Flushes the data to disk in JSON format.
  * <p/>
  * Deserialization works like this...
  * <p/>
  * -> OnCreate() - Activity first created, if there is any serialized fragments, recreate them.
- * -> JSONDeserializer: Read the JSON data into mapped context, passing it to the factory.
+ * -> FloatingFragmentDeserializer: Read the JSON data into mapped context, passing it to the factory.
  * -> FloatingFragmentFactory: Reconstructs the fragment based on LAYOUT_TAG (hence important), passing context to be recreated.
  * -> unpack() - If mContext is not null, unpacks the mContext object to restore overall state.
  * Added to message queue to ensure mContentView is finished inflating. Should be overriden to allow for specific data.
@@ -73,7 +73,7 @@ public class FloatingFragment extends Fragment {
     /*
         Required to keep track of the position and size of the view between each onTouchEvent.
      */
-    private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY, tmpX2, tmpY2, sidebarDimen;
+    private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY, tmpX2, tmpY2;
 
     /*
         Keeps track of the tag to be
@@ -153,7 +153,7 @@ public class FloatingFragment extends Fragment {
         return mContentView;
     }
 
-    private void setupTaskItem(){
+    private void setupTaskItem() {
         mTaskBarButton = new ImageButton(getActivity());
         mTaskBarButton.setImageResource(ICON_ID);
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).addView(mTaskBarButton);
@@ -163,7 +163,6 @@ public class FloatingFragment extends Fragment {
      * Where we initialize, retrieve and setup our global variables.
      */
     private void setupGlobals() {
-        sidebarDimen = (int) getResources().getDimension(R.dimen.activity_main_sidebar_width);
         if (mOptions == null) {
             mOptions = new ArrayList<>();
         }
@@ -182,7 +181,7 @@ public class FloatingFragment extends Fragment {
                 mIsDead = true;
             }
         });
-        setupReactiveTouches();
+        setupReactive();
         mContentView.findViewById(R.id.title_bar_options).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -208,52 +207,100 @@ public class FloatingFragment extends Fragment {
         });
     }
 
-    private void setupReactiveTouches() {
+    /**
+     * In this helper, we create implement the wonders of RxJava and affiliated sub-libraries, to
+     * make handling touch events, I.E moving and resizing views, more elegant in an approach and more efficient.
+     * <p/>
+     * Documentation below will provide a walk-through as to what each class does, their purpose, and what
+     * they do in the grand scheme of things, and of course I will contrast to the complexity that a normal
+     * onTouchListener couldn't even begin to do as elegantly.
+     * <p/>
+     * Some key explanations to help with understanding the code below...
+     * <p/>
+     * An Observer, is what it sounds like. It is an object which observes some event. You can think of
+     * an onTouchListener as an Observer, as it "Listens" for a touch, and the Motion Event itself the
+     * Observable (which I will explain in a bit). An Observer can be anything, so long as it emits an
+     * "item", or an event. The Observer also handles the operations, I.E Map, Filter, etc., allowing
+     * it asynchronicity and elegance. To expand on the onTouchListener comparison, the onTouchListener feels
+     * as asynchronous as the Observer does, but only can the Observer truly be considered asynchronous. The
+     * OnTouch event is dispatched by and on the main looper, while an Observer can be dispatched on any thread.
+     * <p/>
+     * An Observable is also what it sounds like. It is an object which can be observed. Like the above
+     * analogy, the onTouch event is the Observable. The main thread polls for new events, on observable
+     * events. The Observable "emits" items, or events, like a touch event, while an Observer listens for
+     * these items. The observable mostly calls the callbacks onNext(), meaning for the next event,
+     * onError(), meaning if an error or an exception is thrown and not handled, or onComplete(), for
+     * when the Observable has finished broadcasting its events. An Observer can Subscribe to an
+     * Observable, and when the Observable emits these items, the Observer's operators handles transforming
+     * it however it wants, and if it decides to handle the items emitted, it can subscribe(), which will
+     * call the Observables onSubscribe() if declared. I.E, when a new Observer subscribes to an Observable,
+     * say the main thread wants to query from a database, it may onSubscribe() and query for any immediate returns
+     * or block until one is ready, upon which the main thread (Observer) subscribes() and does something with
+     * said data.
+     * <p/>
+     * I understand this may be longwinded and overwhelming for a simple Javadoc, but for a more
+     * thorough explanation, see RxJava's documentation and tutorials.
+     */
+    private void setupReactive() {
         /*
-            RxView allows us to transform normal listeners into a much more flexible and extremely
-            powerful observables. Each time this listener is triggered (I.E, onTouch or onClick) it will
-            alert any and all observers observing this particular event.
+            A PublishSubject acts as both an Observable and an Observer. Pretty much, it serves as a
+            proxy between Observers and Observables. It abstracts the need to subscribe and create an observable of
+            everything by just calling onNext() to emit an event, as here onNext() is called to directly
+            send the MotionEvent to any listeners, and subscribe() determines how it handles the onTouch event.
 
-            How does this differ from normal listeners? It allows us to filter out events we do not want (filter),
-            transform these events into other types (map), and even set which thread we do background processing
-            and which thread we wish to handle the finally processed event on, like an Async Task.
+            Why not just a simple onTouchListener? You will see why below, and maybe you will agree with me
+            or maybe you will not. Up to you.
          */
         final PublishSubject<MotionEvent> onTouch = PublishSubject.create();
         mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                // Whenever we receive a touch event, re-emit the event. Effectively turns it into an observer.
                 onTouch.onNext(event);
                 return true;
             }
         });
         onTouch
-                .observeOn(AndroidSchedulers.mainThread()) // Processing goes on in background, non-I/O bound thread.
-                .subscribeOn(Schedulers.computation()) // Handling of fully processed event is done on main thread (I.E, update view)
-                .map(new Func1<MotionEvent, TouchEventInfo>() { // Handle calculations and map each event to the Point it has to move.
+                .observeOn(AndroidSchedulers.mainThread()) // The Observer, the UI Thread, waits for processed events containing the information needed to manipulate views.
+                .subscribeOn(Schedulers.computation()) // The Observable's events are processed on a computational thread, which is a non I/O-Bound thread. Perfect for this.
+                .map(new Func1<MotionEvent, TouchEventInfo>() { // Map transforms one item to another item. We process the MotionEvent and create an object that encapsulates straight-forward instructions.
                     @Override
                     public TouchEventInfo call(MotionEvent event) {
                         return event.getPointerCount() == 1 ? moveCalculation(event) : resizeCalculation(event);
                     }
-                }).filter(new Func1<TouchEventInfo, Boolean>() { // If it returns null, it does not have to move at all.
-            @Override
-            public Boolean call(TouchEventInfo info) {
-                return info != null;
-            }
-        }).subscribe(new Action1<TouchEventInfo>() { // On the main thread, set the new X and Y coordinate.
-            @Override
-            public void call(TouchEventInfo info) {
-                if (info.isMultiTouch()) {
-                    mContentView.setLayoutParams(new FrameLayout.LayoutParams(info.getWidth(), info.getHeight()));
-                } else {
-                    mContentView.setX(info.getX());
-                    mContentView.setY(info.getY());
-                }
-                //Log.d(TAG, "Coordinates... (" + MeasureTools.getScaledCoordinates(mContentView).x + "," +
+                })
+                .filter(new Func1<TouchEventInfo, Boolean>() { // Here we "filter" unwanted processed items. If it returns null, it does not have to move at all.
+                    @Override
+                    public Boolean call(TouchEventInfo info) {
+                        return info != null;
+                    }
+                })
+                .subscribe(new Action1<TouchEventInfo>() { // This part is ran on the UI Thread. The MainThread does a lot less work than before, which is good.
+                    @Override
+                    public void call(TouchEventInfo info) {
+                        if (info.isMultiTouch()) { // If it is multi-touch, it is a resize event.
+                            mContentView.setLayoutParams(new FrameLayout.LayoutParams(info.getWidth(), info.getHeight()));
+                        } else { // Otherwise we just update the X,Y coordinates.
+                            mContentView.setX(info.getX());
+                            mContentView.setY(info.getY());
+                        }
+                        //Log.d(TAG, "Coordinates... (" + MeasureTools.getScaledCoordinates(mContentView).x + "," +
                         //MeasureTools.getScaledCoordinates(mContentView).y + ")\n" +
                         //"Resolution... <" + MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) +
                         //"x" + MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) + ">");
-            }
-        });
+                    }
+                });
+        /*
+            RxView is a sub-library of RxJava that handles and automates creating observables from Android's
+            vanilla listeners. The reason I do not use this above is because it is extremely paranoid about running on the main thread,
+            even if it does not touch the view other than it's properties (which is legal), and throws a runtime exception.
+
+            Since the below is extremely simple, I do it for simplicity. Notice the concatWith() operator, which
+            creates one observable from both. Hence, when either listener goes off, subscribe() will be called
+            for either one. Otherwise I would have to create two different onGlobalLayoutChangeListeners for them.
+
+            TODO: Apparently RxView keeps a strong reference to view for as long as it is subscribed, unsubscribe at end to prevent memory leaks!
+         */
         RxView.globalLayouts(getActivity().findViewById(R.id.main_layout)).concatWith(RxView.globalLayouts(mContentView))
                 .subscribe(new Action1<Void>() {
                     @Override
@@ -286,6 +333,7 @@ public class FloatingFragment extends Fragment {
     public TouchEventInfo moveCalculation(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                mContentView.bringToFront();
                 initialX = (int) event.getRawX() - (int) mContentView.getX();
                 initialY = (int) event.getRawY() - (int) mContentView.getY();
                 return null;
@@ -382,8 +430,8 @@ public class FloatingFragment extends Fragment {
     /**
      * For any subclasses that need to clean up extra resources, they may do so here.
      */
-    protected void cleanUp(){
-        ((LinearLayout)getActivity().findViewById(R.id.main_task_bar)).removeView(mTaskBarButton);
+    protected void cleanUp() {
+        ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).removeView(mTaskBarButton);
     }
 
 

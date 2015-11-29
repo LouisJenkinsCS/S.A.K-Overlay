@@ -23,7 +23,7 @@ import com.theif519.sakoverlay.Activities.PermissionActivity;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.POD.PermissionInfo;
 import com.theif519.sakoverlay.R;
-import com.theif519.sakoverlay.ReactiveX.EventBus.RxBus;
+import com.theif519.sakoverlay.Rx.EventBus.RxBus;
 
 import java.io.IOException;
 

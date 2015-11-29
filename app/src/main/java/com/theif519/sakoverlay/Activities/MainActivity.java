@@ -15,6 +15,7 @@ import android.view.ViewTreeObserver;
 import android.widget.PopupWindow;
 import android.widget.Toast;
 
+import com.theif519.sakoverlay.Async.FloatingFragmentDeserializer;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
 import com.theif519.sakoverlay.Fragments.Floating.GoogleMapsFragment;
@@ -25,8 +26,7 @@ import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.utils.Misc.ServiceTools;
-import com.theif519.utils.Serialization.JSONDeserializer;
-import com.theif519.utils.Serialization.JSONSerializer;
+import com.theif519.sakoverlay.Async.FloatingFragmentSerializer;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -40,17 +40,7 @@ public class MainActivity extends Activity {
 
     private PopupWindow mMenuPopup;
 
-    /*
-        WeakReference - Allows me to keep track of fragments, without keeping them around after they are removed
-        permanently "destroyed" by the FragmentManager/FragmentTransaction.
 
-        To give an example of what I mean, imagine that this list, if I used strong referencing, would keep
-        the Garbage Collector from collecting these fragments as I kept a strong reference to them from this list.
-        Now, I COULD, of course, remove the fragments from this list as well when they are finished, but...
-
-        Well, it was a way I could experiment, so why not?
-     */
-    private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
     public static final String JSON_FILENAME = "SerializedFloatingFragments.json";
 
     @Override
@@ -80,27 +70,7 @@ public class MainActivity extends Activity {
         Globals.SCALE_X.set(value.getFloat());
         getResources().getValue(R.dimen.default_scale_y, value, true);
         Globals.SCALE_Y.set(value.getFloat());
-        final File jsonFile = new File(getExternalFilesDir(null), JSON_FILENAME);
-        if (jsonFile.exists()) {
-            new JSONDeserializer() {
-                @Override
-                protected void onPreExecute() {
-                    this.file = jsonFile;
-                }
-
-                @Override
-                protected void onPostExecute(List<ArrayMap<String, String>> mapList) {
-                    FloatingFragmentFactory factory = FloatingFragmentFactory.getInstance();
-                    FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                    for (ArrayMap<String, String> map : mapList) {
-                        FloatingFragment fragment = factory.getFragment(map);
-                        mFragments.add(new WeakReference<>(fragment));
-                        transaction.add(R.id.main_layout, fragment);
-                    }
-                    transaction.commit();
-                }
-            }.execute();
-        }
+        deserializeFloatingFragments(); // Deserialize.
     }
 
     private void setupActionBar() {
@@ -126,6 +96,30 @@ public class MainActivity extends Activity {
                 View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
+    private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
+    private void deserializeFloatingFragments(){
+        final File jsonFile = new File(getExternalFilesDir(null), JSON_FILENAME);
+        if (jsonFile.exists()) {
+            new FloatingFragmentDeserializer() {
+                @Override
+                protected void onPreExecute() {
+                    this.file = jsonFile;
+                } // Sets the file handle.
+
+                @Override
+                protected void onPostExecute(List<ArrayMap<String, String>> mapList) {
+                    FloatingFragmentFactory factory = FloatingFragmentFactory.getInstance();
+                    FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                    for (ArrayMap<String, String> map : mapList) {
+                        FloatingFragment fragment = factory.getFragment(map);
+                        mFragments.add(new WeakReference<>(fragment));
+                        transaction.add(R.id.main_layout, fragment);
+                    }
+                    transaction.commit();
+                }
+            }.execute();
+        }
+    }
     @SuppressWarnings("unchecked")
     private void serializeFloatingFragments() {
         List<ArrayMap<String, String>> mapList = new ArrayList<>();
@@ -137,12 +131,20 @@ public class MainActivity extends Activity {
                 mapList.add(fragment.serialize());
             }
         }
-        new JSONSerializer() {
+        new FloatingFragmentSerializer() {
             @Override
             protected void onPreExecute() {
                 this.file = new File(getExternalFilesDir(null), JSON_FILENAME);
             }
         }.execute(mapList.toArray(new ArrayMap[0]));
+    }
+    private void addFragment(FloatingFragment fragment) {
+        if(fragment == null) {
+            Toast.makeText(MainActivity.this, "There can only be one instance of this widget!", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mFragments.add(new WeakReference<>(fragment));
+        getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
     }
 
     @Override
@@ -155,15 +157,6 @@ public class MainActivity extends Activity {
     public void onBackPressed() {
         serializeFloatingFragments();
         moveTaskToBack(true);
-    }
-
-    private void addFragment(FloatingFragment fragment) {
-        if(fragment == null) {
-            Toast.makeText(MainActivity.this, "There can only be one instance of this widget!", Toast.LENGTH_LONG).show();
-            return;
-        }
-        mFragments.add(new WeakReference<>(fragment));
-        getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
     }
 
     private int getActionBarHeight() {

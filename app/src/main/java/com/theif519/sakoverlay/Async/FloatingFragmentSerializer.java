@@ -1,4 +1,4 @@
-package com.theif519.utils.Serialization;
+package com.theif519.sakoverlay.Async;
 
 import android.os.AsyncTask;
 import android.util.ArrayMap;
@@ -25,7 +25,7 @@ import java.util.Map;
  * it is completely safe for this to run while the activity is paused and/or stopped, as it maintains
  * a strong reference to the data passed, preventing unwanted garbage collection.
  */
-public abstract class JSONSerializer extends AsyncTask<ArrayMap<String, String>, Void, Void> {
+public abstract class FloatingFragmentSerializer extends AsyncTask<ArrayMap<String, String>, Void, Void> {
 
     protected File file;
 

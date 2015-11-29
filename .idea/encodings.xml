@@ -2,6 +2,8 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Activities/MainActivity.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Async/FloatingFragmentDeserializer.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Async/FloatingFragmentSerializer.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/FloatingFragment.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/FloatingFragmentFactory.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/IntroductionFragment.java" charset="windows-1252" />
@@ -9,8 +11,6 @@
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/AttributeRetriever.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/Callbacks.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/FileRetriever.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Serialization/JSONDeserializer.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Serialization/JSONSerializer.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/anim" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/drawable" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/res/layout" charset="windows-1252" />

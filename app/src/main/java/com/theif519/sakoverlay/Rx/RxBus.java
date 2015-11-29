@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.ReactiveX.EventBus;
+package com.theif519.sakoverlay.Rx;
 
 import rx.Observable;
 import rx.functions.Func1;
