@@ -14,73 +14,71 @@
         android:id="@+id/title_bar"
         app:tbTitle="Screen Recorder" />
 
-    <LinearLayout
-        android:layout_weight="1"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_gravity="center_horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="State: "
-            android:textSize="20sp"
-            android:textStyle="bold" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/screen_recorder_state_text"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:text="@string/screen_recorder_state_dead"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_weight="5"
+    <FrameLayout
         android:layout_width="fill_parent"
-        android:layout_height="0dp">
+        android:layout_height="fill_parent">
 
-        <ListView
+        <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:choiceMode="singleChoice"
-            android:listSelector="@color/transparent_fragment"
-            android:id="@+id/screen_recorder_file_list"/>
+            android:layout_height="fill_parent"
+            android:orientation="vertical">
 
-    </LinearLayout>
+            <LinearLayout
+                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_gravity="center_horizontal">
 
-    <RelativeLayout
-        android:layout_weight="1"
-        android:layout_width="fill_parent"
-        android:layout_height="0dp"
-        android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="State: "
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/screen_recorder_state_text"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:text="@string/screen_recorder_state_dead"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_weight="5"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp">
+
+                <ListView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:choiceMode="singleChoice"
+                    android:listSelector="@color/transparent_fragment"
+                    android:id="@+id/screen_recorder_file_list"/>
+
+            </LinearLayout>
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:id="@+id/screen_recorder_record_button"
+                android:text="Start"
+                style="@android:style/Widget.Holo.Button.Borderless"/>
+
+        </LinearLayout>
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@android:style/Widget.Holo.Button.Borderless"
-            android:text="Play"
-            android:id="@+id/screen_recorder_play_button"/>
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom|end"
+            android:id="@+id/resize_button"
+            android:textSize="30sp"
+            android:background="@android:color/transparent"
+            android:text="&#8690;"/>
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/screen_recorder_play_button"
-            android:id="@+id/screen_recorder_record_button"
-            android:layout_toStartOf="@+id/screen_recorder_delete_button"
-            android:text="Start"
-            style="@android:style/Widget.Holo.Button.Borderless"/>
+    </FrameLayout>
 
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@android:style/Widget.Holo.Button.Borderless"
-            android:text="Delete"
-            android:layout_alignParentEnd="true"
-            android:id="@+id/screen_recorder_delete_button" />
-
-    </RelativeLayout>
 
 
 

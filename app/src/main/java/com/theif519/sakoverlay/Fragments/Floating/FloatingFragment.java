@@ -308,6 +308,12 @@ public class FloatingFragment extends Fragment {
                         boundsCheck();
                     }
                 });
+        // TODO: Make resize_button reactive.
+        /*
+            Idea: Basically, the new width and height is based on the difference between the origin, (0,0) of
+            the scaled view, and the bottom right corner of the view. Hence, when the button is dragged in a certain direction, it should basically
+            capture the difference and translate width and height accordingly.
+         */
     }
 
     /**

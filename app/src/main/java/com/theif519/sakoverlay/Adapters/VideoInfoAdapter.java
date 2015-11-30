@@ -18,12 +18,14 @@ import java.util.List;
 
 /**
  * Created by theif519 on 11/19/2015.
+ *
+ * The adapter to hold the VideoInfo data, used to hold various information like the thumbnail bitmap,
+ * the duration, name, etc. It implements the ViewHolder pattern which is the standard for adapters in Android,
+ * and overall is mostly boiler plate code.
  */
 public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
 
     private static final int RESOURCE_ID = R.layout.list_view_video_info;
-
-    private Context mContext;
     private List<VideoInfo> mVideoInfo = new ArrayList<>();
 
     public VideoInfoAdapter(Context context, VideoInfo[] objects) {
@@ -32,16 +34,16 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
 
     public VideoInfoAdapter(Context context, List<VideoInfo> objects) {
         super(context, RESOURCE_ID, objects);
-        mContext = context;
         mVideoInfo = objects;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        Context context = getContext();
         View row = convertView;
         VideoInfoHolder holder = null;
         if(row == null){
-            LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             row = inflater.inflate(RESOURCE_ID, parent, false);
             holder = new VideoInfoHolder(row);
             row.setTag(holder);

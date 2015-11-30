@@ -12,10 +12,25 @@
         android:layout_height="wrap_content"
         app:tbTitle="Maps"/>
 
-    <fragment
-        android:id="@+id/map"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:name="com.google.android.gms.maps.MapFragment"/>
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <fragment
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:name="com.google.android.gms.maps.MapFragment"/>
+
+        <Button
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom|end"
+            android:id="@+id/resize_button"
+            android:textSize="30sp"
+            android:background="@android:color/transparent"
+            android:text="&#8690;"/>
+
+    </FrameLayout>
 
 </LinearLayout>

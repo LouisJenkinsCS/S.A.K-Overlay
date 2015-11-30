@@ -1,30 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:scaleX="@dimen/default_scale_x"
-    android:scaleY="@dimen/default_scale_y"
-    android:layout_width="@dimen/sticky_note_width"
-    android:layout_height="@dimen/sticky_note_height"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="@dimen/sticky_note_width"
+    android:layout_height="wrap_content"
     android:background="@color/sticky_note_background"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:scaleX="@dimen/default_scale_x"
+    android:scaleY="@dimen/default_scale_y">
 
     <com.theif519.sakoverlay.Views.TitleBar
         android:layout_width="wrap_content"
-        app:tbTitle="Sticky Note"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        app:tbTitle="Sticky Note" />
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
 
-        <EditText
+        <com.theif519.sakoverlay.Views.UnderlinedEditText
             android:id="@+id/sticky_note_edit_text"
             android:layout_width="fill_parent"
-            android:theme="@style/StickyNote_EditText"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"
+            android:lines="8"
+            android:maxLines="10"
+            android:minLines="6"
+            android:scrollbars="vertical"
             android:textColor="@color/sticky_note_text"
-            android:inputType="textMultiLine" />
+            android:theme="@style/StickyNote_EditText"
+            app:uetColor="@color/black"/>
 
-    </LinearLayout>
+        <Button
+            android:id="@+id/resize_button"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom|end"
+            android:background="@android:color/transparent"
+            android:text="&#8690;"
+            android:textSize="30sp" />
+
+    </FrameLayout>
 
 </LinearLayout>

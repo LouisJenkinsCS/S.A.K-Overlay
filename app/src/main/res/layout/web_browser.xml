@@ -52,9 +52,24 @@
 
     </LinearLayout>
 
-    <WebView
-        android:id="@+id/browser_view"
+    <FrameLayout
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_height="fill_parent">
+
+        <WebView
+            android:id="@+id/browser_view"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" />
+
+        <Button
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="bottom|end"
+            android:id="@+id/resize_button"
+            android:textSize="30sp"
+            android:background="@android:color/transparent"
+            android:text="&#8690;"/>
+
+    </FrameLayout>
 
 </LinearLayout>

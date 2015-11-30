@@ -14,4 +14,8 @@
         <attr name="tbiIcon" format="reference"/>
         <attr name="tbiDescription" format="string"/>
     </declare-styleable>
+
+    <declare-styleable name="UnderlinedEditText">
+        <attr name="uetColor" format="color"/>
+    </declare-styleable>
 </resources>
