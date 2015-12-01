@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
@@ -16,7 +17,14 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.theif519.sakoverlay.Activities.PermissionActivity;
@@ -222,6 +230,7 @@ public class RecorderService extends Service {
         });
         mStateChangeObserver = PublishSubject.create();
         setupForegroundNotification();
+        setupFloatingView();
         changeState(RecorderState.STOPPED);
         //android.os.Debug.waitForDebugger();
     }
@@ -311,6 +320,54 @@ public class RecorderService extends Service {
         startForeground(Globals.RECORDER_NOTIFICATION_ID, notification);
     }
 
+    private void setupFloatingView(){
+        final WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT);
+        params.gravity = Gravity.TOP | Gravity.LEFT;
+        params.x = 0;
+        params.y = 0;
+        final ViewGroup layout = (ViewGroup) ((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(R.layout.screen_recorder_controller_view, null);
+        final ImageButton controller = (ImageButton) layout.findViewById(R.id.screen_recorder_controller_button);
+        final TextView stateText = (TextView) layout.findViewById(R.id.screen_recorder_controller_state);
+        controller.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mState == RecorderState.STARTED) {
+                    stop();
+                }
+            }
+        });
+        controller.setOnTouchListener(new View.OnTouchListener() {
+            int initialX, initialY, initialTouchY, initialTouchX;
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initialX = params.x;
+                        initialY = params.y;
+                        initialTouchX = (int) event.getRawX();
+                        initialTouchY = (int) event.getRawY();
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        params.x = initialX + (int) (event.getRawX() - initialTouchX);
+                        params.y = initialY + (int) (event.getRawY() - initialTouchY);
+                        manager.updateViewLayout(layout, params);
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        });
+        manager.addView(layout, params);
+    }
+
     public void die(){
         if(!RecorderCommand.DIE.isPossible(mState)) return;
         if(mRecorder != null){
@@ -324,6 +381,7 @@ public class RecorderService extends Service {
             mProjection.stop();
         }
         changeState(RecorderState.DEAD);
+        stopForeground(true);
         stopSelf();
     }
 

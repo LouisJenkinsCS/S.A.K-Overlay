@@ -292,7 +292,7 @@ public class FloatingFragment extends Fragment {
                 .subscribe(new Action1<Void>() {
                     @Override
                     public void call(Void aVoid) {
-                        //boundsCheck();
+                        boundsCheck();
                     }
                 });
         observableFromTouch(mContentView.findViewById(R.id.resize_button))
