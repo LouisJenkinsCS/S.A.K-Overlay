@@ -245,7 +245,7 @@ public class FloatingFragment extends Fragment {
                 .map(new Func1<MotionEvent, TouchEventInfo>() { // Map transforms one item to another item. We process the MotionEvent and create an object that encapsulates straight-forward instructions.
                     @Override
                     public TouchEventInfo call(MotionEvent event) {
-                        return event.getPointerCount() == 1 ? moveCalculation(event) : resizeCalculation(event);
+                        return move(event);
                     }
                 })
                 .filter(new Func1<TouchEventInfo, Boolean>() { // Here we "filter" unwanted processed items. If it returns null, it does not have to move at all.
@@ -257,16 +257,11 @@ public class FloatingFragment extends Fragment {
                 .subscribe(new Action1<TouchEventInfo>() { // This part is ran on the UI Thread. The MainThread does a lot less work than before, which is good.
                     @Override
                     public void call(TouchEventInfo info) {
-                        if (info.isMultiTouch()) { // If it is multi-touch, it is a resize event.
-                            mContentView.setLayoutParams(new FrameLayout.LayoutParams(info.getWidth(), info.getHeight()));
-                        } else { // Otherwise we just update the X,Y coordinates.
-                            mContentView.setX(info.getX());
-                            mContentView.setY(info.getY());
-                        }
-                        //Log.d(TAG, "Coordinates... (" + MeasureTools.getScaledCoordinates(mContentView).x + "," +
-                        //MeasureTools.getScaledCoordinates(mContentView).y + ")\n" +
-                        //"Resolution... <" + MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) +
-                        //"x" + MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) + ">");
+                        mContentView.setX(info.getX());
+                        mContentView.setY(info.getY());
+                        int snapHint = info.getMask();
+                        if(snapHint != 0) snap(snapHint);
+                        Log.i(getClass().getName(), "SnapHint: " + snapHint);
                     }
                 });
         /*
@@ -297,7 +292,7 @@ public class FloatingFragment extends Fragment {
                 .subscribe(new Action1<Void>() {
                     @Override
                     public void call(Void aVoid) {
-                        boundsCheck();
+                        //boundsCheck();
                     }
                 });
         observableFromTouch(mContentView.findViewById(R.id.resize_button))
@@ -319,10 +314,6 @@ public class FloatingFragment extends Fragment {
                     @Override
                     public void call(Point point) {
                         mContentView.setLayoutParams(new FrameLayout.LayoutParams(point.x, point.y));
-                        Log.d(getClass().getName(), "Coordinates... (" + MeasureTools.getScaledCoordinates(mContentView).x + "," +
-                                MeasureTools.getScaledCoordinates(mContentView).y + ")\n" +
-                                "Resolution... <" + MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) +
-                                "x" + MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) + ">");
                     }
                 });
         /*
@@ -365,60 +356,26 @@ public class FloatingFragment extends Fragment {
         return onTouch.asObservable();
     }
 
-    private int initialX, initialY;
+    private int touchXOffset, touchYOffset, prevX, prevY;
 
-    public TouchEventInfo moveCalculation(MotionEvent event) {
+    public TouchEventInfo move(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mContentView.bringToFront();
-                initialX = (int) event.getRawX() - (int) mContentView.getX();
-                initialY = (int) event.getRawY() - (int) mContentView.getY();
+                touchXOffset = (prevX = (int) event.getRawX()) - (int) mContentView.getX();
+                touchYOffset = (prevY = (int) event.getRawY()) - (int) mContentView.getY();
                 return null;
             case MotionEvent.ACTION_MOVE:
-                tmpX = (int) event.getRawX();
-                tmpY = (int) event.getRawY();
+                mSnapHint = getSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
                 width = mContentView.getWidth();
                 height = mContentView.getHeight();
                 int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
                 int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
-                int moveX = Math.min(Math.max(tmpX - initialX, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
-                int moveY = Math.min(Math.max(tmpY - initialY, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
-                return new TouchEventInfo(moveX, moveY, 0, 0, false);
-            default:
-                return null;
-        }
-    }
-
-    public TouchEventInfo resizeCalculation(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_POINTER_DOWN:
-                tmpX = (int) event.getX(0);
-                tmpY = (int) event.getY(0);
-                tmpWidth = (int) (width * Globals.SCALE_X.get());
-                tmpHeight = (int) (height * Globals.SCALE_Y.get());
-                tmpX2 = (int) event.getX(1);
-                tmpY2 = (int) event.getY(1);
-                return null;
-            case MotionEvent.ACTION_MOVE:
-                // TODO: Make resizing it at negative coordinates rebound
-                /*
-                    We capture the difference between this and the originally captured coordinates. The reason
-                    is that, for example, if the user is pinching, then the pointer difference is negative, meaning
-                    that the overall size is shrinking. If it is positive, then the width and height should grow.
-                 */
-                int firstPointerDiffX = tmpX - (int) event.getX(0);
-                int firstPointerDiffY = tmpY - (int) event.getY(0);
-                int secondPointerDiffX = tmpX2 - (int) event.getX(1);
-                int secondPointerDiffY = tmpY2 - (int) event.getY(1);
-                /*
-                    Now we take the distance between both X pointers and Y pointers. This will result in how much we should
-                    grow or shrink. I.E, if pinching, then both will be negative, so, width + (-X) + (-X2) = new width.
-                 */
-                int xPointerDist = firstPointerDiffX - secondPointerDiffX;
-                int yPointerDist = firstPointerDiffY - secondPointerDiffY;
-                int resizeX = Math.min(Math.max(tmpWidth + (int) (xPointerDist * Globals.SCALE_X.get()), 150), Globals.MAX_X.get());
-                int resizeY = Math.min(Math.max(tmpHeight + (int) (yPointerDist * Globals.SCALE_Y.get()), 150), Globals.MAX_Y.get());
-                return new TouchEventInfo(0, 0, resizeX, resizeY, true);
+                int moveX = Math.min(Math.max(tmpX - touchXOffset, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
+                int moveY = Math.min(Math.max(tmpY - touchYOffset, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
+                return new TouchEventInfo((prevX = moveX), (prevY = moveY), 0);
+            case MotionEvent.ACTION_UP:
+                return new TouchEventInfo(prevX, prevY, mSnapHint);
             default:
                 return null;
         }
@@ -442,6 +399,64 @@ public class FloatingFragment extends Fragment {
             default:
                 return null;
         }
+    }
+
+    private int mSnapHint = 0;
+
+    public void snap(int snapHint){
+        int maxWidth = getActivity().findViewById(R.id.main_layout).getWidth();
+        int maxHeight = getActivity().findViewById(R.id.main_layout).getHeight();
+        int width = 0, height = 0, x = 0, y = 0;
+        if((snapHint & TouchEventInfo.RIGHT) != 0){
+            width = maxWidth / 2;
+            height = maxHeight;
+            x = maxWidth / 2;
+        }
+        if((snapHint & TouchEventInfo.LEFT) != 0){
+            width = maxWidth / 2;
+            height = maxHeight;
+        }
+        if((snapHint & TouchEventInfo.UPPER) != 0){
+            if(width == 0){
+                width = maxWidth;
+            }
+            height = maxHeight / 2;
+        }
+        if((snapHint & TouchEventInfo.BOTTOM) != 0){
+            if(width == 0){
+                width = maxWidth;
+            }
+            height = maxHeight / 2;
+            y = maxHeight / 2;
+        }
+        width = (int)(width / Globals.SCALE_X.get());
+        height = (int)(height / Globals.SCALE_Y.get());
+        x -= MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
+        y -= MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
+        mContentView.setX(x);
+        mContentView.setY(y);
+        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+    }
+
+    public int getSnapMask(int oldX, int oldY, int newX, int newY){
+        int snapMask = 0;
+        int transitionX = newX - oldX;
+        int transitionY = newY - oldY;
+        int snapOffsetX = MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 10;
+        int snapOffsetY = MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 10;
+        if(transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()){
+            snapMask |= TouchEventInfo.RIGHT;
+        }
+        if(transitionX < 0 && MeasureTools.getScaledCoordinates(mContentView).x <= snapOffsetX){
+            snapMask |= TouchEventInfo.LEFT;
+        }
+        if(transitionY < 0 &&  MeasureTools.getScaledCoordinates(mContentView).y <= snapOffsetY){
+            snapMask |= TouchEventInfo.UPPER;
+        }
+        if(transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()){
+            snapMask |= TouchEventInfo.BOTTOM;
+        }
+        return snapMask;
     }
 
     public ArrayMap<String, String> serialize() {

@@ -4,15 +4,20 @@ package com.theif519.sakoverlay.POD;
  * Created by theif519 on 11/25/2015.
  */
 public class TouchEventInfo {
-    private int mX, mY, mWidth, mHeight;
-    private boolean mIsMultiTouch;
+    private int mX, mY, mMask;
 
-    public TouchEventInfo(int x, int y, int width, int height, boolean isMultiTouch) {
+    public static final int RIGHT = 1;
+
+    public static final int LEFT = 1 << 1;
+
+    public static final int UPPER = 1 << 2;
+
+    public static final int BOTTOM = 1 << 3;
+
+    public TouchEventInfo(int x, int y, int snapMask) {
         this.mX = x;
         this.mY = y;
-        this.mWidth = width;
-        this.mHeight = height;
-        this.mIsMultiTouch = isMultiTouch;
+        this.mMask = snapMask;
     }
 
     public int getX() {
@@ -31,27 +36,11 @@ public class TouchEventInfo {
         mY = y;
     }
 
-    public int getWidth() {
-        return mWidth;
+    public int getMask() {
+        return mMask;
     }
 
-    public void setWidth(int width) {
-        mWidth = width;
-    }
-
-    public int getHeight() {
-        return mHeight;
-    }
-
-    public void setHeight(int height) {
-        mHeight = height;
-    }
-
-    public boolean isMultiTouch() {
-        return mIsMultiTouch;
-    }
-
-    public void setIsMultiTouch(boolean isMultiTouch) {
-        mIsMultiTouch = isMultiTouch;
+    public void setMask(int mask) {
+        mMask = mask;
     }
 }
