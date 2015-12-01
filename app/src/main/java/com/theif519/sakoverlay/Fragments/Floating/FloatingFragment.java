@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -28,6 +29,7 @@ import com.theif519.utils.Misc.MeasureTools;
 
 import java.util.ArrayList;
 
+import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -40,7 +42,7 @@ import rx.subjects.PublishSubject;
  * FloatingFragment is the base class for all floating views, which implements the dynamic movement,
  * resizability, and other on(Touch|Click)Listeners. It must be overriden, as the LAYOUT_ID and
  * LAYOUT_TAG must be set, as well as ICON optionally. It maintains it's state, which is used to serialize
- * to disk, and can readily be deserialized and unpacked to restore it's state from mContext if not null.
+ * to disk, and can readily be deserialized and unpacked to restore it's state from mMappedContext if not null.
  * <p/>
  * Serialization works like this...
  * <p/>
@@ -53,7 +55,7 @@ import rx.subjects.PublishSubject;
  * -> OnCreate() - Activity first created, if there is any serialized fragments, recreate them.
  * -> FloatingFragmentDeserializer: Read the JSON data into mapped context, passing it to the factory.
  * -> FloatingFragmentFactory: Reconstructs the fragment based on LAYOUT_TAG (hence important), passing context to be recreated.
- * -> unpack() - If mContext is not null, unpacks the mContext object to restore overall state.
+ * -> unpack() - If mMappedContext is not null, unpacks the mMappedContext object to restore overall state.
  * Added to message queue to ensure mContentView is finished inflating. Should be overriden to allow for specific data.
  * -> setup() - After unpacking, any additional steps should be done here. Hence, presumably the state is complete restored
  * and if extra steps are needed, can be handled here. Added to message queue so mContentView has finished inflating.
@@ -62,7 +64,7 @@ import rx.subjects.PublishSubject;
 public class FloatingFragment extends Fragment {
 
     /*
-        mIsDead: ??? (Seriously, wtf?)
+        mIsDead: Used to signify that this fragment is dead or is about to be, but Garbage Collector hasn't collected us yet.
 
         mMinimizeHint: Helps determine whether or not, when the move event finishes, to minimize this fragment.
 
@@ -76,7 +78,7 @@ public class FloatingFragment extends Fragment {
     private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY, tmpX2, tmpY2;
 
     /*
-        Keeps track of the tag to be
+        Tag used to serialize and deserialize/reconstruct with the factory. This must be overriden.
      */
     protected String LAYOUT_TAG = "DefaultFragment";
 
@@ -87,12 +89,7 @@ public class FloatingFragment extends Fragment {
     protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
 
     /*
-        Convenient tag.
-     */
-    private static final String TAG = FloatingFragment.class.getName();
-
-    /*
-        Menu Options
+        Represents Menu Options.
      */
     protected static final String TRANSPARENCY_TOGGLE = "Transparency Toggle", BRING_TO_FRONT = "Bring to Front";
 
@@ -114,7 +111,7 @@ public class FloatingFragment extends Fragment {
 
         This is left protected so that subclasses can override and set the context for their own purposes.
      */
-    protected ArrayMap<String, String> mContext;
+    protected ArrayMap<String, String> mMappedContext;
 
     private ImageButton mTaskBarButton;
 
@@ -139,14 +136,15 @@ public class FloatingFragment extends Fragment {
         //mContentView.setVisibility(View.INVISIBLE);
         setupGlobals();
         setupListeners();
+        setupReactive();
         setupTaskItem();
-        /*f (mContext != null && Boolean.valueOf(mContext.get(Globals.Keys.MINIMIZED))) {
+        /*f (mMappedContext != null && Boolean.valueOf(mMappedContext.get(Globals.Keys.MINIMIZED))) {
             minimize();
         } else mContentView.setVisibility(View.VISIBLE);*/
         mContentView.post(new Runnable() {
             @Override
             public void run() {
-                if (mContext != null) unpack();
+                if (mMappedContext != null) unpack();
                 setup();
             }
         });
@@ -181,7 +179,6 @@ public class FloatingFragment extends Fragment {
                 mIsDead = true;
             }
         });
-        setupReactive();
         mContentView.findViewById(R.id.title_bar_options).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -242,25 +239,7 @@ public class FloatingFragment extends Fragment {
      * thorough explanation, see RxJava's documentation and tutorials.
      */
     private void setupReactive() {
-        /*
-            A PublishSubject acts as both an Observable and an Observer. Pretty much, it serves as a
-            proxy between Observers and Observables. It abstracts the need to subscribe and create an observable of
-            everything by just calling onNext() to emit an event, as here onNext() is called to directly
-            send the MotionEvent to any listeners, and subscribe() determines how it handles the onTouch event.
-
-            Why not just a simple onTouchListener? You will see why below, and maybe you will agree with me
-            or maybe you will not. Up to you.
-         */
-        final PublishSubject<MotionEvent> onTouch = PublishSubject.create();
-        mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                // Whenever we receive a touch event, re-emit the event. Effectively turns it into an observer.
-                onTouch.onNext(event);
-                return true;
-            }
-        });
-        onTouch
+        observableFromTouch(mContentView.findViewById(R.id.title_bar_move))
                 .observeOn(AndroidSchedulers.mainThread()) // The Observer, the UI Thread, waits for processed events containing the information needed to manipulate views.
                 .subscribeOn(Schedulers.computation()) // The Observable's events are processed on a computational thread, which is a non I/O-Bound thread. Perfect for this.
                 .map(new Func1<MotionEvent, TouchEventInfo>() { // Map transforms one item to another item. We process the MotionEvent and create an object that encapsulates straight-forward instructions.
@@ -291,6 +270,19 @@ public class FloatingFragment extends Fragment {
                     }
                 });
         /*
+            Lambda Version:
+                onTouch
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.computation())
+                    .map(e -> move(e))
+                    .filter(p -> p != null)
+                    .subscribe(p -> {
+                        mContentView.setX(p.x);
+                        mContentView.setY(p.y);
+                        }
+                    );
+         */
+        /*
             RxView is a sub-library of RxJava that handles and automates creating observables from Android's
             vanilla listeners. The reason I do not use this above is because it is extremely paranoid about running on the main thread,
             even if it does not touch the view other than it's properties (which is legal), and throws a runtime exception.
@@ -308,30 +300,69 @@ public class FloatingFragment extends Fragment {
                         boundsCheck();
                     }
                 });
-        // TODO: Make resize_button reactive.
+        observableFromTouch(mContentView.findViewById(R.id.resize_button))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.computation())
+                .map(new Func1<MotionEvent, Point>() {
+                    @Override
+                    public Point call(MotionEvent event) {
+                        return resize(event);
+                    }
+                })
+                .filter(new Func1<Point, Boolean>() {
+                    @Override
+                    public Boolean call(Point point) {
+                        return point != null;
+                    }
+                })
+                .subscribe(new Action1<Point>() {
+                    @Override
+                    public void call(Point point) {
+                        mContentView.setLayoutParams(new FrameLayout.LayoutParams(point.x, point.y));
+                        Log.d(getClass().getName(), "Coordinates... (" + MeasureTools.getScaledCoordinates(mContentView).x + "," +
+                                MeasureTools.getScaledCoordinates(mContentView).y + ")\n" +
+                                "Resolution... <" + MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) +
+                                "x" + MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) + ">");
+                    }
+                });
         /*
-            Idea: Basically, the new width and height is based on the difference between the origin, (0,0) of
-            the scaled view, and the bottom right corner of the view. Hence, when the button is dragged in a certain direction, it should basically
-            capture the difference and translate width and height accordingly.
+            Lambda Version:
+                RxView.touches(mContentView.findViewById(R.id.resize_button))
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.computation())
+                    .map(e -> resize(e))
+                    .filter(p -> p != null)
+                    .subscribe(p -> mContentView.setLayoutParams(new FrameLayout.LayoutParams(p.x, p.y)
+                    );
          */
     }
 
     /**
-     * Function called to unpack any serialized data that was originally in JSON format. This function
-     * should be overriden if there is a need to unpack any extra serialized data, and the very first call
-     * MUST be the super.unpack(map), as this ensures that the base data gets unpacked first.
+     * Used to create an Observable from a onTouchListener event.
      * <p/>
-     * It is safe to call getContentView() and should be used to update the view associated with this fragment.
+     * A PublishSubject acts as both an Observable and an Observer. Pretty much, it serves as a
+     * proxy between Observers and Observables. It abstracts the need to subscribe and create an observable of
+     * everything by just calling onNext() to emit an event, as here onNext() is called to directly
+     * send the MotionEvent to any listeners, and subscribe() determines how it handles the onTouch event.
+     *
+     * @param v View
+     * @return An Observable that gets published to from an onTouchListener handler.
      */
-    protected void unpack() {
-        x = Integer.parseInt(mContext.get(Globals.Keys.X_COORDINATE));
-        y = Integer.parseInt(mContext.get(Globals.Keys.Y_COORDINATE));
-        width = Integer.parseInt(mContext.get(Globals.Keys.WIDTH));
-        height = Integer.parseInt(mContext.get(Globals.Keys.HEIGHT));
-        mContentView.setX(x);
-        mContentView.setY(y);
-        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
-        // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
+    private Observable<MotionEvent> observableFromTouch(View v) {
+        final PublishSubject<MotionEvent> onTouch = PublishSubject.create();
+        v.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                // Whenever we receive a touch event, re-emit the event. Effectively turns it into an observer.
+                if (onTouch.hasObservers()) {
+                    onTouch.onNext(event);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        });
+        return onTouch.asObservable();
     }
 
     private int initialX, initialY;
@@ -393,6 +424,26 @@ public class FloatingFragment extends Fragment {
         }
     }
 
+    public Point resize(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                Point p = MeasureTools.getScaledCoordinates(mContentView);
+                tmpX2 = p.x;
+                tmpY2 = p.y;
+                return null;
+            case MotionEvent.ACTION_MOVE:
+                int diffX = (int) event.getRawX() - tmpX2;
+                int diffY = (int) event.getRawY() - tmpY2;
+                int scaleDiffX = MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get());
+                int scaleDiffY = MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get());
+                int width = Math.min(Math.max((int) (diffX / Globals.SCALE_X.get()), 250), Globals.MAX_X.get() + scaleDiffX);
+                int height = Math.min(Math.max((int) (diffY / Globals.SCALE_Y.get()), 250), Globals.MAX_Y.get() + scaleDiffY);
+                return new Point(width, height);
+            default:
+                return null;
+        }
+    }
+
     public ArrayMap<String, String> serialize() {
         ArrayMap<String, String> map = new ArrayMap<>();
         map.put(Globals.Keys.LAYOUT_TAG, LAYOUT_TAG);
@@ -402,6 +453,24 @@ public class FloatingFragment extends Fragment {
         map.put(Globals.Keys.HEIGHT, Integer.toString(height));
         map.put(Globals.Keys.MINIMIZED, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
         return map;
+    }
+
+    /**
+     * Function called to unpack any serialized data that was originally in JSON format. This function
+     * should be overriden if there is a need to unpack any extra serialized data, and the very first call
+     * MUST be the super.unpack(), as this ensures that the base data gets unpacked first.
+     * <p/>
+     * It is safe to call getContentView() and should be used to update the view associated with this fragment.
+     */
+    protected void unpack() {
+        x = Integer.parseInt(mMappedContext.get(Globals.Keys.X_COORDINATE));
+        y = Integer.parseInt(mMappedContext.get(Globals.Keys.Y_COORDINATE));
+        width = Integer.parseInt(mMappedContext.get(Globals.Keys.WIDTH));
+        height = Integer.parseInt(mMappedContext.get(Globals.Keys.HEIGHT));
+        mContentView.setX(x);
+        mContentView.setY(y);
+        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+        // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
     }
 
     private void boundsCheck() {

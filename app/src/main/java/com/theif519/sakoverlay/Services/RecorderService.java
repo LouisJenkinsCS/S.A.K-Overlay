@@ -210,7 +210,7 @@ public class RecorderService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mPermissionSubscriber = RxBus.await(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
+        mPermissionSubscriber = RxBus.subscribe(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
             @Override
             public void call(PermissionInfo permissionInfo) {
                 if (mProjection == null) {

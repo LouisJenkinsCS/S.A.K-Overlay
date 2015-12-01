@@ -43,7 +43,7 @@ public class PermissionActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, final int resultCode, final Intent data) {
         if (requestCode == Globals.RECORDER_PERMISSION_RETVAL && resultCode == RESULT_OK) {
-            RxBus.post(new PermissionInfo(data, resultCode));
+            RxBus.publish(new PermissionInfo(data, resultCode));
         }
         finish();
     }

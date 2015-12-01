@@ -39,6 +39,6 @@ public class StickyNoteFragment extends FloatingFragment {
     @Override
     public void unpack() {
         super.unpack();
-        ((EditText) getContentView().findViewById(R.id.sticky_note_edit_text)).setText(mContext.get(CONTENTS_KEY));
+        ((EditText) getContentView().findViewById(R.id.sticky_note_edit_text)).setText(mMappedContext.get(CONTENTS_KEY));
     }
 }
