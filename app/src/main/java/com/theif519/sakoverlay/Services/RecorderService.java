@@ -30,6 +30,7 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Activities.PermissionActivity;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.POD.PermissionInfo;
+import com.theif519.sakoverlay.POD.RecorderInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 
@@ -167,7 +168,7 @@ public class RecorderService extends Service {
             return RecorderService.this;
         }
 
-        public Observable<RecorderState> observeStateChanges(){
+        public Observable<RecorderState> observeStateChanges() {
             return mStateChangeObserver.asObservable();
         }
     }
@@ -202,7 +203,7 @@ public class RecorderService extends Service {
             if (audioEnabled) mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
             mRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
             mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            if(audioEnabled) mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            if (audioEnabled) mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
             mRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
             mRecorder.setVideoEncodingBitRate(512 * 1000);
             mRecorder.setVideoFrameRate(30);
@@ -252,6 +253,9 @@ public class RecorderService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && intent.getSerializableExtra(Globals.Keys.RECORDER_COMMAND) != null) {
+            die();
+        }
         return START_NOT_STICKY;
     }
 
@@ -296,7 +300,7 @@ public class RecorderService extends Service {
     private void changeState(RecorderState state) {
         mState = state;
         mStateChangeObserver.onNext(state);
-        Log.i(getClass().getName(), "Sent Broadcast Receiver and State is " + mState.toString());
+        Log.i(getClass().getName(), "Published to Subscribers that the State is " + mState.toString());
     }
 
 
@@ -320,7 +324,7 @@ public class RecorderService extends Service {
         startForeground(Globals.RECORDER_NOTIFICATION_ID, notification);
     }
 
-    private void setupFloatingView(){
+    private void setupFloatingView() {
         final WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -334,18 +338,32 @@ public class RecorderService extends Service {
         final ViewGroup layout = (ViewGroup) ((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(R.layout.screen_recorder_controller_view, null);
         final ImageButton controller = (ImageButton) layout.findViewById(R.id.screen_recorder_controller_button);
         final TextView stateText = (TextView) layout.findViewById(R.id.screen_recorder_controller_state);
-        controller.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mState == RecorderState.STARTED) {
-                    stop();
-                }
-            }
-        });
+        mStateChangeObserver // Luckily, Rx Observables can also be observed from the same thread, easily.
+                .subscribe(new Action1<RecorderState>() { // Here we handle any state changes below.
+                    @Override
+                    public void call(RecorderState recorderState) {
+                        stateText.setText(recorderState.toString());
+                        switch (recorderState) {
+                            case DEAD:
+                                manager.removeView(layout);
+                                break;
+                            case STARTED:
+                                controller.setImageResource(R.drawable.stop);
+                                break;
+                            case STOPPED:
+                                controller.setImageResource(R.drawable.play);
+                                break;
+                        }
+                    }
+                });
         controller.setOnTouchListener(new View.OnTouchListener() {
             int initialX, initialY, initialTouchY, initialTouchX;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                /*
+                    If it is not a single tap, then assume it is a move event.
+                 */
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         initialX = params.x;
@@ -354,6 +372,19 @@ public class RecorderService extends Service {
                         initialTouchY = (int) event.getRawY();
                         return true;
                     case MotionEvent.ACTION_UP:
+                        if((int) (event.getRawX()) == initialTouchX || (int)(event.getRawY()) == initialTouchY){
+                            switch (mState) {
+                                case STARTED:
+                                    stop();
+                                    break;
+                                case STOPPED:
+                                    if (mLastRecorderInfo != null) {
+                                        start(mLastRecorderInfo);
+                                    } else {
+                                        Toast.makeText(RecorderService.this, "Requires previous recording session to start!", Toast.LENGTH_SHORT).show();
+                                    }
+                            }
+                        }
                         return true;
                     case MotionEvent.ACTION_MOVE:
                         params.x = initialX + (int) (event.getRawX() - initialTouchX);
@@ -368,16 +399,16 @@ public class RecorderService extends Service {
         manager.addView(layout, params);
     }
 
-    public void die(){
-        if(!RecorderCommand.DIE.isPossible(mState)) return;
-        if(mRecorder != null){
+    public void die() {
+        if (!RecorderCommand.DIE.isPossible(mState)) return;
+        if (mRecorder != null) {
             mRecorder.reset();
             mRecorder.release();
         }
         if (mDisplay != null) {
             mDisplay.release();
         }
-        if(mProjection != null) {
+        if (mProjection != null) {
             mProjection.stop();
         }
         changeState(RecorderState.DEAD);
@@ -385,8 +416,8 @@ public class RecorderService extends Service {
         stopSelf();
     }
 
-    public boolean stop(){
-        if(!RecorderCommand.STOP.isPossible(mState)) return false;
+    public boolean stop() {
+        if (!RecorderCommand.STOP.isPossible(mState)) return false;
         try {
             Log.i(getClass().getName(), "Stopping recorder...");
             mRecorder.stop();
@@ -403,8 +434,14 @@ public class RecorderService extends Service {
         }
     }
 
-    public boolean start(int width, int height, boolean audioEnabled, String fileName) {
-        if(!RecorderCommand.START.isPossible(mState)) return false;
+    private RecorderInfo mLastRecorderInfo;
+
+    public boolean start(RecorderInfo info) {
+        mLastRecorderInfo = info;
+        int width = info.getWidth(), height = info.getHeight();
+        boolean audioEnabled = info.isAudioEnabled();
+        String fileName = info.getFileName();
+        if (!RecorderCommand.START.isPossible(mState)) return false;
         Log.i(getClass().getName(), "Checking for permissions...");
         if (mProjection == null) {
             Log.i(getClass().getName(), "Starting activity for permission...");
@@ -414,11 +451,11 @@ public class RecorderService extends Service {
             return false;
         }
         String errMsg;
-        if(!(errMsg = checkStartParameters(width, height, fileName)).isEmpty()){
+        if (!(errMsg = checkStartParameters(width, height, fileName)).isEmpty()) {
             Toast.makeText(RecorderService.this, errMsg, Toast.LENGTH_LONG).show();
             return false;
         }
-        if(!initialize(width, height, audioEnabled, fileName)){
+        if (!initialize(width, height, audioEnabled, fileName)) {
             return false;
         }
         try {
@@ -435,18 +472,18 @@ public class RecorderService extends Service {
         return true;
     }
 
-    private String checkStartParameters(int width, int height, String fileName){
+    private String checkStartParameters(int width, int height, String fileName) {
         StringBuilder errMsg = new StringBuilder();
-        if(width == 0){
+        if (width == 0) {
             errMsg.append("Width must be larger than or equal to 0!\n");
         }
-        if(height == 0){
+        if (height == 0) {
             errMsg.append("Height must be large than or equal to 0!\n");
         }
-        if(fileName == null){
+        if (fileName == null) {
             errMsg.append("Filename cannot be left null!");
         }
-        if(fileName != null && fileName.isEmpty()){
+        if (fileName != null && fileName.isEmpty()) {
             errMsg.append("Filename cannot be left empty!");
         }
         return errMsg.toString();

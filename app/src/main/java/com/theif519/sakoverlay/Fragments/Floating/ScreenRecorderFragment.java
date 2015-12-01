@@ -20,6 +20,7 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Adapters.VideoInfoAdapter;
 import com.theif519.sakoverlay.Async.MediaThumbnailGenerator;
 import com.theif519.sakoverlay.Misc.Globals;
+import com.theif519.sakoverlay.POD.RecorderInfo;
 import com.theif519.sakoverlay.POD.VideoInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;
@@ -70,9 +71,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
             public void onClick(View v) {
                 if (mIsRunning) {
                     mServiceHandle.stop();
-                    toggleState();
                 } else {
-                    toggleState();
                     createDialog();
                 }
             }
@@ -101,6 +100,15 @@ public class ScreenRecorderFragment extends FloatingFragment {
                             @Override
                             public void call(RecorderService.RecorderState recorderState) {
                                 mStateText.setText(recorderState.toString());
+                                switch(recorderState){
+                                    case STARTED:
+                                        mIsRunning = true;
+                                        ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Stop");
+                                        break;
+                                    case STOPPED:
+                                        mIsRunning = false;
+                                        ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Start");
+                                }
                             }
                         });
                 mStateText.setText(mServiceHandle.getState().toString());
@@ -115,14 +123,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
         getActivity().startService(new Intent(getActivity(), RecorderService.class));
     }
 
-    private void toggleState(){
-        if(mIsRunning = !mIsRunning){
-            ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Stop");
-        } else {
-            ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Start");
-        }
-    }
-
     public void createDialog() {
         final AlertDialog dialog = new AlertDialog.Builder(getActivity()).setView(R.layout.dialog_recorder_details)
                 .setTitle("Recorder Info").setPositiveButton("Start", new DialogInterface.OnClickListener() {
@@ -132,16 +132,13 @@ public class ScreenRecorderFragment extends FloatingFragment {
                         EditText height = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_resolution_height);
                         CheckBox audio = (CheckBox) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_audio_checkbox);
                         EditText fileName = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_filename_name);
-                        if (!mServiceHandle.start(Integer.parseInt(width.getText().toString()), Integer.parseInt(height.getText().toString()),
-                                audio.isChecked(), fileName.getText().toString())) {
-                            toggleState();
-                        }
+                        mServiceHandle.start(new RecorderInfo(Integer.parseInt(width.getText().toString()), Integer.parseInt(height.getText().toString()),
+                                audio.isChecked(), fileName.getText().toString()));
                         dialog.dismiss();
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        toggleState();
                         dialog.dismiss();
                     }
                 }).show();
