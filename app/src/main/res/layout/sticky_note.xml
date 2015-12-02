@@ -29,6 +29,8 @@
             android:scrollbars="vertical"
             android:textColor="@color/sticky_note_text"
             android:theme="@style/StickyNote_EditText"
+            android:cursorVisible="true"
+            android:textCursorDrawable="@null"
             app:uetColor="@color/black"/>
 
         <Button

@@ -195,7 +195,7 @@ public class FloatingFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if(mIsMaximized){
-                    restoreOriginalSize();
+                    restoreOriginal();
                 } else {
                     maximize();
                 }
@@ -256,8 +256,7 @@ public class FloatingFragment extends Fragment {
                 .subscribe(new Action1<TouchEventInfo>() { // This part is ran on the UI Thread. The MainThread does a lot less work than before, which is good.
                     @Override
                     public void call(TouchEventInfo info) {
-                        int x = info.getX(), y = info.getY();
-                        if (x != Integer.MAX_VALUE && y != Integer.MAX_VALUE) { // If X and Y are dummy values, we do not set them.
+                        if (info.getX() != Integer.MAX_VALUE && info.getY() != Integer.MAX_VALUE) { // If X and Y are dummy values, we do not set them.
                             mContentView.setX(x = info.getX());
                             mContentView.setY(y = info.getY());
                         }
@@ -342,6 +341,10 @@ public class FloatingFragment extends Fragment {
                 touchYOffset = (prevY = (int) event.getRawY()) - (int) mContentView.getY();
                 return null;
             case MotionEvent.ACTION_MOVE:
+                if(mSnapMask != 0){
+                    restoreOriginalSize();
+                    mSnapMask = 0;
+                }
                 mSnapHint = getSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
                 prevX = tmpX;
                 prevY = tmpY;
@@ -362,11 +365,13 @@ public class FloatingFragment extends Fragment {
     public Point resize(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                mSnapMask = 0;
                 Point p = MeasureTools.getScaledCoordinates(mContentView);
                 tmpX2 = p.x;
                 tmpY2 = p.y;
                 return null;
             case MotionEvent.ACTION_MOVE:
+                mSnapMask = 0;
                 int diffX = (int) event.getRawX() - tmpX2;
                 int diffY = (int) event.getRawY() - tmpY2;
                 int scaleDiffX = MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get());
@@ -420,8 +425,8 @@ public class FloatingFragment extends Fragment {
         int snapMask = 0;
         int transitionX = newX - oldX;
         int transitionY = newY - oldY;
-        int snapOffsetX = MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 10;
-        int snapOffsetY = MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 10;
+        int snapOffsetX = MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 3;
+        int snapOffsetY = MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 3;
         if (transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()) {
             snapMask |= TouchEventInfo.RIGHT;
         }
@@ -525,12 +530,21 @@ public class FloatingFragment extends Fragment {
         mIsMaximized = true;
     }
 
-    private void restoreOriginalSize(){
+    private void restoreOriginalCoordinates(){
         mContentView.setX(x);
         mContentView.setY(y);
         mContentView.bringToFront();
+    }
+
+    private void restoreOriginalSize() {
+        mContentView.bringToFront();
         mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
         mIsMaximized = false;
+    }
+
+    private void restoreOriginal(){
+        restoreOriginalCoordinates();
+        restoreOriginalSize();
     }
 
     private void minimize(){

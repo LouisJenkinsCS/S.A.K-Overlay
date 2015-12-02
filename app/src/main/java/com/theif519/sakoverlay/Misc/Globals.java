@@ -33,36 +33,9 @@ public final class Globals {
                 MAXIMIZED = "Maximized";
 
 
-        public static final String AUDIO_ENABLED_KEY = "Audio Enabled", FILENAME_KEY = "Filename";
+        public static final String RECORDER_COMMAND_REQUEST = "Recorder Command Request Key", RECORDER_COMMAND = "Recorder Command";
 
-        /*
-            RecorderService's key-values to serve as a form of IPC between the service and the FloatingFragment,
-            in this case, ScreenRecorderFragment.
-
-            RECORDER_STATE - Passed through an intent in a bundle as a key for the value state.
-
-            RECORDER_STATE_REQUEST - Sent when ScreenRecorderFragment requests the current state of the recorder.
-
-            RECORDER_COMMAND_REQUEST - Requests that a command be executed.
-
-            RECORDER_COMMAND_RESPONSE - Whether or not the command was honored.
-
-            RECORDER_STATE_REQUEST - When the ScreenRecorderFragment attempts to change the state of the RecorderService.
-
-            RECORDER_STATE_RESPONSE - Response from the RecorderService regarding whether or not it obliged.
-
-            RECORDER_STATE_END_SERVICE_KEY - Request to end the service.
-
-            RECORDER_STATE_HAS_ENDED - Broadcast telling that it will be ending.
-
-            RECORDER_COMMAND - Command sent to recorder.
-         */
-        public static final String RECORDER_STATE = "Recorder State", RECORDER_STATE_REQUEST = "Recorder State Request",
-                RECORDER_STATE_RESPONSE = "Recorder State Response", RECORDER_STATE_CHANGE = "Recorder State Change",
-                RECORDER_STATE_HAS_ENDED = "Recorder State Has Ended Key", RECORDER_PERMISSIONS_REQUEST = "Recorder Permissions Request",
-                RECORDER_PERMISSIONS_RESPONSE = "Recorder Permissions Response", RECORDER_COMMAND_REQUEST = "Recorder Command Request Key",
-                RECORDER_COMMAND_RESPONSE = "Recorder Command Response", RECORDER_COMMAND = "Recorder Command",
-                RECORDER_COMMAND_EXECUTED = "Recorder Command Executed", RECORDER_ERROR_MESSAGE = "Recorder Error Message";
+        public static final String GEOCODER_DECODE_LOCATION = "Geocoder Decode Location", GEOCODER_DECODED_LOCATION = "Geocoder Decoded Location";
     }
 
     public static final MutableObject<Float> SCALE_X = new MutableObject<>(1f), SCALE_Y = new MutableObject<>(1f);

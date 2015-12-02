@@ -1,5 +1,6 @@
 package com.theif519.sakoverlay.Fragments.Floating;
 
+import android.location.Geocoder;
 import android.location.Location;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -9,6 +10,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.theif519.sakoverlay.R;
 
+import java.util.Locale;
+
 /**
  * Created by theif519 on 11/4/2015.
  */
@@ -16,7 +19,9 @@ public class GoogleMapsFragment extends FloatingFragment {
 
     protected static final String IDENTIFIER = "Google Maps";
 
-    private GoogleMap map;
+    private GoogleMap mMap;
+
+    private Geocoder mGeocoder;
 
     public static GoogleMapsFragment newInstance() {
         GoogleMapsFragment fragment = new GoogleMapsFragment();
@@ -32,16 +37,17 @@ public class GoogleMapsFragment extends FloatingFragment {
         ((MapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap googleMap) {
-                map = googleMap;
-                map.setMyLocationEnabled(true);
-                map.getMyLocation();
-                map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-                map.setTrafficEnabled(true);
-                map.setBuildingsEnabled(true);
-                map.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+                mMap = googleMap;
+                mMap.setMyLocationEnabled(true);
+                mMap.getMyLocation();
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                mMap.setTrafficEnabled(true);
+                mMap.setBuildingsEnabled(true);
+                mGeocoder = new Geocoder(getActivity(), Locale.getDefault());
+                mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
                     @Override
                     public void onMyLocationChange(Location location) {
-                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 18.0f));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 18.0f));
                     }
                 });
             }
