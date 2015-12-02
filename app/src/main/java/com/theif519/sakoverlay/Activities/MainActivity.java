@@ -111,9 +111,7 @@ public class MainActivity extends Activity {
                     FloatingFragmentFactory factory = FloatingFragmentFactory.getInstance();
                     FragmentTransaction transaction = getFragmentManager().beginTransaction();
                     for (ArrayMap<String, String> map : mapList) {
-                        FloatingFragment fragment = factory.getFragment(map);
-                        mFragments.add(new WeakReference<>(fragment));
-                        transaction.add(R.id.main_layout, fragment);
+                        addFragment(factory.getFragment(map));
                     }
                     transaction.commit();
                 }

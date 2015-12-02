@@ -3,24 +3,19 @@ package com.theif519.sakoverlay.Fragments.Floating;
 
 import android.app.Fragment;
 import android.graphics.Point;
-import android.graphics.drawable.ColorDrawable;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.PopupWindow;
 
-import com.jakewharton.rxbinding.view.RxView;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.POD.TouchEventInfo;
 import com.theif519.sakoverlay.R;
@@ -63,18 +58,14 @@ import rx.subjects.PublishSubject;
 public class FloatingFragment extends Fragment {
 
     /*
-        mIsDead: Used to signify that this fragment is dead or is about to be, but Garbage Collector hasn't collected us yet.
-
-        mMinimizeHint: Helps determine whether or not, when the move event finishes, to minimize this fragment.
-
-        mFinishedMultiTouch: Helps prevent the automatic snapping of views away from the finger released.
+        Used to signify that this fragment is dead or is about to be, but Garbage Collector hasn't collected us yet.
      */
-    private boolean mIsDead = false, mMinimizeHint = false, mFinishedMultiTouch = false, mIsTransparent = false;
+    private boolean mIsDead = false, mIsMaximized = false;
 
     /*
         Required to keep track of the position and size of the view between each onTouchEvent.
      */
-    private int width, height, x, y, tmpWidth, tmpHeight, tmpX, tmpY, tmpX2, tmpY2;
+    private int width, height, x, y, z, tmpWidth, tmpHeight, tmpX, tmpY, tmpX2, tmpY2;
 
     /*
         Tag used to serialize and deserialize/reconstruct with the factory. This must be overriden.
@@ -134,14 +125,13 @@ public class FloatingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(LAYOUT_ID, container, false);
-        //mContentView.setVisibility(View.INVISIBLE);
         setupGlobals();
         setupListeners();
         setupReactive();
         setupTaskItem();
-        /*f (mMappedContext != null && Boolean.valueOf(mMappedContext.get(Globals.Keys.MINIMIZED))) {
+        if (mMappedContext != null && Boolean.valueOf(mMappedContext.get(Globals.Keys.MINIMIZED))) {
             minimize();
-        } else mContentView.setVisibility(View.VISIBLE);*/
+        }
         mContentView.post(new Runnable() {
             @Override
             public void run() {
@@ -155,6 +145,21 @@ public class FloatingFragment extends Fragment {
     private void setupTaskItem() {
         mTaskBarButton = new ImageButton(getActivity());
         mTaskBarButton.setImageResource(ICON_ID);
+        mTaskBarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mContentView.getVisibility() == View.INVISIBLE) {
+                    mContentView.setVisibility(View.VISIBLE);
+                    mContentView.bringToFront();
+                } else {
+                    if(!isVisibleOnScreen()){
+                        mContentView.bringToFront();
+                    } else {
+                        mContentView.setVisibility(View.INVISIBLE);
+                    }
+                }
+            }
+        });
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).addView(mTaskBarButton);
     }
 
@@ -180,27 +185,20 @@ public class FloatingFragment extends Fragment {
                 mIsDead = true;
             }
         });
-        mContentView.findViewById(R.id.title_bar_options).setOnClickListener(new View.OnClickListener() {
+        mContentView.findViewById(R.id.title_bar_minimize).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final PopupWindow window = new PopupWindow(null, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, mOptions);
-                ListView listView = new ListView(getActivity());
-                listView.setAdapter(adapter);
-                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        onItemSelected((String) parent.getItemAtPosition(position));
-                        window.dismiss();
-                    }
-                });
-                Point p = MeasureTools.getScaledCoordinates(mContentView);
-                window.setContentView(listView);
-                window.setWidth(MeasureTools.measureContentWidth(getActivity(), adapter));
-                window.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparent_fragment)));
-                window.showAtLocation(getActivity().findViewById(R.id.main_layout), Gravity.NO_GRAVITY,
-                        p.x + MeasureTools.scaleToInt(mContentView.findViewById(R.id.title_bar_options).getWidth(), Globals.SCALE_X.get()),
-                        p.y + MeasureTools.scaleToInt(mContentView.findViewById(R.id.title_bar_options).getHeight(), Globals.SCALE_Y.get()));
+                minimize();
+            }
+        });
+        mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mIsMaximized){
+                    restoreOriginalSize();
+                } else {
+                    maximize();
+                }
             }
         });
     }
@@ -238,17 +236,6 @@ public class FloatingFragment extends Fragment {
      * <p/>
      * I understand this may be longwinded and overwhelming for a simple Javadoc, but for a more
      * thorough explanation, see RxJava's documentation and tutorials.
-     * <p/>
-     * Decided to place all relevant comments describing what a certain thing does that cannot fit within one
-     * line.
-     * <p/>
-     * RxView is a sub-library of RxJava that handles and automates creating observables from Android's
-     * vanilla listeners. The reason I do not use this above is because it is extremely paranoid about running on the main thread,
-     * even if it does not touch the view other than it's properties (which is legal), and throws a runtime exception.
-     * <p/>
-     * Since the below is extremely simple, I do it for simplicity. Notice the concatWith() operator, which
-     * creates one observable from both. Hence, when either listener goes off, subscribe() will be called
-     * for either one. Otherwise I would have to create two different onGlobalLayoutChangeListeners for them.
      */
     private void setupReactive() {
         observableFromTouch(mContentView.findViewById(R.id.title_bar_move))
@@ -271,21 +258,29 @@ public class FloatingFragment extends Fragment {
                     public void call(TouchEventInfo info) {
                         int x = info.getX(), y = info.getY();
                         if (x != Integer.MAX_VALUE && y != Integer.MAX_VALUE) { // If X and Y are dummy values, we do not set them.
-                            mContentView.setX(info.getX());
-                            mContentView.setY(info.getY());
+                            mContentView.setX(x = info.getX());
+                            mContentView.setY(y = info.getY());
                         }
                         mSnapMask = info.getMask();
                         if (mSnapMask != 0)
                             snap(mSnapMask); // Keep in mind, that if it is 0, then no bits are set.
                     }
                 });
-        RxView.globalLayouts(getActivity().findViewById(R.id.main_layout)).concatWith(RxView.globalLayouts(mContentView))
-                .subscribe(new Action1<Void>() {
-                    @Override
-                    public void call(Void aVoid) {
-                        boundsCheck();
-                    }
-                });
+        getActivity().findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                boundsCheck();
+                if (mSnapMask != 0) {
+                    snap(mSnapMask);
+                }
+            }
+        });
+        mContentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                boundsCheck();
+            }
+        });
         observableFromTouch(mContentView.findViewById(R.id.resize_button))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.computation())
@@ -304,7 +299,7 @@ public class FloatingFragment extends Fragment {
                 .subscribe(new Action1<Point>() {
                     @Override
                     public void call(Point point) {
-                        mContentView.setLayoutParams(new FrameLayout.LayoutParams(point.x, point.y));
+                        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width = point.x, height = point.y));
                     }
                 });
     }
@@ -387,8 +382,8 @@ public class FloatingFragment extends Fragment {
     private int mSnapHint = 0;
 
     public void snap(int snapHint) {
-        int maxWidth = getActivity().findViewById(R.id.main_layout).getWidth();
-        int maxHeight = getActivity().findViewById(R.id.main_layout).getHeight();
+        int maxWidth = Globals.MAX_X.get();
+        int maxHeight = Globals.MAX_Y.get();
         int width = 0, height = 0, x = 0, y = 0;
         if ((snapHint & TouchEventInfo.RIGHT) != 0) {
             width = maxWidth / 2;
@@ -447,9 +442,12 @@ public class FloatingFragment extends Fragment {
         map.put(Globals.Keys.LAYOUT_TAG, LAYOUT_TAG);
         map.put(Globals.Keys.X_COORDINATE, Integer.toString(x));
         map.put(Globals.Keys.Y_COORDINATE, Integer.toString(y));
+        map.put(Globals.Keys.Z_COORDINATE, Integer.toString((int) mContentView.getZ()));
         map.put(Globals.Keys.WIDTH, Integer.toString(width));
         map.put(Globals.Keys.HEIGHT, Integer.toString(height));
         map.put(Globals.Keys.MINIMIZED, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
+        map.put(Globals.Keys.MAXIMIZED, Boolean.toString(mIsMaximized));
+        map.put(Globals.Keys.SNAP_MASK, Integer.toString(mSnapMask));
         return map;
     }
 
@@ -463,10 +461,14 @@ public class FloatingFragment extends Fragment {
     protected void unpack() {
         x = Integer.parseInt(mMappedContext.get(Globals.Keys.X_COORDINATE));
         y = Integer.parseInt(mMappedContext.get(Globals.Keys.Y_COORDINATE));
+        z = Integer.parseInt(mMappedContext.get(Globals.Keys.Z_COORDINATE));
         width = Integer.parseInt(mMappedContext.get(Globals.Keys.WIDTH));
         height = Integer.parseInt(mMappedContext.get(Globals.Keys.HEIGHT));
+        mSnapMask = Integer.parseInt(mMappedContext.get(Globals.Keys.SNAP_MASK));
+        mIsMaximized = Boolean.parseBoolean(mMappedContext.get(Globals.Keys.MAXIMIZED));
         mContentView.setX(x);
         mContentView.setY(y);
+        mContentView.setZ(z);
         mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
         // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
     }
@@ -497,7 +499,14 @@ public class FloatingFragment extends Fragment {
      * necessary to setup.
      */
     protected void setup() {
-
+        // Release as we no longer need, to prevent memory leak.
+        mMappedContext = null;
+        if(mSnapMask != 0){
+            snap(mSnapMask);
+        }
+        if(mIsMaximized){
+            maximize();
+        }
     }
 
     /**
@@ -507,6 +516,36 @@ public class FloatingFragment extends Fragment {
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).removeView(mTaskBarButton);
     }
 
+    private void maximize(){
+        mContentView.setLayoutParams(new FrameLayout.LayoutParams((int) (Globals.MAX_X.get() / Globals.SCALE_X.get()),
+                (int) (Globals.MAX_Y.get() / Globals.SCALE_Y.get())));
+        mContentView.setX(0);
+        mContentView.setY(0);
+        mContentView.bringToFront();
+        mIsMaximized = true;
+    }
+
+    private void restoreOriginalSize(){
+        mContentView.setX(x);
+        mContentView.setY(y);
+        mContentView.bringToFront();
+        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+        mIsMaximized = false;
+    }
+
+    private void minimize(){
+        mContentView.setVisibility(View.INVISIBLE);
+    }
+
+    /**
+     * Determines if this view is visible on the screen, I.E not covered by another view.
+     * @return If user can still see this.
+     */
+    protected boolean isVisibleOnScreen(){
+        Rect visibleRect = new Rect();
+        getActivity().findViewById(R.id.main_layout).getHitRect(visibleRect);
+        return mContentView.getLocalVisibleRect(visibleRect);
+    }
 
     @Override
     public void onDestroy() {
@@ -520,21 +559,6 @@ public class FloatingFragment extends Fragment {
 
     public boolean isDead() {
         return mIsDead;
-    }
-
-    public void onItemSelected(String string) {
-        switch (string) {
-            case TRANSPARENCY_TOGGLE:
-                if (mIsTransparent = !mIsTransparent) {
-                    mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(android.R.color.transparent));
-                } else {
-                    mContentView.findViewById(R.id.title_bar_root).setBackgroundColor(getResources().getColor(R.color.black));
-                }
-                break;
-            case BRING_TO_FRONT:
-                mContentView.bringToFront();
-                break;
-        }
     }
 
 }

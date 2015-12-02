@@ -106,17 +106,4 @@ public class WebBrowserFragment extends FloatingFragment {
         mBrowser.loadUrl(DEFAULT_HOMEPAGE);
         ((EditText) getContentView().findViewById(R.id.browser_action_text)).setText(DEFAULT_HOMEPAGE);
     }
-
-    @Override
-    public void onItemSelected(String string) {
-        super.onItemSelected(string);
-        switch(string){
-            case HOME:
-                mBrowser.loadUrl(DEFAULT_HOMEPAGE);
-                break;
-            case REFRESH:
-                mBrowser.reload();
-                break;
-        }
-    }
 }

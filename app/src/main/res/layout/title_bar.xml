@@ -7,18 +7,10 @@
     android:orientation="horizontal">
 
     <Button
-        android:id="@+id/title_bar_options"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:text="&#x25bd;"
-        android:textSize="24sp" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/title_bar_options"
-        android:layout_toStartOf="@+id/title_bar_close"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/title_bar_minimize"
         android:background="@android:color/transparent"
         android:id="@+id/title_bar_move"/>
 
@@ -28,8 +20,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
         android:layout_centerInParent="true"
-        android:layout_toEndOf="@+id/title_bar_options"
-        android:layout_toStartOf="@+id/title_bar_close"
+        android:layout_alignParentStart="true"
+        android:gravity="center"
+        android:layout_toStartOf="@+id/title_bar_minimize"
         android:ellipsize="end"
         android:maxLength="20"
         android:maxLines="1"
@@ -37,13 +30,40 @@
         android:textSize="24sp"
         android:textStyle="bold" />
 
-    <Button
+    <ImageButton
+        android:id="@+id/title_bar_minimize"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:paddingEnd="5dp"
+        android:layout_toStartOf="@+id/title_bar_maximize"
+        android:src="@drawable/minimize"
+        android:scaleType="fitCenter"
+        android:background="@android:color/transparent" />
+
+    <ImageButton
+        android:id="@+id/title_bar_maximize"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:paddingEnd="5dp"
+        android:layout_toStartOf="@+id/title_bar_close"
+        android:src="@drawable/maximize"
+        android:scaleType="fitCenter"
+        android:background="@android:color/transparent" />
+
+    <ImageButton
         android:id="@+id/title_bar_close"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:paddingEnd="5dp"
         android:layout_alignParentEnd="true"
-        android:background="@android:color/transparent"
-        android:text="&#x2716;"
-        android:textSize="24sp" />
+        android:src="@drawable/close"
+        android:scaleType="fitCenter"
+        android:background="@android:color/transparent" />
 
 </RelativeLayout>
