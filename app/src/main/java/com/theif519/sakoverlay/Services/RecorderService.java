@@ -46,12 +46,6 @@ import rx.subjects.PublishSubject;
  */
 public class RecorderService extends Service {
 
-    public interface PermissionsCallback {
-        void permissionsGranted(Intent intent);
-
-        void permissionsDenied(Intent intent);
-    }
-
     /**
      * Enumerations used to describe the current state of the object, even
      * having a direct string representation. It utilizes bitmasking to allow

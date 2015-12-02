@@ -48,12 +48,12 @@ public abstract class MediaThumbnailGenerator extends AsyncTask<File, Void, List
                 IsoFile mp4 = new IsoFile(new FileDataSourceImpl(file));
                 list.add(new VideoInfo()
                         .setDescription(file.getName())
-                        .setDuration(prettyDuration((int) ((double) mp4.getMovieBox().getMovieHeaderBox().getDuration() / mp4.getMovieBox().getMovieHeaderBox().getTimescale())))
+                        .setDuration(prettyDuration((int)((double) mp4.getMovieBox().getMovieHeaderBox().getDuration() / mp4.getMovieBox().getMovieHeaderBox().getTimescale())))
                         .setTimestamp(mp4.getMovieBox().getMovieHeaderBox().getCreationTime().toString())
                         .setFileSize(prettyFileSize(file.length()))
                         .setThumbnail(ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MICRO_KIND))
                 );
-            } catch (IOException e) {
+            } catch (IOException | NullPointerException e) {
                 Log.w(getClass().getName(), "Error while parsing info from video: " + (e.getMessage() == null ? "" : e.getMessage()));
             }
         }

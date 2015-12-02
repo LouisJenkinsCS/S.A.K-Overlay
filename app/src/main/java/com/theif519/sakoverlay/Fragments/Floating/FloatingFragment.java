@@ -7,7 +7,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -112,6 +111,8 @@ public class FloatingFragment extends Fragment {
         This is left protected so that subclasses can override and set the context for their own purposes.
      */
     protected ArrayMap<String, String> mMappedContext;
+
+    protected int mSnapMask;
 
     private ImageButton mTaskBarButton;
 
@@ -237,6 +238,17 @@ public class FloatingFragment extends Fragment {
      * <p/>
      * I understand this may be longwinded and overwhelming for a simple Javadoc, but for a more
      * thorough explanation, see RxJava's documentation and tutorials.
+     * <p/>
+     * Decided to place all relevant comments describing what a certain thing does that cannot fit within one
+     * line.
+     * <p/>
+     * RxView is a sub-library of RxJava that handles and automates creating observables from Android's
+     * vanilla listeners. The reason I do not use this above is because it is extremely paranoid about running on the main thread,
+     * even if it does not touch the view other than it's properties (which is legal), and throws a runtime exception.
+     * <p/>
+     * Since the below is extremely simple, I do it for simplicity. Notice the concatWith() operator, which
+     * creates one observable from both. Hence, when either listener goes off, subscribe() will be called
+     * for either one. Otherwise I would have to create two different onGlobalLayoutChangeListeners for them.
      */
     private void setupReactive() {
         observableFromTouch(mContentView.findViewById(R.id.title_bar_move))
@@ -257,37 +269,16 @@ public class FloatingFragment extends Fragment {
                 .subscribe(new Action1<TouchEventInfo>() { // This part is ran on the UI Thread. The MainThread does a lot less work than before, which is good.
                     @Override
                     public void call(TouchEventInfo info) {
-                        mContentView.setX(info.getX());
-                        mContentView.setY(info.getY());
-                        int snapHint = info.getMask();
-                        if(snapHint != 0) snap(snapHint);
-                        Log.i(getClass().getName(), "SnapHint: " + snapHint);
+                        int x = info.getX(), y = info.getY();
+                        if (x != Integer.MAX_VALUE && y != Integer.MAX_VALUE) { // If X and Y are dummy values, we do not set them.
+                            mContentView.setX(info.getX());
+                            mContentView.setY(info.getY());
+                        }
+                        mSnapMask = info.getMask();
+                        if (mSnapMask != 0)
+                            snap(mSnapMask); // Keep in mind, that if it is 0, then no bits are set.
                     }
                 });
-        /*
-            Lambda Version:
-                onTouch
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.computation())
-                    .map(e -> move(e))
-                    .filter(p -> p != null)
-                    .subscribe(p -> {
-                        mContentView.setX(p.x);
-                        mContentView.setY(p.y);
-                        }
-                    );
-         */
-        /*
-            RxView is a sub-library of RxJava that handles and automates creating observables from Android's
-            vanilla listeners. The reason I do not use this above is because it is extremely paranoid about running on the main thread,
-            even if it does not touch the view other than it's properties (which is legal), and throws a runtime exception.
-
-            Since the below is extremely simple, I do it for simplicity. Notice the concatWith() operator, which
-            creates one observable from both. Hence, when either listener goes off, subscribe() will be called
-            for either one. Otherwise I would have to create two different onGlobalLayoutChangeListeners for them.
-
-            TODO: Apparently RxView keeps a strong reference to view for as long as it is subscribed, unsubscribe at end to prevent memory leaks!
-         */
         RxView.globalLayouts(getActivity().findViewById(R.id.main_layout)).concatWith(RxView.globalLayouts(mContentView))
                 .subscribe(new Action1<Void>() {
                     @Override
@@ -316,16 +307,6 @@ public class FloatingFragment extends Fragment {
                         mContentView.setLayoutParams(new FrameLayout.LayoutParams(point.x, point.y));
                     }
                 });
-        /*
-            Lambda Version:
-                RxView.touches(mContentView.findViewById(R.id.resize_button))
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.computation())
-                    .map(e -> resize(e))
-                    .filter(p -> p != null)
-                    .subscribe(p -> mContentView.setLayoutParams(new FrameLayout.LayoutParams(p.x, p.y)
-                    );
-         */
     }
 
     /**
@@ -367,15 +348,17 @@ public class FloatingFragment extends Fragment {
                 return null;
             case MotionEvent.ACTION_MOVE:
                 mSnapHint = getSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
+                prevX = tmpX;
+                prevY = tmpY;
                 width = mContentView.getWidth();
                 height = mContentView.getHeight();
                 int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
                 int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
                 int moveX = Math.min(Math.max(tmpX - touchXOffset, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
                 int moveY = Math.min(Math.max(tmpY - touchYOffset, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
-                return new TouchEventInfo((prevX = moveX), (prevY = moveY), 0);
+                return new TouchEventInfo(moveX, moveY, 0);
             case MotionEvent.ACTION_UP:
-                return new TouchEventInfo(prevX, prevY, mSnapHint);
+                return new TouchEventInfo(Integer.MAX_VALUE, Integer.MAX_VALUE, mSnapHint);
             default:
                 return null;
         }
@@ -403,34 +386,34 @@ public class FloatingFragment extends Fragment {
 
     private int mSnapHint = 0;
 
-    public void snap(int snapHint){
+    public void snap(int snapHint) {
         int maxWidth = getActivity().findViewById(R.id.main_layout).getWidth();
         int maxHeight = getActivity().findViewById(R.id.main_layout).getHeight();
         int width = 0, height = 0, x = 0, y = 0;
-        if((snapHint & TouchEventInfo.RIGHT) != 0){
+        if ((snapHint & TouchEventInfo.RIGHT) != 0) {
             width = maxWidth / 2;
             height = maxHeight;
             x = maxWidth / 2;
         }
-        if((snapHint & TouchEventInfo.LEFT) != 0){
+        if ((snapHint & TouchEventInfo.LEFT) != 0) {
             width = maxWidth / 2;
             height = maxHeight;
         }
-        if((snapHint & TouchEventInfo.UPPER) != 0){
-            if(width == 0){
+        if ((snapHint & TouchEventInfo.UPPER) != 0) {
+            if (width == 0) {
                 width = maxWidth;
             }
             height = maxHeight / 2;
         }
-        if((snapHint & TouchEventInfo.BOTTOM) != 0){
-            if(width == 0){
+        if ((snapHint & TouchEventInfo.BOTTOM) != 0) {
+            if (width == 0) {
                 width = maxWidth;
             }
             height = maxHeight / 2;
             y = maxHeight / 2;
         }
-        width = (int)(width / Globals.SCALE_X.get());
-        height = (int)(height / Globals.SCALE_Y.get());
+        width = (int) (width / Globals.SCALE_X.get());
+        height = (int) (height / Globals.SCALE_Y.get());
         x -= MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
         y -= MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
         mContentView.setX(x);
@@ -438,22 +421,22 @@ public class FloatingFragment extends Fragment {
         mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
     }
 
-    public int getSnapMask(int oldX, int oldY, int newX, int newY){
+    public int getSnapMask(int oldX, int oldY, int newX, int newY) {
         int snapMask = 0;
         int transitionX = newX - oldX;
         int transitionY = newY - oldY;
         int snapOffsetX = MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 10;
         int snapOffsetY = MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 10;
-        if(transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()){
+        if (transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()) {
             snapMask |= TouchEventInfo.RIGHT;
         }
-        if(transitionX < 0 && MeasureTools.getScaledCoordinates(mContentView).x <= snapOffsetX){
+        if (transitionX < 0 && MeasureTools.getScaledCoordinates(mContentView).x <= snapOffsetX) {
             snapMask |= TouchEventInfo.LEFT;
         }
-        if(transitionY < 0 &&  MeasureTools.getScaledCoordinates(mContentView).y <= snapOffsetY){
+        if (transitionY < 0 && MeasureTools.getScaledCoordinates(mContentView).y <= snapOffsetY) {
             snapMask |= TouchEventInfo.UPPER;
         }
-        if(transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()){
+        if (transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()) {
             snapMask |= TouchEventInfo.BOTTOM;
         }
         return snapMask;
