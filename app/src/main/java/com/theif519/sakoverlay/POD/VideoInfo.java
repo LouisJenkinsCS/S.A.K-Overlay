@@ -13,7 +13,7 @@ import android.os.Parcelable;
  */
 public class VideoInfo implements Parcelable {
 
-    private String mDescription, mDuration, mTimestamp, mFileSize;
+    private String mDescription, mDuration, mTimestamp, mFileSize, mFilePath;
     private Bitmap mThumbnail;
 
     public VideoInfo() {
@@ -96,6 +96,15 @@ public class VideoInfo implements Parcelable {
 
     public VideoInfo setThumbnail(Bitmap mThumbnail) {
         this.mThumbnail = mThumbnail;
+        return this;
+    }
+
+    public String getFilePath(){
+        return mFilePath;
+    }
+
+    public VideoInfo setFilePath(String filePath){
+        mFilePath = filePath;
         return this;
     }
 }

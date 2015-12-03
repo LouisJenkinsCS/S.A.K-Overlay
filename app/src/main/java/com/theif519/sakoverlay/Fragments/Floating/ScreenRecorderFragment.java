@@ -10,7 +10,6 @@ import android.graphics.Point;
 import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -24,7 +23,6 @@ import com.theif519.sakoverlay.POD.RecorderInfo;
 import com.theif519.sakoverlay.POD.VideoInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;
-import com.theif519.sakoverlay.Views.ListViewVideoInfo;
 import com.theif519.utils.Misc.FileRetriever;
 
 import java.io.File;
@@ -82,13 +80,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
             protected void onPostExecute(List<VideoInfo> videoInfos) {
                 listView.setEmptyView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.list_view_video_info_empty, null));
                 listView.setAdapter(new VideoInfoAdapter(getActivity(), videoInfos));
-                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Toast.makeText(getActivity(), "You selected: "
-                                + ((ListViewVideoInfo) parent.getItemAtPosition(position)).getDescription(), Toast.LENGTH_SHORT).show();
-                    }
-                });
             }
         }.execute(FileRetriever.getFiles(Globals.RECORDER_FILE_SAVE_PATH).toArray(new File[0]));
         getActivity().bindService(new Intent(getActivity(), RecorderService.class), mServiceConnectionHandler = new ServiceConnection() {
@@ -100,7 +91,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
                             @Override
                             public void call(RecorderService.RecorderState recorderState) {
                                 mStateText.setText(recorderState.toString());
-                                switch(recorderState){
+                                switch (recorderState) {
                                     case STARTED:
                                         mIsRunning = true;
                                         ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Stop");
@@ -123,7 +114,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
         getActivity().startService(new Intent(getActivity(), RecorderService.class));
     }
 
-    public void createDialog() {
+    private void createDialog() {
         final AlertDialog dialog = new AlertDialog.Builder(getActivity()).setView(R.layout.dialog_recorder_details)
                 .setTitle("Recorder Info").setPositiveButton("Start", new DialogInterface.OnClickListener() {
                     @Override
@@ -151,14 +142,14 @@ public class ScreenRecorderFragment extends FloatingFragment {
     @Override
     public void onStart() {
         super.onStart();
-        if(mStateText != null) mStateText.setText(mServiceHandle.getState().toString());
+        if (mStateText != null) mStateText.setText(mServiceHandle.getState().toString());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         getActivity().unbindService(mServiceConnectionHandler);
-        if(mServiceHandle != null){
+        if (mServiceHandle != null) {
             mServiceHandle.die();
         }
         INSTANCE_EXISTS = false;

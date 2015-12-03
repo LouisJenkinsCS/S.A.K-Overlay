@@ -3,10 +3,10 @@ package com.theif519.sakoverlay.Fragments.Floating;
 
 import android.app.Fragment;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,11 +15,14 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.POD.TouchEventInfo;
 import com.theif519.sakoverlay.R;
+import com.theif519.utils.Misc.Callbacks;
 import com.theif519.utils.Misc.MeasureTools;
+import com.theif519.utils.Misc.MutableObject;
 
 import java.util.ArrayList;
 
@@ -152,7 +155,7 @@ public class FloatingFragment extends Fragment {
                     mContentView.setVisibility(View.VISIBLE);
                     mContentView.bringToFront();
                 } else {
-                    if(!isVisibleOnScreen()){
+                    if (!isVisibleOnScreen()) {
                         mContentView.bringToFront();
                     } else {
                         mContentView.setVisibility(View.INVISIBLE);
@@ -263,9 +266,10 @@ public class FloatingFragment extends Fragment {
                         mSnapMask = info.getMask();
                         if (mSnapMask != 0)
                             snap(mSnapMask); // Keep in mind, that if it is 0, then no bits are set.
+                        //boundsCheck();
                     }
                 });
-        getActivity().findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        getActivity().findViewById(R.id.main_root).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 boundsCheck();
@@ -277,7 +281,7 @@ public class FloatingFragment extends Fragment {
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                boundsCheck();
+
             }
         });
         observableFromTouch(mContentView.findViewById(R.id.resize_button))
@@ -299,6 +303,7 @@ public class FloatingFragment extends Fragment {
                     @Override
                     public void call(Point point) {
                         mContentView.setLayoutParams(new FrameLayout.LayoutParams(width = point.x, height = point.y));
+                        //boundsCheck();
                     }
                 });
     }
@@ -336,6 +341,7 @@ public class FloatingFragment extends Fragment {
     public TouchEventInfo move(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                mSnapHint = 0;
                 mContentView.bringToFront();
                 touchXOffset = (prevX = (int) event.getRawX()) - (int) mContentView.getX();
                 touchYOffset = (prevY = (int) event.getRawY()) - (int) mContentView.getY();
@@ -348,8 +354,6 @@ public class FloatingFragment extends Fragment {
                 mSnapHint = getSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
                 prevX = tmpX;
                 prevY = tmpY;
-                width = mContentView.getWidth();
-                height = mContentView.getHeight();
                 int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
                 int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
                 int moveX = Math.min(Math.max(tmpX - touchXOffset, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
@@ -365,7 +369,6 @@ public class FloatingFragment extends Fragment {
     public Point resize(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mSnapMask = 0;
                 Point p = MeasureTools.getScaledCoordinates(mContentView);
                 tmpX2 = p.x;
                 tmpY2 = p.y;
@@ -425,15 +428,17 @@ public class FloatingFragment extends Fragment {
         int snapMask = 0;
         int transitionX = newX - oldX;
         int transitionY = newY - oldY;
-        int snapOffsetX = MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 3;
-        int snapOffsetY = MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 3;
+        int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
+        int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
+        int snapOffsetX = Globals.MAX_X.get() / 10;
+        int snapOffsetY = Globals.MAX_Y.get() / 10;
         if (transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()) {
             snapMask |= TouchEventInfo.RIGHT;
         }
-        if (transitionX < 0 && MeasureTools.getScaledCoordinates(mContentView).x <= snapOffsetX) {
+        if (transitionX < 0 && newX <= snapOffsetX) {
             snapMask |= TouchEventInfo.LEFT;
         }
-        if (transitionY < 0 && MeasureTools.getScaledCoordinates(mContentView).y <= snapOffsetY) {
+        if (transitionY < 0 && newY <= snapOffsetY) {
             snapMask |= TouchEventInfo.UPPER;
         }
         if (transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()) {
@@ -506,6 +511,10 @@ public class FloatingFragment extends Fragment {
     protected void setup() {
         // Release as we no longer need, to prevent memory leak.
         mMappedContext = null;
+        if(width == 0 || height == 0){
+            width = mContentView.getWidth();
+            height = mContentView.getHeight();
+        }
         if(mSnapMask != 0){
             snap(mSnapMask);
         }
@@ -522,10 +531,10 @@ public class FloatingFragment extends Fragment {
     }
 
     private void maximize(){
+        mContentView.setX(-MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2);
+        mContentView.setY(-MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2);
         mContentView.setLayoutParams(new FrameLayout.LayoutParams((int) (Globals.MAX_X.get() / Globals.SCALE_X.get()),
                 (int) (Globals.MAX_Y.get() / Globals.SCALE_Y.get())));
-        mContentView.setX(0);
-        mContentView.setY(0);
         mContentView.bringToFront();
         mIsMaximized = true;
     }
@@ -556,9 +565,28 @@ public class FloatingFragment extends Fragment {
      * @return If user can still see this.
      */
     protected boolean isVisibleOnScreen(){
-        Rect visibleRect = new Rect();
-        getActivity().findViewById(R.id.main_layout).getHitRect(visibleRect);
-        return mContentView.getLocalVisibleRect(visibleRect);
+        final int myHorizontal = (int) mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get());
+        final int myVertical = (int) mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get());
+        Log.d(getClass().getName(), "Me: { Horizontal: " + myHorizontal + ", Vertical: " + myVertical + " }");
+        final MutableObject<Boolean> isClipped = new MutableObject<>(false);
+        new Callbacks.CallbackOnRootChildren<View>(){
+            @Override
+            public void onChild(View child) {
+                if(child != mContentView){
+                    if(child.getZ() > mContentView.getZ()){
+                        int horizontal = (int) child.getX() + MeasureTools.scaleToInt(child.getWidth(), Globals.SCALE_X.get());
+                        int vertical = (int) child.getY() + MeasureTools.scaleToInt(child.getHeight(), Globals.SCALE_Y.get());
+                        Log.d(getClass().getName(), "Child: { Horizontal: " + horizontal + ", Vertical: " + vertical + " }");
+                        if((myHorizontal > (int) child.getX() && myHorizontal < horizontal)
+                                && (myVertical > (int) child.getY() && myVertical < vertical)){
+                            isClipped.set(true);
+                        }
+                    }
+                }
+            }
+        }.callOnChildren(View.class, (ViewGroup) getActivity().findViewById(R.id.main_layout));
+        Toast.makeText(getActivity(), "IsClipping: " + isClipped.get(), Toast.LENGTH_LONG).show();
+        return !isClipped.get();
     }
 
     @Override

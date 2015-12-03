@@ -106,4 +106,6 @@ public class WebBrowserFragment extends FloatingFragment {
         mBrowser.loadUrl(DEFAULT_HOMEPAGE);
         ((EditText) getContentView().findViewById(R.id.browser_action_text)).setText(DEFAULT_HOMEPAGE);
     }
+
+
 }

@@ -1,7 +1,6 @@
 package com.theif519.sakoverlay.Adapters;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +12,6 @@ import com.theif519.sakoverlay.POD.VideoInfo;
 import com.theif519.sakoverlay.R;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,11 +25,6 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
 
     private static final int RESOURCE_ID = R.layout.list_view_video_info;
     private List<VideoInfo> mVideoInfo = new ArrayList<>();
-
-    public VideoInfoAdapter(Context context, VideoInfo[] objects) {
-        this(context, Arrays.asList(objects));
-    }
-
     public VideoInfoAdapter(Context context, List<VideoInfo> objects) {
         super(context, RESOURCE_ID, objects);
         mVideoInfo = objects;
@@ -57,7 +50,6 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
     private class VideoInfoHolder{
         private TextView mDescription, mDuration, mTimeStamp, mFileSize;
         private ImageView mThumbnail;
-        private Bitmap mBitmap;
 
         public VideoInfoHolder(View view){
             mDescription = (TextView) view.findViewById(R.id.list_view_video_info_description);
@@ -72,12 +64,12 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
             setup(info);
         }
 
-        public void setup(VideoInfo info){
+        public void setup(final VideoInfo info){
             mDescription.setText(info.getDescription());
             mDuration.setText(info.getDuration());
             mTimeStamp.setText(info.getTimestamp());
             mFileSize.setText(info.getFileSize());
-            mThumbnail.setImageBitmap(mBitmap = info.getThumbnail());
+            mThumbnail.setImageBitmap(info.getThumbnail());
         }
     }
 }
