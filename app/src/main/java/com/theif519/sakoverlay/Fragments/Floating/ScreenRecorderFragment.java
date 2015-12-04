@@ -1,5 +1,6 @@
 package com.theif519.sakoverlay.Fragments.Floating;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -78,8 +79,11 @@ public class ScreenRecorderFragment extends FloatingFragment {
         new MediaThumbnailGenerator() {
             @Override
             protected void onPostExecute(List<VideoInfo> videoInfos) {
-                listView.setEmptyView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.list_view_video_info_empty, null));
-                listView.setAdapter(new VideoInfoAdapter(getActivity(), videoInfos));
+                Activity activity = getActivity();
+                // As activity CAN be destroyed in onPostExecute, we must check here to prevent a null pointer exception
+                if(activity == null) return;
+                listView.setEmptyView(((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.list_view_video_info_empty, null));
+                listView.setAdapter(new VideoInfoAdapter(activity, videoInfos));
             }
         }.execute(FileRetriever.getFiles(Globals.RECORDER_FILE_SAVE_PATH).toArray(new File[0]));
         getActivity().bindService(new Intent(getActivity(), RecorderService.class), mServiceConnectionHandler = new ServiceConnection() {

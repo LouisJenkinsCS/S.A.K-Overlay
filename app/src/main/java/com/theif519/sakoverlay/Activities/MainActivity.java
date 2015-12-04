@@ -16,6 +16,7 @@ import android.widget.PopupWindow;
 import android.widget.Toast;
 
 import com.theif519.sakoverlay.Async.FloatingFragmentDeserializer;
+import com.theif519.sakoverlay.Async.FloatingFragmentSerializer;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
 import com.theif519.sakoverlay.Fragments.Floating.GoogleMapsFragment;
@@ -26,7 +27,6 @@ import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.utils.Misc.ServiceTools;
-import com.theif519.sakoverlay.Async.FloatingFragmentSerializer;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -34,30 +34,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-// TODO: Find a better way to register callbacks for button press, and menu options!
-// TODO: Change from popup menu to a dialog menu.
+/**
+ * Created by theif519 on ???. Forgot the date
+ * <p/>
+ * This is the entry point for the program, and also acts as the main context for all Fragments, Views,
+ * Toasts, Services, etc. It's main purpose is to do the following before relinquishing the main thread
+ * to handle other matters, with exception to it's life cycle methods.
+ * <p/>
+ * 1) Inflate and initialize the menu PopupWindow ahead of time.
+ * 2) Deserialize in onCreate() through a factory
+ * 3) Keep WeakReferences to all FloatingFragments
+ * 4) Serialize all FloatingFragments in onPause() through it's WeakReferences
+ * 5) Maintain consistency by updating the maximum vertical and horizontal size of the screen on configuration change.
+ */
 public class MainActivity extends Activity {
 
+    /*
+        This is the menu PopupWindow inflated and created ahead of time. By inflating ahead of time,
+        it reduces the corruption of the heap marginally, by not having to create and destroy each time.
+
+        And of course it is faster this way.
+     */
     private PopupWindow mMenuPopup;
-
-
-    public static final String JSON_FILENAME = "SerializedFloatingFragments.json";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        // The below sets up Immersize mode full screne, which unfortunately requires API level 21.
+        makeImmersive(getWindow().getDecorView());
         setContentView(R.layout.activity_main);
         setupPopupWindow();
         setupActionBar();
+        // We start the service if it hasn't already been started.
         ServiceTools.startService(this, NotificationService.class, new ServiceTools.SetupIntent() {
             @Override
             public void setup(Intent intent) {
                 intent.putExtra(NotificationService.START_NOTIFICATION, true);
             }
         });
+        // Any time there is a configuration change, we update the bounds of the screen here.
         findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -65,14 +80,16 @@ public class MainActivity extends Activity {
                 Globals.MAX_Y.set(findViewById(R.id.main_layout).getHeight());
             }
         });
-        TypedValue value = new TypedValue();
-        getResources().getValue(R.dimen.default_scale_x, value, true);
-        Globals.SCALE_X.set(value.getFloat());
-        getResources().getValue(R.dimen.default_scale_y, value, true);
-        Globals.SCALE_Y.set(value.getFloat());
-        deserializeFloatingFragments(); // Deserialize.
+        Globals.SCALE_X.set(getDimension(R.dimen.default_scale_x));
+        Globals.SCALE_Y.set(getDimension(R.dimen.default_scale_y));
+        // Now that everything else is setup, we can make the call to deserialize.
+        deserializeFloatingFragments();
     }
 
+    /**
+     * Note that the ActionBar is custom, and hence requires quite a bit of setup each time. Luckily, this only needs
+     * to be called once, when the Activity is created.
+     */
     private void setupActionBar() {
         ActionBar actionbar = getActionBar();
         if (actionbar == null) throw new RuntimeException("ActionBar is null!");
@@ -91,13 +108,38 @@ public class MainActivity extends Activity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        // As unfortunately when the view focus changes, it loses it's "Immersion", I have to reset it whenever we regain focus.
+        makeImmersive(getWindow().getDecorView());
     }
 
+    /*
+        WeakReference to current floating fragments. It allows a seamless and the most efficient way
+        of keeping track of each fragment without having to worry about leaking it, or having it
+        modify a public static collection. This is considered the best practice.
+
+        Why do we need a reference for each FloatingFragment, you may ask? Because we cannot serialize each
+        fragment without it. Why do we use a WeakReference? Because each fragment can be destroyed without the
+        MainActivity knowing (which is a good thing).
+     */
     private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
-    private void deserializeFloatingFragments(){
-        final File jsonFile = new File(getExternalFilesDir(null), JSON_FILENAME);
+
+    /**
+     * Sets up and begins the AsyncTask. Unfortunately, we cannot reuse an AsyncTask after using it, or else
+     * we would recycle it. A handler would be too wasteful as it would just spin/block and do absolutely nothing,
+     * no matter how "cheap" threads are.
+     *
+     * It must also be noted that, while I could not fix the issue it is noted here, that sometimes
+     * onPuase() AND onStop() is called immediately after onCreate(), and sometimes even onDestroy() (???)
+     * so it may throw an IllegalStateException because onSaveInstanceState has already been called and these operations
+     * cannot be started. This results in a corrupted file (???) as it completely disappears when this happens.
+     *
+     * I was thinking of using Rx to handle this, but it wouldn't really solve the actual problem. From what else
+     * I can pinpoint, the issue is that .commit() is called after the MainActivity is in the Background. Some probable
+     * "solutions" in the mean time is probably to setup a Runnable that the MainActivity can check for, in case
+     * it needs to inflate each FloatingFragment later.
+     */
+    private void deserializeFloatingFragments() {
+        final File jsonFile = new File(getExternalFilesDir(null), Globals.JSON_FILENAME);
         if (jsonFile.exists()) {
             new FloatingFragmentDeserializer() {
                 @Override
@@ -112,11 +154,17 @@ public class MainActivity extends Activity {
                     for (ArrayMap<String, String> map : mapList) {
                         addFragment(factory.getFragment(map));
                     }
-                    transaction.commit();
+                    transaction.commit(); // This may cause a crash if onStop() called before finish.
                 }
             }.execute();
         }
     }
+
+    /**
+     * Simply serializes each view. By utilizing WeakReferences, I do not need to worry about
+     * memory leaks, nor the issues with a static variable. It basically calls serialize() on each
+     * fragment, then flushes it to disk.
+     */
     @SuppressWarnings("unchecked")
     private void serializeFloatingFragments() {
         List<ArrayMap<String, String>> mapList = new ArrayList<>();
@@ -131,12 +179,17 @@ public class MainActivity extends Activity {
         new FloatingFragmentSerializer() {
             @Override
             protected void onPreExecute() {
-                this.file = new File(getExternalFilesDir(null), JSON_FILENAME);
+                this.file = new File(getExternalFilesDir(null), Globals.JSON_FILENAME);
             }
-        }.execute(mapList.toArray(new ArrayMap[0]));
+        }.execute(mapList.toArray(new ArrayMap[mapList.size()]));
     }
+
+    /**
+     * Convenience method to quickly add a new FloatingFragment to the list and to the FragmentManager.
+     * @param fragment Fragment to add.
+     */
     private void addFragment(FloatingFragment fragment) {
-        if(fragment == null) {
+        if (fragment == null) {
             Toast.makeText(MainActivity.this, "There can only be one instance of this widget!", Toast.LENGTH_LONG).show();
             return;
         }
@@ -150,22 +203,20 @@ public class MainActivity extends Activity {
         serializeFloatingFragments();
     }
 
+    /**
+     * When back button is pressed, it moves this instance of MainActivity to the backstack, helps with going
+     * back to the previous application open. It also serializes as if it was onPause.
+     */
     @Override
     public void onBackPressed() {
         serializeFloatingFragments();
         moveTaskToBack(true);
     }
 
-    private int getActionBarHeight() {
-        TypedValue val = new TypedValue();
-        getTheme().resolveAttribute(android.R.attr.actionBarSize, val, true);
-        return TypedValue.complexToDimensionPixelSize(val.data, getResources().getDisplayMetrics());
-    }
-
     private void setupPopupWindow() {
         View view = getLayoutInflater().inflate(R.layout.menu_icon_dropdown, null);
-        view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        // As stated above, when focus changes, including from a PopupWindow, it loses Immersive Mode, hence we reset here.
+        makeImmersive(view);
         mMenuPopup = new PopupWindow(view);
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_browser_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -199,5 +250,26 @@ public class MainActivity extends Activity {
         mMenuPopup.setBackgroundDrawable(new BitmapDrawable());
         mMenuPopup.setOutsideTouchable(true);
         mMenuPopup.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    /**
+     * Convenience method to retrieve a dimension.
+     * @param dimenId R id of the dimension
+     * @return Dimension as a float.
+     */
+    private float getDimension(int dimenId){
+        TypedValue value = new TypedValue();
+        getResources().getValue(dimenId, value, true);
+        return value.getFloat();
+    }
+
+    /**
+     * Convenience method to make a view Immersive. In the future, I will be for the user's API level, to
+     * make sure we do not launch ImmersiveMode when below API Level 21. However, I do not have time for that.
+     * @param view View to make immersive.
+     */
+    private void makeImmersive(View view){
+        view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 }

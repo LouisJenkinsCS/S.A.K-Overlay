@@ -42,6 +42,8 @@ public final class Globals {
 
     public static final MutableObject<Integer> MAX_X = new MutableObject<>(0), MAX_Y = new MutableObject<>(0);
 
+    public static final String JSON_FILENAME = "SerializedFloatingFragments.json";
+
     public static final int RECORDER_PERMISSION_RETVAL = 1;
 
     public static final int RECORDER_NOTIFICATION_ID = 90;

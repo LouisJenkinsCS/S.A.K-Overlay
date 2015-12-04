@@ -155,11 +155,7 @@ public class FloatingFragment extends Fragment {
                     mContentView.setVisibility(View.VISIBLE);
                     mContentView.bringToFront();
                 } else {
-                    if (!isVisibleOnScreen()) {
-                        mContentView.bringToFront();
-                    } else {
-                        mContentView.setVisibility(View.INVISIBLE);
-                    }
+                    mContentView.setVisibility(View.INVISIBLE);
                 }
             }
         });
@@ -197,7 +193,7 @@ public class FloatingFragment extends Fragment {
         mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mIsMaximized){
+                if (mIsMaximized) {
                     restoreOriginal();
                 } else {
                     maximize();
@@ -347,7 +343,7 @@ public class FloatingFragment extends Fragment {
                 touchYOffset = (prevY = (int) event.getRawY()) - (int) mContentView.getY();
                 return null;
             case MotionEvent.ACTION_MOVE:
-                if(mSnapMask != 0){
+                if (mSnapMask != 0) {
                     restoreOriginalSize();
                     mSnapMask = 0;
                 }
@@ -511,14 +507,14 @@ public class FloatingFragment extends Fragment {
     protected void setup() {
         // Release as we no longer need, to prevent memory leak.
         mMappedContext = null;
-        if(width == 0 || height == 0){
+        if (width == 0 || height == 0) {
             width = mContentView.getWidth();
             height = mContentView.getHeight();
         }
-        if(mSnapMask != 0){
+        if (mSnapMask != 0) {
             snap(mSnapMask);
         }
-        if(mIsMaximized){
+        if (mIsMaximized) {
             maximize();
         }
     }
@@ -530,7 +526,7 @@ public class FloatingFragment extends Fragment {
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).removeView(mTaskBarButton);
     }
 
-    private void maximize(){
+    private void maximize() {
         mContentView.setX(-MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2);
         mContentView.setY(-MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2);
         mContentView.setLayoutParams(new FrameLayout.LayoutParams((int) (Globals.MAX_X.get() / Globals.SCALE_X.get()),
@@ -539,7 +535,7 @@ public class FloatingFragment extends Fragment {
         mIsMaximized = true;
     }
 
-    private void restoreOriginalCoordinates(){
+    private void restoreOriginalCoordinates() {
         mContentView.setX(x);
         mContentView.setY(y);
         mContentView.bringToFront();
@@ -551,34 +547,35 @@ public class FloatingFragment extends Fragment {
         mIsMaximized = false;
     }
 
-    private void restoreOriginal(){
+    private void restoreOriginal() {
         restoreOriginalCoordinates();
         restoreOriginalSize();
     }
 
-    private void minimize(){
+    private void minimize() {
         mContentView.setVisibility(View.INVISIBLE);
     }
 
     /**
      * Determines if this view is visible on the screen, I.E not covered by another view.
+     *
      * @return If user can still see this.
      */
-    protected boolean isVisibleOnScreen(){
+    protected boolean isVisibleOnScreen() {
         final int myHorizontal = (int) mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get());
         final int myVertical = (int) mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get());
         Log.d(getClass().getName(), "Me: { Horizontal: " + myHorizontal + ", Vertical: " + myVertical + " }");
         final MutableObject<Boolean> isClipped = new MutableObject<>(false);
-        new Callbacks.CallbackOnRootChildren<View>(){
+        new Callbacks.CallbackOnRootChildren<View>() {
             @Override
             public void onChild(View child) {
-                if(child != mContentView){
-                    if(child.getZ() > mContentView.getZ()){
+                if (child != mContentView) {
+                    if (child.getZ() > mContentView.getZ()) {
                         int horizontal = (int) child.getX() + MeasureTools.scaleToInt(child.getWidth(), Globals.SCALE_X.get());
                         int vertical = (int) child.getY() + MeasureTools.scaleToInt(child.getHeight(), Globals.SCALE_Y.get());
                         Log.d(getClass().getName(), "Child: { Horizontal: " + horizontal + ", Vertical: " + vertical + " }");
-                        if((myHorizontal > (int) child.getX() && myHorizontal < horizontal)
-                                && (myVertical > (int) child.getY() && myVertical < vertical)){
+                        if ((myHorizontal > (int) child.getX() && myHorizontal < horizontal)
+                                && (myVertical > (int) child.getY() && myVertical < vertical)) {
                             isClipped.set(true);
                         }
                     }
