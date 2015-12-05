@@ -16,76 +16,79 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.theif519.sakoverlay.Misc.Globals;
-import com.theif519.sakoverlay.POD.TouchEventInfo;
 import com.theif519.sakoverlay.POD.ViewProperties;
 import com.theif519.sakoverlay.R;
 import com.theif519.utils.Misc.MeasureTools;
 
-import java.util.ArrayList;
-
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
-
 /**
  * Created by theif519 on 10/29/2015.
  * <p/>
- * FloatingFragment is the base class for all floating views, which implements the dynamic movement,
- * resizability, and other on(Touch|Click)Listeners. It must be overriden, as the LAYOUT_ID and
- * LAYOUT_TAG must be set, as well as ICON optionally. It maintains it's state, which is used to serialize
- * to disk, and can readily be deserialized and unpacked to restore it's state from mMappedContext if not null.
- * <p/>
- * Serialization works like this...
- * <p/>
- * -> OnPause(): Signifies that the user may never leave, hence we should serialize all data.
- * -> Serialize(): Maps information used to restore the state of the fragment at a later date.
- * -> FloatingFragmentSerializer: Flushes the data to disk in JSON format.
- * <p/>
- * Deserialization works like this...
- * <p/>
- * -> OnCreate() - Activity first created, if there is any serialized fragments, recreate them.
- * -> FloatingFragmentDeserializer: Read the JSON data into mapped context, passing it to the factory.
- * -> FloatingFragmentFactory: Reconstructs the fragment based on LAYOUT_TAG (hence important), passing context to be recreated.
- * -> unpack() - If mMappedContext is not null, unpacks the mMappedContext object to restore overall state.
- * Added to message queue to ensure mContentView is finished inflating. Should be overriden to allow for specific data.
- * -> setup() - After unpacking, any additional steps should be done here. Hence, presumably the state is complete restored
- * and if extra steps are needed, can be handled here. Added to message queue so mContentView has finished inflating.
- * Should be overriden!
+ * This is the base and core class for FloatingFragments. A FloatingFragment is what it sounds like, it is
+ * a Fragment which acts as if it is attached to a container, I.E Floating. It is bounded within the walls
+ * of the main_layout container (beginning of action bar, edges of screen, and the task bar at the bottom
+ * however it can be moved at will by the user.
+ *
+ * FloatingFragments contain their own custom life cycle methods, handle serializing and deserializing their views,
+ * as well as unpacking and setting themselves up. Although the presentation I gave already described how
+ * everything works, I will summarize it once again here...
+ *
+ * The custom life-cycles reflect the MainActivity's life cycles and are also triggered by them.
+ *
+ * MainActivity methods preceded with a (-)
+ * FloatingFragments methods preceded with a (+)
+ * FloatingFragments custom lifecycle methods preceded with a (~)
+ * - OnCreate()
+ *  - DeserializeFloatingFragments()
+ *  + OnCreateView()
+ *    ~ Unpack()
+ *        // Will be called if mappedContext passed, as in, if instantiated from the deserializer factory.
+ *    ~ Setup()
+ *  + OnDestroy()
+ *    ~ CleanUp()
+ *  - OnPause()
+ *    - SerializeFloatingFragments()
+ *      ~ Serialize()
+ *          // Where each FloatingFragment serializes their data.
+ *
+ *
+ * Relatively simplistic flow. Some life cycle methods may be changed or outright removed later (I.E CleanUp)
+ * however as of now they remain.
+ *
+ * It should be noted that I removed the Rx and multithreading from the onTouch events, as while IMO they
+ * sounded like a great and cool idea, and they did actually work at first, it was only because of a really
+ * big mistake I made by instantiating a new LayoutParam each time I called resize() or snap(), which is surprisingly
+ * often (Seems that ACTION_UP gets called more than once a lot of the time). I found this out by checking out
+ * Allocation Tracker and seeing that after 5 minutes of use, it had allocated it (which is 64 bytes of memory
+ * in size) over a 1,000 times. Even though the VM cleaned it up, it still would have caused the GC to trigger a LOT.
  */
 public class FloatingFragment extends Fragment {
 
+    /*
+        I decided to change from having separate instance member variables (x, y, width, height)
+        to not only encapsulating them inside of another object, BUT ALSO handle resizing the view
+        inside of that object as well. This also makes it possible for other classes to easily manipulate
+        this fragment's view (if I make it public or make a getter method of course).
+
+        For example, if I wanted to, say, implement gestured or maybe resizing other views when I resize my own
+        while snapped, I would need some elegant of doing so.
+     */
     protected ViewProperties mViewProperties;
 
     /*
-        Used to signify that this fragment is dead or is about to be, but Garbage Collector hasn't collected us yet.
+        mIsDead - Determines whether or not this instance is dead but not reaped by the garbage collector.
      */
     private boolean mIsDead = false, mIsMaximized = false;
 
     /*
-        Tag used to serialize and deserialize/reconstruct with the factory. This must be overriden.
+        Tag used to serialize and deserialize/reconstruct with the factory. This must be changed by sub classes.
      */
     protected String LAYOUT_TAG = "DefaultFragment";
 
     /*
-        These protected variables MUST be overriden, and is used during the onCreateView() to initialize
+        These protected variables MUST be changed by subclasses, and is used during the onCreateView() to initialize
         the root view. default_fragment is akin to a 404 message.
      */
     protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
-
-    /*
-        Represents Menu Options.
-     */
-    protected static final String TRANSPARENCY_TOGGLE = "Transparency Toggle", BRING_TO_FRONT = "Bring to Front";
-
-    /*
-        The list of options to be shown in the list view when the options menu is to be displayed
-        If left null, it will create a new one, and have the default options available, else the default
-        options are appended to the list view.
-     */
-    protected ArrayList<String> mOptions;
 
     /*
         We keep track of the root view out of convenience.
@@ -93,29 +96,27 @@ public class FloatingFragment extends Fragment {
     private View mContentView;
 
     /*
-        The state of the fragment is deserialized from this map, and is used to restore the context
-        of the fragment after the application and host activity is destroyed.
-
-        This is left protected so that subclasses can override and set the context for their own purposes.
+        This map should be created when serialize() is called, and also set when created from the factory.
+        Unpack relies on this to determine whether or not there is anything to unpack or not.
      */
     protected ArrayMap<String, String> mMappedContext;
 
+    /*
+        The current snap state of this view. By bitwise OR'ing different snap states, we can get
+        combinations like BOTTOM RIGHT and UPPER LEFT.
+     */
     protected int mSnapMask;
 
+    /*
+        Snap states.
+     */
+    protected static final int RIGHT = 1, LEFT = 1 << 1, UPPER = 1 << 2, BOTTOM = 1 << 3;
+
+    /*
+        As of now, the task bar at the bottom of the activity isn't very well developed. We only have an
+        image button, which the base classes inflates and adds to it in setup(). Very bare-bones, as I said.
+     */
     private ImageButton mTaskBarButton;
-
-    public static FloatingFragment newInstance(int layoutId, String layoutTag) {
-        FloatingFragment fragment = new FloatingFragment();
-        fragment.LAYOUT_TAG = layoutTag;
-        fragment.LAYOUT_ID = layoutId;
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
 
     @SuppressWarnings("unchecked")
     @Nullable
@@ -123,11 +124,11 @@ public class FloatingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(LAYOUT_ID, container, false);
         setupListeners();
-        setupReactive();
         setupTaskItem();
         if (mMappedContext != null && Boolean.valueOf(mMappedContext.get(Globals.Keys.MINIMIZED))) {
             minimize();
         }
+        // Ensures that the following methods are called after the view is fully drawn and setup.
         mContentView.post(new Runnable() {
             @Override
             public void run() {
@@ -139,6 +140,9 @@ public class FloatingFragment extends Fragment {
         return mContentView;
     }
 
+    /**
+     * This is where we setup the bottom task bar's button for this FloatingFragment. Very bare-bones right now.
+     */
     private void setupTaskItem() {
         mTaskBarButton = new ImageButton(getActivity());
         mTaskBarButton.setImageResource(ICON_ID);
@@ -183,119 +187,29 @@ public class FloatingFragment extends Fragment {
                 }
             }
         });
-    }
-
-    /**
-     * In this helper, we create implement the wonders of RxJava and affiliated sub-libraries, to
-     * make handling touch events, I.E moving and resizing views, more elegant in an approach and more efficient.
-     * <p/>
-     * Documentation below will provide a walk-through as to what each class does, their purpose, and what
-     * they do in the grand scheme of things, and of course I will contrast to the complexity that a normal
-     * onTouchListener couldn't even begin to do as elegantly.
-     * <p/>
-     * Some key explanations to help with understanding the code below...
-     * <p/>
-     * An Observer, is what it sounds like. It is an object which observes some event. You can think of
-     * an onTouchListener as an Observer, as it "Listens" for a touch, and the Motion Event itself the
-     * Observable (which I will explain in a bit). An Observer can be anything, so long as it emits an
-     * "item", or an event. The Observer also handles the operations, I.E Map, Filter, etc., allowing
-     * it asynchronicity and elegance. To expand on the onTouchListener comparison, the onTouchListener feels
-     * as asynchronous as the Observer does, but only can the Observer truly be considered asynchronous. The
-     * OnTouch event is dispatched by and on the main looper, while an Observer can be dispatched on any thread.
-     * <p/>
-     * An Observable is also what it sounds like. It is an object which can be observed. Like the above
-     * analogy, the onTouch event is the Observable. The main thread polls for new events, on observable
-     * events. The Observable "emits" items, or events, like a touch event, while an Observer listens for
-     * these items. The observable mostly calls the callbacks onNext(), meaning for the next event,
-     * onError(), meaning if an error or an exception is thrown and not handled, or onComplete(), for
-     * when the Observable has finished broadcasting its events. An Observer can Subscribe to an
-     * Observable, and when the Observable emits these items, the Observer's operators handles transforming
-     * it however it wants, and if it decides to handle the items emitted, it can subscribe(), which will
-     * call the Observables onSubscribe() if declared. I.E, when a new Observer subscribes to an Observable,
-     * say the main thread wants to query from a database, it may onSubscribe() and query for any immediate returns
-     * or block until one is ready, upon which the main thread (Observer) subscribes() and does something with
-     * said data.
-     * <p/>
-     * I understand this may be longwinded and overwhelming for a simple Javadoc, but for a more
-     * thorough explanation, see RxJava's documentation and tutorials.
-     */
-    private void setupReactive() {
-        observableFromTouch(mContentView.findViewById(R.id.title_bar_move))
-                .observeOn(AndroidSchedulers.mainThread()) // The Observer, the UI Thread, waits for processed events containing the information needed to manipulate views.
-                .subscribeOn(Schedulers.computation()) // The Observable's events are processed on a computational thread, which is a non I/O-Bound thread. Perfect for this.
-                .map(new Func1<MotionEvent, Void>() { // We process each MotionEvent in a background thread, then dispose of it.
-                    @Override
-                    public Void call(MotionEvent event) {
-                        /*
-                            I decided, from a design point of view, it would be better to encapsulate all View manipulations from an
-                            inner class. Due to this, I do not need to return anything, and the added benefit is that (presumably) we
-                            relinquish it's reference to be garbage collected or recycled.
-                         */
-                        move(event);
-                        return null;
-                    }
-                })
-                .subscribe(new Action1<Void>() { // Where the UI Thread gets called.
-                    @Override
-                    public void call(Void none) {
-                        mViewProperties.update();
-                    }
-                });
+        mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return move(event);
+            }
+        });
+        mContentView.findViewById(R.id.resize_button).setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return resize(event);
+            }
+        });
         getActivity().findViewById(R.id.main_root).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 boundsCheck();
             }
         });
-        observableFromTouch(mContentView.findViewById(R.id.resize_button))
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.computation())
-                .map(new Func1<MotionEvent, Void>() {
-                    @Override
-                    public Void call(MotionEvent event) {
-                        resize(event);
-                        return null;
-                    }
-                })
-                .subscribe(new Action1<Void>() {
-                    @Override
-                    public void call(Void none) {
-                        mViewProperties.update();
-                    }
-                });
-    }
-
-    /**
-     * Used to create an Observable from a onTouchListener event.
-     * <p/>
-     * A PublishSubject acts as both an Observable and an Observer. Pretty much, it serves as a
-     * proxy between Observers and Observables. It abstracts the need to subscribe and create an observable of
-     * everything by just calling onNext() to emit an event, as here onNext() is called to directly
-     * send the MotionEvent to any listeners, and subscribe() determines how it handles the onTouch event.
-     *
-     * @param v View
-     * @return An Observable that gets published to from an onTouchListener handler.
-     */
-    private Observable<MotionEvent> observableFromTouch(View v) {
-        final PublishSubject<MotionEvent> onTouch = PublishSubject.create();
-        v.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                // Whenever we receive a touch event, re-emit the event. Effectively turns it into an observer.
-                if (onTouch.hasObservers()) {
-                    onTouch.onNext(event);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
-        return onTouch.asObservable();
     }
 
     private int touchXOffset, touchYOffset, prevX, prevY;
 
-    public void move(MotionEvent event) {
+    public boolean move(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mContentView.bringToFront();
@@ -304,7 +218,7 @@ public class FloatingFragment extends Fragment {
                 }
                 touchXOffset = (prevX = (int) event.getRawX()) - (int) mContentView.getX();
                 touchYOffset = (prevY = (int) event.getRawY()) - (int) mContentView.getY();
-                break;
+                return false;
             case MotionEvent.ACTION_MOVE:
                 int tmpX, tmpY;
                 updateSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
@@ -316,23 +230,25 @@ public class FloatingFragment extends Fragment {
                 int moveX = Math.min(Math.max(tmpX - touchXOffset, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
                 int moveY = Math.min(Math.max(tmpY - touchYOffset, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
                 mViewProperties.setX(moveX).setY(moveY);
-                break;
+                return false;
             case MotionEvent.ACTION_UP:
                 snap();
-                break;
+                return true;
+            default:
+                return false;
         }
     }
 
     private int tmpX, tmpY;
 
-    public void resize(MotionEvent event) {
+    public boolean resize(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 mContentView.bringToFront();
                 Point p = MeasureTools.getScaledCoordinates(mContentView);
                 tmpX = p.x;
                 tmpY = p.y;
-                break;
+                return false;
             case MotionEvent.ACTION_MOVE:
                 mSnapMask = 0;
                 int diffX = (int) event.getRawX() - tmpX;
@@ -342,40 +258,42 @@ public class FloatingFragment extends Fragment {
                 int width = Math.min(Math.max((int) (diffX / Globals.SCALE_X.get()), 250), Globals.MAX_X.get() + scaleDiffX);
                 int height = Math.min(Math.max((int) (diffY / Globals.SCALE_Y.get()), 250), Globals.MAX_Y.get() + scaleDiffY);
                 mViewProperties.setWidth(width).setHeight(height);
-                break;
+                return false;
+            case MotionEvent.ACTION_UP:
+                return true;
+            default:
+                return false;
         }
     }
 
     /**
-     * Used to snap views to a side of the window if the bitmask is set. It should be noted that RxJava's schedulers are guaranteed
-     * to perform tasks sequentially, hence, I have no need to worry about race conditions while performing operations on the
-     * bitmask.
-     *
+     * Used to snap views to a side of the window if the bitmask is set.
+     * <p/>
      * By utilizing a bitmask, it allows me to dynamically snap to not just sides, but also corners as well. It uses bitwise AND'ing
      * to retrieve set bits/attributes. Unlike other operations, such as move() and resize(), changes to the mContentView's
      * size and coordinates are not saved, to easily allow the view to go back to it's original size easily.
      */
     public void snap() {
-        if(mSnapMask == 0) return;
+        if (mSnapMask == 0) return;
         int maxWidth = Globals.MAX_X.get();
         int maxHeight = Globals.MAX_Y.get();
         int width = 0, height = 0, x = 0, y = 0;
-        if ((mSnapMask & TouchEventInfo.RIGHT) != 0) {
+        if ((mSnapMask & RIGHT) != 0) {
             width = maxWidth / 2;
             height = maxHeight;
             x = maxWidth / 2;
         }
-        if ((mSnapMask & TouchEventInfo.LEFT) != 0) {
+        if ((mSnapMask & LEFT) != 0) {
             width = maxWidth / 2;
             height = maxHeight;
         }
-        if ((mSnapMask & TouchEventInfo.UPPER) != 0) {
+        if ((mSnapMask & UPPER) != 0) {
             if (width == 0) {
                 width = maxWidth;
             }
             height = maxHeight / 2;
         }
-        if ((mSnapMask & TouchEventInfo.BOTTOM) != 0) {
+        if ((mSnapMask & BOTTOM) != 0) {
             if (width == 0) {
                 width = maxWidth;
             }
@@ -401,9 +319,8 @@ public class FloatingFragment extends Fragment {
     }
 
     /**
-     * Updates the bitmask used to maintain the current snap direction of the current view. It should be
-     * noted that as RxJava's schedulers perform tasks sequentially, that updateSnapMask() and snap() do not
-     * conflict with each other in any way.
+     * Updates the bitmask used to maintain the current snap direction of the current view.
+     *
      * @param oldX The old x-coordinate. This is used to determine the horizontal direction the user is going.
      * @param oldY The old y-coordinate. This is used to determine the vertical direction the user is going.
      * @param newX The new x-coordinate. By finding the difference between new and old we can determine which horizontal direction the user is going.
@@ -416,16 +333,16 @@ public class FloatingFragment extends Fragment {
         int snapOffsetX = Globals.MAX_X.get() / 10;
         int snapOffsetY = Globals.MAX_Y.get() / 10;
         if (transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()) {
-            mSnapMask |= TouchEventInfo.RIGHT;
+            mSnapMask |= RIGHT;
         }
         if (transitionX < 0 && newX <= snapOffsetX) {
-            mSnapMask |= TouchEventInfo.LEFT;
+            mSnapMask |= LEFT;
         }
         if (transitionY < 0 && newY <= snapOffsetY) {
-            mSnapMask |= TouchEventInfo.UPPER;
+            mSnapMask |= UPPER;
         }
         if (transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()) {
-            mSnapMask |= TouchEventInfo.BOTTOM;
+            mSnapMask |= BOTTOM;
         }
     }
 
@@ -521,7 +438,7 @@ public class FloatingFragment extends Fragment {
     }
 
     private void restoreOriginal() {
-        mViewProperties.markUpdate().update();
+        mViewProperties.update();
         mIsMaximized = false;
         mSnapMask = 0;
     }

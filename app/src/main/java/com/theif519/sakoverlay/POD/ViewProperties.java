@@ -1,6 +1,5 @@
 package com.theif519.sakoverlay.POD;
 
-import android.os.Looper;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -10,22 +9,19 @@ import android.widget.FrameLayout;
 public class ViewProperties {
     private int x, y, width, height;
     private View v;
-    private boolean shouldUpdate;
 
     public ViewProperties(View v) {
         this.v = v;
     }
 
     public ViewProperties update() {
-        if (shouldUpdate && Looper.myLooper() == Looper.getMainLooper()) {
-            v.setX(x);
-            v.setY(y);
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
-            params.width = width;
-            params.height = height;
-            v.setLayoutParams(params);
-            shouldUpdate = false;
-        }
+        v.setX(x);
+        v.setY(y);
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
+        params.width = width;
+        params.height = height;
+        v.setLayoutParams(params);
+        v.bringToFront();
         return this;
     }
 
@@ -34,13 +30,8 @@ public class ViewProperties {
     }
 
     public ViewProperties setX(int x) {
-        if (this.x == x) return this;
         this.x = x;
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            v.setX(x);
-        } else {
-            shouldUpdate = true;
-        }
+        v.setX(x);
         return this;
     }
 
@@ -51,11 +42,7 @@ public class ViewProperties {
     public ViewProperties setY(int y) {
         if (this.y == y) return this;
         this.y = y;
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            v.setY(y);
-        } else {
-            shouldUpdate = true;
-        }
+        v.setY(y);
         return this;
     }
 
@@ -66,13 +53,9 @@ public class ViewProperties {
     public ViewProperties setWidth(int width) {
         if (this.width == width) return this;
         this.width = width;
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
-            params.width = width;
-            v.setLayoutParams(params);
-        } else {
-            shouldUpdate = true;
-        }
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
+        params.width = width;
+        v.setLayoutParams(params);
         return this;
     }
 
@@ -80,25 +63,26 @@ public class ViewProperties {
         return height;
     }
 
-    /**
-     * Marks this instance to be updated on the UI thread when possible.
-     * @return This.
-     */
-    public ViewProperties markUpdate(){
-        shouldUpdate = true;
+    public ViewProperties setCoordinates(int x, int y){
+        v.setX(x);
+        v.setY(y);
+        return this;
+    }
+
+    public ViewProperties setSize(int width, int height){
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
+        params.width = width;
+        params.height = height;
+        v.setLayoutParams(params);
         return this;
     }
 
     public ViewProperties setHeight(int height) {
         if (this.height == height) return this;
         this.height = height;
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
-            params.height = height;
-            v.setLayoutParams(params);
-        } else {
-            shouldUpdate = true;
-        }
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
+        params.height = height;
+        v.setLayoutParams(params);
         return this;
     }
 }
