@@ -6,7 +6,6 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.ArrayMap;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,14 +14,12 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.POD.TouchEventInfo;
+import com.theif519.sakoverlay.POD.ViewProperties;
 import com.theif519.sakoverlay.R;
-import com.theif519.utils.Misc.Callbacks;
 import com.theif519.utils.Misc.MeasureTools;
-import com.theif519.utils.Misc.MutableObject;
 
 import java.util.ArrayList;
 
@@ -60,15 +57,12 @@ import rx.subjects.PublishSubject;
  */
 public class FloatingFragment extends Fragment {
 
+    protected ViewProperties mViewProperties;
+
     /*
         Used to signify that this fragment is dead or is about to be, but Garbage Collector hasn't collected us yet.
      */
     private boolean mIsDead = false, mIsMaximized = false;
-
-    /*
-        Required to keep track of the position and size of the view between each onTouchEvent.
-     */
-    private int width, height, x, y, z, tmpWidth, tmpHeight, tmpX, tmpY, tmpX2, tmpY2;
 
     /*
         Tag used to serialize and deserialize/reconstruct with the factory. This must be overriden.
@@ -128,7 +122,6 @@ public class FloatingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = inflater.inflate(LAYOUT_ID, container, false);
-        setupGlobals();
         setupListeners();
         setupReactive();
         setupTaskItem();
@@ -138,6 +131,7 @@ public class FloatingFragment extends Fragment {
         mContentView.post(new Runnable() {
             @Override
             public void run() {
+                mViewProperties = new ViewProperties(mContentView);
                 if (mMappedContext != null) unpack();
                 setup();
             }
@@ -160,17 +154,6 @@ public class FloatingFragment extends Fragment {
             }
         });
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).addView(mTaskBarButton);
-    }
-
-    /**
-     * Where we initialize, retrieve and setup our global variables.
-     */
-    private void setupGlobals() {
-        if (mOptions == null) {
-            mOptions = new ArrayList<>();
-        }
-        mOptions.add(TRANSPARENCY_TOGGLE);
-        mOptions.add(BRING_TO_FRONT);
     }
 
     /**
@@ -240,66 +223,44 @@ public class FloatingFragment extends Fragment {
         observableFromTouch(mContentView.findViewById(R.id.title_bar_move))
                 .observeOn(AndroidSchedulers.mainThread()) // The Observer, the UI Thread, waits for processed events containing the information needed to manipulate views.
                 .subscribeOn(Schedulers.computation()) // The Observable's events are processed on a computational thread, which is a non I/O-Bound thread. Perfect for this.
-                .map(new Func1<MotionEvent, TouchEventInfo>() { // Map transforms one item to another item. We process the MotionEvent and create an object that encapsulates straight-forward instructions.
+                .map(new Func1<MotionEvent, Void>() { // We process each MotionEvent in a background thread, then dispose of it.
                     @Override
-                    public TouchEventInfo call(MotionEvent event) {
-                        return move(event);
+                    public Void call(MotionEvent event) {
+                        /*
+                            I decided, from a design point of view, it would be better to encapsulate all View manipulations from an
+                            inner class. Due to this, I do not need to return anything, and the added benefit is that (presumably) we
+                            relinquish it's reference to be garbage collected or recycled.
+                         */
+                        move(event);
+                        return null;
                     }
                 })
-                .filter(new Func1<TouchEventInfo, Boolean>() { // Here we "filter" unwanted processed items. If it returns null, it does not have to move at all.
+                .subscribe(new Action1<Void>() { // Where the UI Thread gets called.
                     @Override
-                    public Boolean call(TouchEventInfo info) {
-                        return info != null;
-                    }
-                })
-                .subscribe(new Action1<TouchEventInfo>() { // This part is ran on the UI Thread. The MainThread does a lot less work than before, which is good.
-                    @Override
-                    public void call(TouchEventInfo info) {
-                        if (info.getX() != Integer.MAX_VALUE && info.getY() != Integer.MAX_VALUE) { // If X and Y are dummy values, we do not set them.
-                            mContentView.setX(x = info.getX());
-                            mContentView.setY(y = info.getY());
-                        }
-                        mSnapMask = info.getMask();
-                        if (mSnapMask != 0)
-                            snap(mSnapMask); // Keep in mind, that if it is 0, then no bits are set.
-                        //boundsCheck();
+                    public void call(Void none) {
+                        mViewProperties.update();
                     }
                 });
         getActivity().findViewById(R.id.main_root).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 boundsCheck();
-                if (mSnapMask != 0) {
-                    snap(mSnapMask);
-                }
-            }
-        });
-        mContentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-
             }
         });
         observableFromTouch(mContentView.findViewById(R.id.resize_button))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.computation())
-                .map(new Func1<MotionEvent, Point>() {
+                .map(new Func1<MotionEvent, Void>() {
                     @Override
-                    public Point call(MotionEvent event) {
-                        return resize(event);
+                    public Void call(MotionEvent event) {
+                        resize(event);
+                        return null;
                     }
                 })
-                .filter(new Func1<Point, Boolean>() {
+                .subscribe(new Action1<Void>() {
                     @Override
-                    public Boolean call(Point point) {
-                        return point != null;
-                    }
-                })
-                .subscribe(new Action1<Point>() {
-                    @Override
-                    public void call(Point point) {
-                        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width = point.x, height = point.y));
-                        //boundsCheck();
+                    public void call(Void none) {
+                        mViewProperties.update();
                     }
                 });
     }
@@ -334,77 +295,87 @@ public class FloatingFragment extends Fragment {
 
     private int touchXOffset, touchYOffset, prevX, prevY;
 
-    public TouchEventInfo move(MotionEvent event) {
+    public void move(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mSnapHint = 0;
                 mContentView.bringToFront();
+                if (mSnapMask != 0 || mIsMaximized) {
+                    restoreOriginal();
+                }
                 touchXOffset = (prevX = (int) event.getRawX()) - (int) mContentView.getX();
                 touchYOffset = (prevY = (int) event.getRawY()) - (int) mContentView.getY();
-                return null;
+                break;
             case MotionEvent.ACTION_MOVE:
-                if (mSnapMask != 0) {
-                    restoreOriginalSize();
-                    mSnapMask = 0;
-                }
-                mSnapHint = getSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
+                int tmpX, tmpY;
+                updateSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
                 prevX = tmpX;
                 prevY = tmpY;
+                int width = mViewProperties.getWidth(), height = mViewProperties.getHeight();
                 int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
                 int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
                 int moveX = Math.min(Math.max(tmpX - touchXOffset, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
                 int moveY = Math.min(Math.max(tmpY - touchYOffset, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
-                return new TouchEventInfo(moveX, moveY, 0);
+                mViewProperties.setX(moveX).setY(moveY);
+                break;
             case MotionEvent.ACTION_UP:
-                return new TouchEventInfo(Integer.MAX_VALUE, Integer.MAX_VALUE, mSnapHint);
-            default:
-                return null;
+                snap();
+                break;
         }
     }
 
-    public Point resize(MotionEvent event) {
+    private int tmpX, tmpY;
+
+    public void resize(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                mContentView.bringToFront();
                 Point p = MeasureTools.getScaledCoordinates(mContentView);
-                tmpX2 = p.x;
-                tmpY2 = p.y;
-                return null;
+                tmpX = p.x;
+                tmpY = p.y;
+                break;
             case MotionEvent.ACTION_MOVE:
                 mSnapMask = 0;
-                int diffX = (int) event.getRawX() - tmpX2;
-                int diffY = (int) event.getRawY() - tmpY2;
+                int diffX = (int) event.getRawX() - tmpX;
+                int diffY = (int) event.getRawY() - tmpY;
                 int scaleDiffX = MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get());
                 int scaleDiffY = MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get());
                 int width = Math.min(Math.max((int) (diffX / Globals.SCALE_X.get()), 250), Globals.MAX_X.get() + scaleDiffX);
                 int height = Math.min(Math.max((int) (diffY / Globals.SCALE_Y.get()), 250), Globals.MAX_Y.get() + scaleDiffY);
-                return new Point(width, height);
-            default:
-                return null;
+                mViewProperties.setWidth(width).setHeight(height);
+                break;
         }
     }
 
-    private int mSnapHint = 0;
-
-    public void snap(int snapHint) {
+    /**
+     * Used to snap views to a side of the window if the bitmask is set. It should be noted that RxJava's schedulers are guaranteed
+     * to perform tasks sequentially, hence, I have no need to worry about race conditions while performing operations on the
+     * bitmask.
+     *
+     * By utilizing a bitmask, it allows me to dynamically snap to not just sides, but also corners as well. It uses bitwise AND'ing
+     * to retrieve set bits/attributes. Unlike other operations, such as move() and resize(), changes to the mContentView's
+     * size and coordinates are not saved, to easily allow the view to go back to it's original size easily.
+     */
+    public void snap() {
+        if(mSnapMask == 0) return;
         int maxWidth = Globals.MAX_X.get();
         int maxHeight = Globals.MAX_Y.get();
         int width = 0, height = 0, x = 0, y = 0;
-        if ((snapHint & TouchEventInfo.RIGHT) != 0) {
+        if ((mSnapMask & TouchEventInfo.RIGHT) != 0) {
             width = maxWidth / 2;
             height = maxHeight;
             x = maxWidth / 2;
         }
-        if ((snapHint & TouchEventInfo.LEFT) != 0) {
+        if ((mSnapMask & TouchEventInfo.LEFT) != 0) {
             width = maxWidth / 2;
             height = maxHeight;
         }
-        if ((snapHint & TouchEventInfo.UPPER) != 0) {
+        if ((mSnapMask & TouchEventInfo.UPPER) != 0) {
             if (width == 0) {
                 width = maxWidth;
             }
             height = maxHeight / 2;
         }
-        if ((snapHint & TouchEventInfo.BOTTOM) != 0) {
+        if ((mSnapMask & TouchEventInfo.BOTTOM) != 0) {
             if (width == 0) {
                 width = maxWidth;
             }
@@ -415,42 +386,57 @@ public class FloatingFragment extends Fragment {
         height = (int) (height / Globals.SCALE_Y.get());
         x -= MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
         y -= MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
+        /*
+            Interesting note, but I used to just create a new LayoutParams each time instead of obtaining
+            the old one, updating it, and then giving it back (recycling), and I could see the app making a new
+            one hundreds of times. Didn't even realize you could recycle it, tbh. This greatly reduces the
+            heap fragmentation.
+         */
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
+        params.width = width;
+        params.height = height;
         mContentView.setX(x);
         mContentView.setY(y);
-        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+        mContentView.setLayoutParams(params);
     }
 
-    public int getSnapMask(int oldX, int oldY, int newX, int newY) {
-        int snapMask = 0;
+    /**
+     * Updates the bitmask used to maintain the current snap direction of the current view. It should be
+     * noted that as RxJava's schedulers perform tasks sequentially, that updateSnapMask() and snap() do not
+     * conflict with each other in any way.
+     * @param oldX The old x-coordinate. This is used to determine the horizontal direction the user is going.
+     * @param oldY The old y-coordinate. This is used to determine the vertical direction the user is going.
+     * @param newX The new x-coordinate. By finding the difference between new and old we can determine which horizontal direction the user is going.
+     * @param newY The new y-coordinate. By finding the difference between new and old, we can determine which vertical direction the user is going.
+     */
+    public void updateSnapMask(int oldX, int oldY, int newX, int newY) {
+        mSnapMask = 0;
         int transitionX = newX - oldX;
         int transitionY = newY - oldY;
-        int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
-        int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
         int snapOffsetX = Globals.MAX_X.get() / 10;
         int snapOffsetY = Globals.MAX_Y.get() / 10;
         if (transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()) {
-            snapMask |= TouchEventInfo.RIGHT;
+            mSnapMask |= TouchEventInfo.RIGHT;
         }
         if (transitionX < 0 && newX <= snapOffsetX) {
-            snapMask |= TouchEventInfo.LEFT;
+            mSnapMask |= TouchEventInfo.LEFT;
         }
         if (transitionY < 0 && newY <= snapOffsetY) {
-            snapMask |= TouchEventInfo.UPPER;
+            mSnapMask |= TouchEventInfo.UPPER;
         }
         if (transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()) {
-            snapMask |= TouchEventInfo.BOTTOM;
+            mSnapMask |= TouchEventInfo.BOTTOM;
         }
-        return snapMask;
     }
 
     public ArrayMap<String, String> serialize() {
         ArrayMap<String, String> map = new ArrayMap<>();
         map.put(Globals.Keys.LAYOUT_TAG, LAYOUT_TAG);
-        map.put(Globals.Keys.X_COORDINATE, Integer.toString(x));
-        map.put(Globals.Keys.Y_COORDINATE, Integer.toString(y));
+        map.put(Globals.Keys.X_COORDINATE, Integer.toString(mViewProperties.getX()));
+        map.put(Globals.Keys.Y_COORDINATE, Integer.toString(mViewProperties.getY()));
         map.put(Globals.Keys.Z_COORDINATE, Integer.toString((int) mContentView.getZ()));
-        map.put(Globals.Keys.WIDTH, Integer.toString(width));
-        map.put(Globals.Keys.HEIGHT, Integer.toString(height));
+        map.put(Globals.Keys.WIDTH, Integer.toString(mViewProperties.getWidth()));
+        map.put(Globals.Keys.HEIGHT, Integer.toString(mViewProperties.getHeight()));
         map.put(Globals.Keys.MINIMIZED, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
         map.put(Globals.Keys.MAXIMIZED, Boolean.toString(mIsMaximized));
         map.put(Globals.Keys.SNAP_MASK, Integer.toString(mSnapMask));
@@ -465,17 +451,13 @@ public class FloatingFragment extends Fragment {
      * It is safe to call getContentView() and should be used to update the view associated with this fragment.
      */
     protected void unpack() {
-        x = Integer.parseInt(mMappedContext.get(Globals.Keys.X_COORDINATE));
-        y = Integer.parseInt(mMappedContext.get(Globals.Keys.Y_COORDINATE));
-        z = Integer.parseInt(mMappedContext.get(Globals.Keys.Z_COORDINATE));
-        width = Integer.parseInt(mMappedContext.get(Globals.Keys.WIDTH));
-        height = Integer.parseInt(mMappedContext.get(Globals.Keys.HEIGHT));
+        mViewProperties
+                .setX(Integer.parseInt(mMappedContext.get(Globals.Keys.X_COORDINATE)))
+                .setY(Integer.parseInt(mMappedContext.get(Globals.Keys.Y_COORDINATE)))
+                .setWidth(Integer.parseInt(mMappedContext.get(Globals.Keys.WIDTH)))
+                .setHeight(Integer.parseInt(mMappedContext.get(Globals.Keys.HEIGHT)));
         mSnapMask = Integer.parseInt(mMappedContext.get(Globals.Keys.SNAP_MASK));
         mIsMaximized = Boolean.parseBoolean(mMappedContext.get(Globals.Keys.MAXIMIZED));
-        mContentView.setX(x);
-        mContentView.setY(y);
-        mContentView.setZ(z);
-        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
         // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
     }
 
@@ -507,12 +489,13 @@ public class FloatingFragment extends Fragment {
     protected void setup() {
         // Release as we no longer need, to prevent memory leak.
         mMappedContext = null;
-        if (width == 0 || height == 0) {
-            width = mContentView.getWidth();
-            height = mContentView.getHeight();
+        if (mViewProperties.getWidth() == 0 || mViewProperties.getHeight() == 0) {
+            mViewProperties
+                    .setWidth(mContentView.getWidth())
+                    .setHeight(mContentView.getHeight());
         }
         if (mSnapMask != 0) {
-            snap(mSnapMask);
+            snap();
         }
         if (mIsMaximized) {
             maximize();
@@ -527,63 +510,24 @@ public class FloatingFragment extends Fragment {
     }
 
     private void maximize() {
-        mContentView.setX(-MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2);
-        mContentView.setY(-MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2);
-        mContentView.setLayoutParams(new FrameLayout.LayoutParams((int) (Globals.MAX_X.get() / Globals.SCALE_X.get()),
-                (int) (Globals.MAX_Y.get() / Globals.SCALE_Y.get())));
+        mContentView.setX(-MeasureTools.scaleDiffToInt(mViewProperties.getWidth(), Globals.SCALE_X.get()) / 2);
+        mContentView.setY(-MeasureTools.scaleDiffToInt(mViewProperties.getHeight(), Globals.SCALE_Y.get()) / 2);
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
+        params.width = (int) (Globals.MAX_X.get() / Globals.SCALE_X.get());
+        params.height = (int) (Globals.MAX_Y.get() / Globals.SCALE_Y.get());
+        mContentView.setLayoutParams(params);
         mContentView.bringToFront();
         mIsMaximized = true;
     }
 
-    private void restoreOriginalCoordinates() {
-        mContentView.setX(x);
-        mContentView.setY(y);
-        mContentView.bringToFront();
-    }
-
-    private void restoreOriginalSize() {
-        mContentView.bringToFront();
-        mContentView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
-        mIsMaximized = false;
-    }
-
     private void restoreOriginal() {
-        restoreOriginalCoordinates();
-        restoreOriginalSize();
+        mViewProperties.markUpdate().update();
+        mIsMaximized = false;
+        mSnapMask = 0;
     }
 
     private void minimize() {
         mContentView.setVisibility(View.INVISIBLE);
-    }
-
-    /**
-     * Determines if this view is visible on the screen, I.E not covered by another view.
-     *
-     * @return If user can still see this.
-     */
-    protected boolean isVisibleOnScreen() {
-        final int myHorizontal = (int) mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get());
-        final int myVertical = (int) mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get());
-        Log.d(getClass().getName(), "Me: { Horizontal: " + myHorizontal + ", Vertical: " + myVertical + " }");
-        final MutableObject<Boolean> isClipped = new MutableObject<>(false);
-        new Callbacks.CallbackOnRootChildren<View>() {
-            @Override
-            public void onChild(View child) {
-                if (child != mContentView) {
-                    if (child.getZ() > mContentView.getZ()) {
-                        int horizontal = (int) child.getX() + MeasureTools.scaleToInt(child.getWidth(), Globals.SCALE_X.get());
-                        int vertical = (int) child.getY() + MeasureTools.scaleToInt(child.getHeight(), Globals.SCALE_Y.get());
-                        Log.d(getClass().getName(), "Child: { Horizontal: " + horizontal + ", Vertical: " + vertical + " }");
-                        if ((myHorizontal > (int) child.getX() && myHorizontal < horizontal)
-                                && (myVertical > (int) child.getY() && myVertical < vertical)) {
-                            isClipped.set(true);
-                        }
-                    }
-                }
-            }
-        }.callOnChildren(View.class, (ViewGroup) getActivity().findViewById(R.id.main_layout));
-        Toast.makeText(getActivity(), "IsClipping: " + isClipped.get(), Toast.LENGTH_LONG).show();
-        return !isClipped.get();
     }
 
     @Override

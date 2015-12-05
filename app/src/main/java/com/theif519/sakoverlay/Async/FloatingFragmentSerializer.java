@@ -40,7 +40,7 @@ public abstract class FloatingFragmentSerializer extends AsyncTask<ArrayMap<Stri
      * Utilizes the entrySet() feature to serialize any key-value pairs. Writes any mapped
      * data to disk. On error, it will stop immediately.
      * @param params List of mapped data to serialize to disk.
-     * @return
+     * @return Nothing
      */
     @Override
     protected Void doInBackground(ArrayMap<String, String>... params) {
