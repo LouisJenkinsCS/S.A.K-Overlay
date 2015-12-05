@@ -203,6 +203,7 @@ public class FloatingFragment extends Fragment {
             @Override
             public void onGlobalLayout() {
                 boundsCheck();
+                snap();
             }
         });
     }
@@ -379,23 +380,28 @@ public class FloatingFragment extends Fragment {
     }
 
     private void boundsCheck() {
-        if (mContentView.getX() - MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 2 < 0) {
+        Point p = MeasureTools.getScaledCoordinates(mContentView);
+        if (p.x < 0) {
             mContentView.setX(-MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 2);
         }
-        if (mContentView.getY() - MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 2 < 0) {
+        if (p.y < 0) {
             mContentView.setY(-MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 2);
         }
-        if (mContentView.getX() + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
+        if (p.x + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
             mContentView.setX(Globals.MAX_X.get() - mContentView.getWidth());
         }
-        if (mContentView.getY() + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
+        if (p.y + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
             mContentView.setY(Globals.MAX_Y.get() - mContentView.getHeight());
         }
         if (MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
-            mContentView.setLayoutParams(new FrameLayout.LayoutParams(Globals.MAX_X.get(), mContentView.getHeight()));
+            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
+            params.width = (int)(Globals.MAX_X.get() / Globals.SCALE_X.get());
+            mContentView.setLayoutParams(params);
         }
         if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
-            mContentView.setLayoutParams(new FrameLayout.LayoutParams(mContentView.getWidth(), Globals.MAX_Y.get()));
+            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
+            params.height = (int)(Globals.MAX_Y.get() / Globals.SCALE_Y.get());
+            mContentView.setLayoutParams(params);
         }
     }
 

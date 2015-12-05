@@ -51,7 +51,7 @@ public class MainActivity extends Activity {
 
     /*
         This is the menu PopupWindow inflated and created ahead of time. By inflating ahead of time,
-        it reduces the pollution of the heap marginally, by not having to create and destroy each time.
+        it reduces the f of the heap marginally, by not having to create and destroy each time.
 
         And of course it is faster this way.
      */

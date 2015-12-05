@@ -12,8 +12,6 @@ import android.widget.EditText;
 
 import com.theif519.sakoverlay.R;
 
-import java.util.ArrayList;
-
 /**
  * Created by theif519 on 11/6/2015.
  */
@@ -32,9 +30,6 @@ public class WebBrowserFragment extends FloatingFragment {
         fragment.LAYOUT_ID = R.layout.web_browser;
         fragment.LAYOUT_TAG = IDENTIFIER;
         fragment.ICON_ID = R.drawable.browser;
-        fragment.mOptions = new ArrayList<>();
-        fragment.mOptions.add(HOME);
-        fragment.mOptions.add(REFRESH);
         return fragment;
     }
 
