@@ -26,6 +26,8 @@ public class ViewProperties {
         int maxY = MeasureTools.scaleInverse(Globals.MAX_Y.get());
         x = x > maxX ? maxX : x < minX ? minX : x;
         y = y > maxY ? maxY : y < minY ? minY : y;
+        width = width > maxX ? maxX : width < 250 ? 250 : width;
+        height = height > maxY ? maxY : height < 250 ? 250 : height;
         v.setX(x);
         v.setY(y);
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();

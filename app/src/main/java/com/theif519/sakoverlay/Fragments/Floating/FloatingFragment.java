@@ -31,33 +31,33 @@ import rx.functions.Action1;
  * a Fragment which acts as if it is attached to a container, I.E Floating. It is bounded within the walls
  * of the main_layout container (beginning of action bar, edges of screen, and the task bar at the bottom
  * however it can be moved at will by the user.
- *
+ * <p/>
  * FloatingFragments contain their own custom life cycle methods, handle serializing and deserializing their views,
  * as well as unpacking and setting themselves up. Although the presentation I gave already described how
  * everything works, I will summarize it once again here...
- *
+ * <p/>
  * The custom life-cycles reflect the MainActivity's life cycles and are also triggered by them.
- *
+ * <p/>
  * MainActivity methods preceded with a (-)
  * FloatingFragments methods preceded with a (+)
  * FloatingFragments custom lifecycle methods preceded with a (~)
  * - OnCreate()
- *  - DeserializeFloatingFragments()
- *  + OnCreateView()
- *    ~ Unpack()
- *        // Will be called if mappedContext passed, as in, if instantiated from the deserializer factory.
- *    ~ Setup()
- *  + OnDestroy()
- *    ~ CleanUp()
- *  - OnPause()
- *    - SerializeFloatingFragments()
- *      ~ Serialize()
- *          // Where each FloatingFragment serializes their data.
- *
- *
+ * - DeserializeFloatingFragments()
+ * + OnCreateView()
+ * ~ Unpack()
+ * // Will be called if mappedContext passed, as in, if instantiated from the deserializer factory.
+ * ~ Setup()
+ * + OnDestroy()
+ * ~ CleanUp()
+ * - OnPause()
+ * - SerializeFloatingFragments()
+ * ~ Serialize()
+ * // Where each FloatingFragment serializes their data.
+ * <p/>
+ * <p/>
  * Relatively simplistic flow. Some life cycle methods may be changed or outright removed later (I.E CleanUp)
  * however as of now they remain.
- *
+ * <p/>
  * It should be noted that I removed the Rx and multithreading from the onTouch events, as while IMO they
  * sounded like a great and cool idea, and they did actually work at first, it was only because of a really
  * big mistake I made by instantiating a new LayoutParam each time I called resize() or snap(), which is surprisingly
@@ -223,6 +223,7 @@ public class FloatingFragment extends Fragment {
     /**
      * Handles the MotionEvent for moving the view. Like Resize(), it is rather complication, however
      * it's readability should be made easier with commenting and MeasureTools syntax.
+     *
      * @param event MotionEvent.
      * @return If event has been completed.
      */
@@ -234,10 +235,19 @@ public class FloatingFragment extends Fragment {
                 // If the view is currently snapped or maximized, restore it's original size.
                 if (mSnapMask != 0 || mIsMaximized) {
                     restoreOriginal();
+                    mViewProperties.setCoordinates(
+                            (int) event.getRawX() - MeasureTools.scaleDeltaWidth(mContentView),
+                            (int) event.getRawY() - MeasureTools.scaleDeltaHeight(mContentView)
+                    );
+                    Point p = MeasureTools.getScaledCoordinates(mContentView);
+                    prevX = touchXOffset = p.x - mViewProperties.getX();
+                    prevY = touchYOffset = p.y - mViewProperties.getY();
+                } else {
+                    // Get the offsets of the user's original touch so the view moves with it.
+                    prevX = touchXOffset = (int) event.getRawX() - mViewProperties.getX();
+                    prevY = touchYOffset = (int) event.getRawY() - mViewProperties.getY();
                 }
-                // Get the offsets of the user's original touch so the view moves with it.
-                touchXOffset = (prevX = (int) event.getRawX()) - (int) mContentView.getX();
-                touchYOffset = (prevY = (int) event.getRawY()) - (int) mContentView.getY();
+                //mViewProperties.setCoordinates(prevX = (int) event.getRawX() - touchXOffset, prevY = (int) event.getRawY() - touchYOffset);
                 return false;
             case MotionEvent.ACTION_MOVE:
                 int tmpX, tmpY;
@@ -268,6 +278,7 @@ public class FloatingFragment extends Fragment {
     /**
      * Handles resizing of the view. It used to be extremely complicated, however with MeasureTools, while the complexity
      * has remained the same, the readability hsa increased dramatically.
+     *
      * @param event MotionEvent
      * @return If event has been handled.
      */
@@ -393,6 +404,7 @@ public class FloatingFragment extends Fragment {
      * Handles serialization of the current state of the content view, so it can be restored later.
      * It maps each attribute as a String Key, and String Value. It is a naive implementation, but it
      * gets the job done, and is humanly readable.
+     *
      * @return ArrayMap containing serialized key-value pairs.
      */
     public ArrayMap<String, String> serialize() {
@@ -432,7 +444,7 @@ public class FloatingFragment extends Fragment {
      * whether or not my views remain in bounds, and other times it is impossible to maintain otherwise,
      * like if the user changes orientation. I consider these my FloatingFragment's training wheels,
      * as this gets called whenever a view's state or visibility changes (Meaning on every move, unfortunately).
-     *
+     * <p/>
      * A lot of this code is honestly brute forced. I go with what I feel would be right, then modify it like
      * 100x until it is working.
      */
@@ -537,6 +549,7 @@ public class FloatingFragment extends Fragment {
     /**
      * A way for the subclasses to retrieve the Content View. In the future, I most likely will make the
      * mContentView protected and remove this, or make this public for other classes to use, I.E MainActivity.
+     *
      * @return The content view.
      */
     protected View getContentView() {
@@ -545,6 +558,7 @@ public class FloatingFragment extends Fragment {
 
     /**
      * Whether or not this FloatingFragment is dead. Majority of times it will be garbage collected, but you never know.
+     *
      * @return If is dead.
      */
     public boolean isDead() {
