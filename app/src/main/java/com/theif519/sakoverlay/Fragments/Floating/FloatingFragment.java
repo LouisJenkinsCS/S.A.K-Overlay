@@ -2,6 +2,7 @@ package com.theif519.sakoverlay.Fragments.Floating;
 
 
 import android.app.Fragment;
+import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -10,15 +11,18 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.theif519.sakoverlay.Misc.Globals;
+import com.theif519.sakoverlay.Misc.MeasureTools;
 import com.theif519.sakoverlay.POD.ViewProperties;
 import com.theif519.sakoverlay.R;
-import com.theif519.utils.Misc.MeasureTools;
+import com.theif519.sakoverlay.Rx.RxBus;
+import com.theif519.sakoverlay.Views.TouchInterceptorLayout;
+
+import rx.functions.Action1;
 
 /**
  * Created by theif519 on 10/29/2015.
@@ -93,7 +97,7 @@ public class FloatingFragment extends Fragment {
     /*
         We keep track of the root view out of convenience.
      */
-    private View mContentView;
+    private TouchInterceptorLayout mContentView;
 
     /*
         This map should be created when serialize() is called, and also set when created from the factory.
@@ -122,7 +126,7 @@ public class FloatingFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mContentView = inflater.inflate(LAYOUT_ID, container, false);
+        mContentView = (TouchInterceptorLayout) inflater.inflate(LAYOUT_ID, container, false);
         setupListeners();
         setupTaskItem();
         if (mMappedContext != null && Boolean.valueOf(mMappedContext.get(Globals.Keys.MINIMIZED))) {
@@ -135,6 +139,7 @@ public class FloatingFragment extends Fragment {
                 mViewProperties = new ViewProperties(mContentView);
                 if (mMappedContext != null) unpack();
                 setup();
+                RxBus.publish(FloatingFragment.this);
             }
         });
         return mContentView;
@@ -199,40 +204,58 @@ public class FloatingFragment extends Fragment {
                 return resize(event);
             }
         });
-        getActivity().findViewById(R.id.main_root).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                boundsCheck();
-                snap();
-            }
-        });
+        // Whenever the screen configurations has changed, we get alerted through the event bus.
+        RxBus.subscribe(Configuration.class)
+                .subscribe(new Action1<Configuration>() {
+                    @Override
+                    public void call(Configuration configuration) {
+                        boundsCheck();
+                        snap();
+                        if (mIsMaximized) {
+                            maximize();
+                        }
+                    }
+                });
     }
 
     private int touchXOffset, touchYOffset, prevX, prevY;
 
+    /**
+     * Handles the MotionEvent for moving the view. Like Resize(), it is rather complication, however
+     * it's readability should be made easier with commenting and MeasureTools syntax.
+     * @param event MotionEvent.
+     * @return If event has been completed.
+     */
     public boolean move(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                // We bring the current view to the front, so the user gets to clearly see which view is being moved.
                 mContentView.bringToFront();
+                // If the view is currently snapped or maximized, restore it's original size.
                 if (mSnapMask != 0 || mIsMaximized) {
                     restoreOriginal();
                 }
+                // Get the offsets of the user's original touch so the view moves with it.
                 touchXOffset = (prevX = (int) event.getRawX()) - (int) mContentView.getX();
                 touchYOffset = (prevY = (int) event.getRawY()) - (int) mContentView.getY();
                 return false;
             case MotionEvent.ACTION_MOVE:
                 int tmpX, tmpY;
+                // On each move, we update the snapmask.
                 updateSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
                 prevX = tmpX;
                 prevY = tmpY;
                 int width = mViewProperties.getWidth(), height = mViewProperties.getHeight();
-                int scaleDiffX = MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
-                int scaleDiffY = MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
-                int moveX = Math.min(Math.max(tmpX - touchXOffset, -scaleDiffX), Globals.MAX_X.get() - width + scaleDiffX);
-                int moveY = Math.min(Math.max(tmpY - touchYOffset, -scaleDiffY), Globals.MAX_Y.get() - height + scaleDiffY);
+                int scaleDeltaX = MeasureTools.scaleDeltaWidth(mContentView);
+                int scaleDeltaY = MeasureTools.scaleDeltaHeight(mContentView);
+                // We make sure we inside of bounds, and move the view, keeping in mind the original touch offset.
+                int moveX = Math.min(Math.max(tmpX - touchXOffset, -scaleDeltaX), Globals.MAX_X.get() - width + scaleDeltaX);
+                int moveY = Math.min(Math.max(tmpY - touchYOffset, -scaleDeltaY), Globals.MAX_Y.get() - height + scaleDeltaY);
                 mViewProperties.setX(moveX).setY(moveY);
                 return false;
             case MotionEvent.ACTION_UP:
+                boundsCheck();
+                // We only snap on ACTION_UP to prevent it from annoyingly snapping on everything.
                 snap();
                 return true;
             default:
@@ -242,25 +265,44 @@ public class FloatingFragment extends Fragment {
 
     private int tmpX, tmpY;
 
+    /**
+     * Handles resizing of the view. It used to be extremely complicated, however with MeasureTools, while the complexity
+     * has remained the same, the readability hsa increased dramatically.
+     * @param event MotionEvent
+     * @return If event has been handled.
+     */
     public boolean resize(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                // We bring the current view to the front, so the user gets to clearly see which view is being resized.
                 mContentView.bringToFront();
+                // This is a convenient way to retrieve the current x,y coordinates
                 Point p = MeasureTools.getScaledCoordinates(mContentView);
                 tmpX = p.x;
                 tmpY = p.y;
                 return false;
             case MotionEvent.ACTION_MOVE:
+                // Whenever we resize the view, we must reset the snap mask and maximized state.
                 mSnapMask = 0;
+                mIsMaximized = false;
+                /*
+                    Size = (newX, newY) - (origX, origY)
+                    This pretty much allows us to directly get the difference of the current touch as the
+                    new size.
+                */
                 int diffX = (int) event.getRawX() - tmpX;
                 int diffY = (int) event.getRawY() - tmpY;
-                int scaleDiffX = MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get());
-                int scaleDiffY = MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get());
-                int width = Math.min(Math.max((int) (diffX / Globals.SCALE_X.get()), 250), Globals.MAX_X.get() + scaleDiffX);
-                int height = Math.min(Math.max((int) (diffY / Globals.SCALE_Y.get()), 250), Globals.MAX_Y.get() + scaleDiffY);
+                /*
+                   TODO: Find a simple way to explain this... and why does not make sense mathematically...
+                 */
+                int scaleDiffX = MeasureTools.scaleDifferenceWidth(mContentView);
+                int scaleDiffY = MeasureTools.scaleDifferenceHeight(mContentView);
+                int width = Math.min(Math.max(MeasureTools.scaleInverse(diffX), 250), Globals.MAX_X.get() + scaleDiffX);
+                int height = Math.min(Math.max(MeasureTools.scaleInverse(diffY), 250), Globals.MAX_Y.get() + scaleDiffY);
                 mViewProperties.setWidth(width).setHeight(height);
                 return false;
             case MotionEvent.ACTION_UP:
+                boundsCheck();
                 return true;
             default:
                 return false;
@@ -301,10 +343,10 @@ public class FloatingFragment extends Fragment {
             height = maxHeight / 2;
             y = maxHeight / 2;
         }
-        width = (int) (width / Globals.SCALE_X.get());
-        height = (int) (height / Globals.SCALE_Y.get());
-        x -= MeasureTools.scaleDiffToInt(width, Globals.SCALE_X.get()) / 2;
-        y -= MeasureTools.scaleDiffToInt(height, Globals.SCALE_Y.get()) / 2;
+        width = MeasureTools.scaleInverse(width);
+        height = MeasureTools.scaleInverse(height);
+        x -= MeasureTools.scaleDelta(width);
+        y -= MeasureTools.scaleDelta(height);
         /*
             Interesting note, but I used to just create a new LayoutParams each time instead of obtaining
             the old one, updating it, and then giving it back (recycling), and I could see the app making a new
@@ -347,6 +389,12 @@ public class FloatingFragment extends Fragment {
         }
     }
 
+    /**
+     * Handles serialization of the current state of the content view, so it can be restored later.
+     * It maps each attribute as a String Key, and String Value. It is a naive implementation, but it
+     * gets the job done, and is humanly readable.
+     * @return ArrayMap containing serialized key-value pairs.
+     */
     public ArrayMap<String, String> serialize() {
         ArrayMap<String, String> map = new ArrayMap<>();
         map.put(Globals.Keys.LAYOUT_TAG, LAYOUT_TAG);
@@ -379,28 +427,37 @@ public class FloatingFragment extends Fragment {
         // If this is override, the subclass's unpack would be done after X,Y,Width, and Height are set.
     }
 
+    /**
+     * Used to check the bounds of the view. Sometimes I don't do a good enough job of checking for
+     * whether or not my views remain in bounds, and other times it is impossible to maintain otherwise,
+     * like if the user changes orientation. I consider these my FloatingFragment's training wheels,
+     * as this gets called whenever a view's state or visibility changes (Meaning on every move, unfortunately).
+     *
+     * A lot of this code is honestly brute forced. I go with what I feel would be right, then modify it like
+     * 100x until it is working.
+     */
     private void boundsCheck() {
         Point p = MeasureTools.getScaledCoordinates(mContentView);
         if (p.x < 0) {
-            mContentView.setX(-MeasureTools.scaleDiffToInt(mContentView.getWidth(), Globals.SCALE_X.get()) / 2);
+            mContentView.setX(-MeasureTools.scaleDeltaWidth(mContentView));
         }
         if (p.y < 0) {
-            mContentView.setY(-MeasureTools.scaleDiffToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) / 2);
+            mContentView.setY(-MeasureTools.scaleDeltaHeight(mContentView));
         }
-        if (p.x + MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
-            mContentView.setX(Globals.MAX_X.get() - mContentView.getWidth());
+        if (p.x + MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
+            mContentView.setX(Globals.MAX_X.get() - MeasureTools.scaleDeltaWidth(mContentView) - MeasureTools.scaleWidth(mContentView));
         }
-        if (p.y + MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
-            mContentView.setY(Globals.MAX_Y.get() - mContentView.getHeight());
+        if (p.y + MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
+            mContentView.setY(Globals.MAX_Y.get() - MeasureTools.scaleDeltaHeight(mContentView) - MeasureTools.scaleHeight(mContentView));
         }
-        if (MeasureTools.scaleToInt(mContentView.getWidth(), Globals.SCALE_X.get()) > Globals.MAX_X.get()) {
+        if (MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-            params.width = (int)(Globals.MAX_X.get() / Globals.SCALE_X.get());
+            params.width = MeasureTools.scaleInverse(Globals.MAX_X.get());
             mContentView.setLayoutParams(params);
         }
-        if (MeasureTools.scaleToInt(mContentView.getHeight(), Globals.SCALE_Y.get()) > Globals.MAX_Y.get()) {
+        if (MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-            params.height = (int)(Globals.MAX_Y.get() / Globals.SCALE_Y.get());
+            params.height = MeasureTools.scaleInverse(Globals.MAX_Y.get());
             mContentView.setLayoutParams(params);
         }
     }
@@ -432,37 +489,64 @@ public class FloatingFragment extends Fragment {
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).removeView(mTaskBarButton);
     }
 
+    /**
+     * Maximizes the view. Note that it does not alter the view's X and Y coordinate through the ViewProperties
+     * instance, as we do not really want it to be saved. This allows for the view to go back to it's
+     * previous size and coordinates easily, as the previous are remembered. In fact,  what's really cool about
+     * it is that because it is not set, but the state of whether or not it is maximized is, it will allow the user
+     * to go back to their previous size EVEN if they already exited the program fully.
+     */
     private void maximize() {
-        mContentView.setX(-MeasureTools.scaleDiffToInt(mViewProperties.getWidth(), Globals.SCALE_X.get()) / 2);
-        mContentView.setY(-MeasureTools.scaleDiffToInt(mViewProperties.getHeight(), Globals.SCALE_Y.get()) / 2);
+        int maxX = MeasureTools.scaleInverse(Globals.MAX_X.get()), maxY = MeasureTools.scaleInverse(Globals.MAX_Y.get());
+        mContentView.setX(-MeasureTools.scaleDelta(maxX));
+        mContentView.setY(-MeasureTools.scaleDelta(maxY));
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-        params.width = (int) (Globals.MAX_X.get() / Globals.SCALE_X.get());
-        params.height = (int) (Globals.MAX_Y.get() / Globals.SCALE_Y.get());
+        params.width = maxX;
+        params.height = maxY;
         mContentView.setLayoutParams(params);
         mContentView.bringToFront();
         mIsMaximized = true;
     }
 
+    /**
+     * Used to restore the original view's size and coordinates. It also resets maximization and snap mask
+     * to their original states.
+     */
     private void restoreOriginal() {
         mViewProperties.update();
         mIsMaximized = false;
         mSnapMask = 0;
     }
 
+    /**
+     * Used to minimize the view. It doesn't do much right now, but it works.
+     */
     private void minimize() {
         mContentView.setVisibility(View.INVISIBLE);
     }
 
+    /**
+     * Kind of redundant to have CleanUp() here, but I'll refactor it out later.
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();
         cleanUp();
     }
 
+    /**
+     * A way for the subclasses to retrieve the Content View. In the future, I most likely will make the
+     * mContentView protected and remove this, or make this public for other classes to use, I.E MainActivity.
+     * @return The content view.
+     */
     protected View getContentView() {
         return mContentView;
     }
 
+    /**
+     * Whether or not this FloatingFragment is dead. Majority of times it will be garbage collected, but you never know.
+     * @return If is dead.
+     */
     public boolean isDead() {
         return mIsDead;
     }

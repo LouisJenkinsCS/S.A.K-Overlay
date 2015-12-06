@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="default_scale_x" format="float" type="dimen">.75</item>
-    <item name="default_scale_y" format="float" type="dimen">.75</item>
+    <item name="floating_fragment_scale" format="float" type="dimen">.75</item>
 </resources>

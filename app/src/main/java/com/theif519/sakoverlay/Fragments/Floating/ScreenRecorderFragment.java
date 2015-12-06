@@ -34,9 +34,26 @@ import rx.functions.Action1;
 
 /**
  * Created by theif519 on 11/12/2015.
+ * <p/>
+ * ScreenRecorder FloatingFragment right now is very ugly, and I'm not just saying that. UI-wise, it is
+ * far from complete, however, that does not mean it is lacking in functionality.
+ * <p/>
+ * ScreenRecorder launches and binds to the RecorderService, which allows it to act as both
+ * a controller and to be controlled (thanks to RxJava). It can call start(), stop(), pause() and die()
+ * on the RecorderService, but for example, start() and stop() can be called from the same button, which is determined
+ * by the state (which we observe). Hence, when the state is STARTED, the next command is STOPPED. And of course
+ * vice verse. This is extremely useful as the controller button (attached to the WindowManager) can change the state
+ * at will and also has the same controller/controller relationship as this FloatingFragment.
+ * <p/>
+ * It also has a ListAdapter for previous screen recorderings, which display it's description and duration
+ * and more information the user may be interested in. When this FloatingFragment is killed, the service dies with it.
  */
 public class ScreenRecorderFragment extends FloatingFragment {
 
+    /*
+        There can be only one instance of this class. Imagine the nightmare of having two or more of these, it'd
+        be useless and redundantly redundant.
+     */
     public static Boolean INSTANCE_EXISTS = false;
 
     protected static final String IDENTIFIER = "Screen Recorder";
@@ -53,12 +70,25 @@ public class ScreenRecorderFragment extends FloatingFragment {
         return fragment;
     }
 
+    /*
+        We maintain a handle to the RecorderService, obtained through the IBinder returned in ServiceConnection.
+     */
     private RecorderService mServiceHandle;
 
+    /*
+        We also keep a subscription to the state change observable we are subscribed to so we can unsubscribe in onPause.
+     */
     private Subscription mStateChangeHandler;
 
+    /*
+        We must maintain a reference to this so we may unbind later on.
+     */
     private ServiceConnection mServiceConnectionHandler;
 
+    /*
+        Much of a finite-state machine, huh? This is manipulated based on state change, and hence determines
+        whether the button calls START or STOP. Simple for now, but gets the job done.
+     */
     private boolean mIsRunning = false;
 
     @Override
@@ -81,7 +111,7 @@ public class ScreenRecorderFragment extends FloatingFragment {
             protected void onPostExecute(List<VideoInfo> videoInfos) {
                 Activity activity = getActivity();
                 // As activity CAN be destroyed in onPostExecute, we must check here to prevent a null pointer exception
-                if(activity == null) return;
+                if (activity == null) return;
                 listView.setEmptyView(((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.list_view_video_info_empty, null));
                 listView.setAdapter(new VideoInfoAdapter(activity, videoInfos));
             }
@@ -89,9 +119,14 @@ public class ScreenRecorderFragment extends FloatingFragment {
         getActivity().bindService(new Intent(getActivity(), RecorderService.class), mServiceConnectionHandler = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
+                // In our IBinder, we declared a method to retrieve a handle to the service.
+                // TODO: Research into whether or not this should become a WeakReference
                 mServiceHandle = ((RecorderService.RecorderBinder) service).getService();
-                mStateChangeHandler = ((RecorderService.RecorderBinder) service).observeStateChanges()
-                        .distinctUntilChanged().subscribe(new Action1<RecorderService.RecorderState>() {
+                // The observable to subscribe to for each state change.
+                mStateChangeHandler = ((RecorderService.RecorderBinder) service)
+                        .observeStateChanges() // Method we declared, returns an observable we can observe.
+                        .distinctUntilChanged() // Not needed, but if someone (in the future of course) requests the current state, we don't want to update the textview twice.
+                        .subscribe(new Action1<RecorderService.RecorderState>() { // On any unique change of state...
                             @Override
                             public void call(RecorderService.RecorderState recorderState) {
                                 mStateText.setText(recorderState.toString());
@@ -118,6 +153,10 @@ public class ScreenRecorderFragment extends FloatingFragment {
         getActivity().startService(new Intent(getActivity(), RecorderService.class));
     }
 
+    /**
+     * Creates a dialog which is shown to the user to ask for the information needed to record. I.E, width and height
+     * of recording, by default is set to the max resolution, whether or not to record audio, and the name of the file.
+     */
     private void createDialog() {
         final AlertDialog dialog = new AlertDialog.Builder(getActivity()).setView(R.layout.dialog_recorder_details)
                 .setTitle("Recorder Info").setPositiveButton("Start", new DialogInterface.OnClickListener() {
@@ -143,9 +182,13 @@ public class ScreenRecorderFragment extends FloatingFragment {
         ((EditText) dialog.findViewById(R.id.dialog_recorder_resolution_height)).setText(Integer.toString(size.y));
     }
 
+    /**
+     * As we unregister in onPause, we may need to get any missed states. We do so here.
+     */
     @Override
     public void onStart() {
         super.onStart();
+        // Note: onCreate() -> onStart() -> onCreateView() -> Setup(). Hence state text may not have been initialized so we check.
         if (mStateText != null) mStateText.setText(mServiceHandle.getState().toString());
     }
 

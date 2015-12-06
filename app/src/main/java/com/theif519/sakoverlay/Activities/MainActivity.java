@@ -4,15 +4,18 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.ArrayMap;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.PopupWindow;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.theif519.sakoverlay.Async.FloatingFragmentDeserializer;
@@ -25,6 +28,7 @@ import com.theif519.sakoverlay.Fragments.Floating.StickyNoteFragment;
 import com.theif519.sakoverlay.Fragments.Floating.WebBrowserFragment;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
+import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.utils.Misc.ServiceTools;
 
@@ -32,6 +36,9 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+
+import rx.Subscriber;
+import rx.functions.Action1;
 
 
 /**
@@ -63,8 +70,9 @@ public class MainActivity extends Activity {
         // The below sets up Immersize mode full screne, which unfortunately requires API level 21.
         makeImmersive(getWindow().getDecorView());
         setContentView(R.layout.activity_main);
-        setupPopupWindow();
         setupActionBar();
+        setupPopupWindow();
+        RxBus.publish("Starting Overlay Notification Service if not already...");
         // We start the service if it hasn't already been started.
         ServiceTools.startService(this, NotificationService.class, new ServiceTools.SetupIntent() {
             @Override
@@ -72,18 +80,25 @@ public class MainActivity extends Activity {
                 intent.putExtra(NotificationService.START_NOTIFICATION, true);
             }
         });
-        // Any time there is a configuration change, we update the bounds of the screen here.
-        findViewById(R.id.main_layout).getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        // Set the initial MAX_X and MAX_Y when the root view is fully inflated as well as deserialize the floating fragments.
+        findViewById(R.id.main_layout).post(new Runnable() {
             @Override
-            public void onGlobalLayout() {
-                Globals.MAX_X.set(findViewById(R.id.main_layout).getWidth());
-                Globals.MAX_Y.set(findViewById(R.id.main_layout).getHeight());
+            public void run() {
+                updateMaxCoordinates();
+                // The floating fragments are assured to be called after MainActivity has finished inflating it's view.
+                deserializeFloatingFragments();
             }
         });
-        Globals.SCALE_X.set(getDimension(R.dimen.default_scale_x));
-        Globals.SCALE_Y.set(getDimension(R.dimen.default_scale_y));
-        // Now that everything else is setup, we can make the call to deserialize.
-        deserializeFloatingFragments();
+        // We also setup the floating fragment scale in onCreate as it should never change.
+        Globals.SCALE.set(getDimension(R.dimen.floating_fragment_scale));
+        // Any time there is a configuration change, we update the bounds of the screen here.
+        RxBus.subscribe(Configuration.class)
+                .subscribe(new Action1<Configuration>() {
+                    @Override
+                    public void call(Configuration configuration) {
+                        updateMaxCoordinates();
+                    }
+                });
     }
 
     /**
@@ -103,6 +118,14 @@ public class MainActivity extends Activity {
                 mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight());
             }
         });
+        final TextView info = (TextView) actionbar.getCustomView().findViewById(R.id.menu_bar_info);
+        RxBus.subscribe(String.class)
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        info.setText(s);
+                    }
+                });
     }
 
     @Override
@@ -123,16 +146,20 @@ public class MainActivity extends Activity {
      */
     private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
 
+    private int mFloatingFragmentsSetup;
+
+    private boolean mFinishedSetup = false;
+
     /**
      * Sets up and begins the AsyncTask. Unfortunately, we cannot reuse an AsyncTask after using it, or else
      * we would recycle it. A handler would be too wasteful as it would just spin/block and do absolutely nothing,
      * no matter how "cheap" threads are.
-     *
+     * <p/>
      * It must also be noted that, while I could not fix the issue it is noted here, that sometimes
      * onPuase() AND onStop() is called immediately after onCreate(), and sometimes even onDestroy() (???)
      * so it may throw an IllegalStateException because onSaveInstanceState has already been called and these operations
      * cannot be started. This results in a corrupted file (???) as it completely disappears when this happens.
-     *
+     * <p/>
      * I was thinking of using Rx to handle this, but it wouldn't really solve the actual problem. From what else
      * I can pinpoint, the issue is that .commit() is called after the MainActivity is in the Background. Some probable
      * "solutions" in the mean time is probably to setup a Runnable that the MainActivity can check for, in case
@@ -141,6 +168,7 @@ public class MainActivity extends Activity {
     private void deserializeFloatingFragments() {
         final File jsonFile = new File(getExternalFilesDir(null), Globals.JSON_FILENAME);
         if (jsonFile.exists()) {
+            RxBus.publish("Checking for previous session...");
             new FloatingFragmentDeserializer() {
                 @Override
                 protected void onPreExecute() {
@@ -148,7 +176,34 @@ public class MainActivity extends Activity {
                 } // Sets the file handle.
 
                 @Override
-                protected void onPostExecute(List<ArrayMap<String, String>> mapList) {
+                protected void onPostExecute(final List<ArrayMap<String, String>> mapList) {
+                    if(mapList.isEmpty()){
+                        RxBus.publish("Created new session!");
+                        return;
+                    }
+                    RxBus.publish("Restoring previous session...");
+                    RxBus.subscribe(FloatingFragment.class)
+                            .subscribe(new Subscriber<FloatingFragment>() {
+                                @Override
+                                public void onCompleted() {
+
+                                }
+
+                                @Override
+                                public void onError(Throwable e) {
+
+                                }
+
+                                @Override
+                                public void onNext(FloatingFragment fragment) {
+                                    if(++mFloatingFragmentsSetup >= mFragments.size()){
+                                        mFinishedSetup = true;
+                                        RxBus.publish("Session restored!");
+                                        unsubscribe();
+                                    }
+                                    Log.i(getClass().getName(), "Setup FloatingFragment " + mFloatingFragmentsSetup + "/" + mFragments.size());
+                                }
+                            });
                     FloatingFragmentFactory factory = FloatingFragmentFactory.getInstance();
                     FragmentTransaction transaction = getFragmentManager().beginTransaction();
                     for (ArrayMap<String, String> map : mapList) {
@@ -157,8 +212,10 @@ public class MainActivity extends Activity {
                     transaction.commit(); // This may cause a crash if onStop() called before finish.
                 }
             }.execute();
-        }
+        } else RxBus.publish("Created new session!");
     }
+
+
 
     /**
      * Simply serializes each view. By utilizing WeakReferences, I do not need to worry about
@@ -186,6 +243,7 @@ public class MainActivity extends Activity {
 
     /**
      * Convenience method to quickly add a new FloatingFragment to the list and to the FragmentManager.
+     *
      * @param fragment Fragment to add.
      */
     private void addFragment(FloatingFragment fragment) {
@@ -200,7 +258,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        serializeFloatingFragments();
+        if(mFinishedSetup) {
+            serializeFloatingFragments();
+        }
     }
 
     /**
@@ -214,6 +274,7 @@ public class MainActivity extends Activity {
     }
 
     private void setupPopupWindow() {
+        RxBus.publish("Inflating Menu options...");
         View view = getLayoutInflater().inflate(R.layout.menu_icon_dropdown, null);
         // As stated above, when focus changes, including from a PopupWindow, it loses Immersive Mode, hence we reset here.
         makeImmersive(view);
@@ -254,10 +315,11 @@ public class MainActivity extends Activity {
 
     /**
      * Convenience method to retrieve a dimension.
+     *
      * @param dimenId R id of the dimension
      * @return Dimension as a float.
      */
-    private float getDimension(int dimenId){
+    private float getDimension(int dimenId) {
         TypedValue value = new TypedValue();
         getResources().getValue(dimenId, value, true);
         return value.getFloat();
@@ -266,10 +328,50 @@ public class MainActivity extends Activity {
     /**
      * Convenience method to make a view Immersive. In the future, I will be for the user's API level, to
      * make sure we do not launch ImmersiveMode when below API Level 21. However, I do not have time for that.
+     *
      * @param view View to make immersive.
      */
-    private void makeImmersive(View view){
+    private void makeImmersive(View view) {
         view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                 View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
+    /**
+     * Due to the unfortunate fact that onConfigurationChange is called BEFORE all views are measured, we must
+     * add a GlobalLayoutListener to the ViewTreeObserver. This means that, we have to poll on it until we see
+     * that the overall width and height have changed.
+     *
+     * However, once again, we only have to deal with this once. We broadcast to any subscribers that are listening
+     * for an accurate onConfigurationChange, which includes this same thread (Read: Even though we are our own subscriber,
+     * we are also our own publisher too).
+     * @param newConfig New configuration.
+     */
+    @Override
+    public void onConfigurationChanged(final Configuration newConfig) {
+        final View root = findViewById(R.id.main_root);
+        final int oldWidth = root.getWidth(), oldHeight = root.getHeight();
+        root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if (oldWidth != root.getWidth() && oldHeight != root.getHeight()) {
+                    /*
+                     We publish the Configuration object directly, as it's easily identifiable without having to create an object explicitly for
+                     configuration changes. While it does leak it for a short time, it is better than creating a new object with little purpose at
+                     all.
+                    */
+                    RxBus.publish(newConfig);
+                    root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }
+            }
+        });
+        super.onConfigurationChanged(newConfig);
+    }
+
+    /**
+     * Helper function to update the maxmimum coordinates, contained in the Misc.Globals class.
+     */
+    private void updateMaxCoordinates() {
+        Globals.MAX_X.set(findViewById(R.id.main_layout).getWidth());
+        Globals.MAX_Y.set(findViewById(R.id.main_layout).getHeight());
     }
 }

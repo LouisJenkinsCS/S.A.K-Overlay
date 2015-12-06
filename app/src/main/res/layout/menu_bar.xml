@@ -23,13 +23,15 @@
         android:layout_toEndOf="@id/menu_bar_icon"
         android:layout_toStartOf="@+id/menu_bar_clock">
 
-        <LinearLayout
-            android:id="@+id/menu_bar_options_layout"
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
-            android:layout_toEndOf="@id/menu_bar_icon"
-            android:background="@color/transparent_fragment"
-            android:orientation="horizontal" />
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="20sp"
+            android:ellipsize="end"
+            android:id="@+id/menu_bar_info"
+            android:text="Information Bar"/>
 
     </HorizontalScrollView>
 

@@ -38,7 +38,7 @@ public final class Globals {
         public static final String GEOCODER_DECODE_LOCATION = "Geocoder Decode Location", GEOCODER_DECODED_LOCATION = "Geocoder Decoded Location";
     }
 
-    public static final MutableObject<Float> SCALE_X = new MutableObject<>(1f), SCALE_Y = new MutableObject<>(1f);
+    public static final MutableObject<Float> SCALE = new MutableObject<>(1f);
 
     public static final MutableObject<Integer> MAX_X = new MutableObject<>(0), MAX_Y = new MutableObject<>(0);
 

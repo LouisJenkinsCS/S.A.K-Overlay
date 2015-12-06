@@ -17,6 +17,8 @@ import java.util.List;
 
 /**
  * Created by theif519 on 11/19/2015.
+ *
+ * An AsyncTask used to retrieve thumbnails and information about the previous ScreenRecorder's recordings.
  */
 public abstract class MediaThumbnailGenerator extends AsyncTask<File, Void, List<VideoInfo>> {
 
@@ -46,6 +48,7 @@ public abstract class MediaThumbnailGenerator extends AsyncTask<File, Void, List
         List<VideoInfo> list = new ArrayList<>();
         for (File file : params) {
             try {
+                // An ISO file contains a ton of parsed information which a normal File cannot provide.
                 IsoFile mp4 = new IsoFile(new FileDataSourceImpl(file));
                 list.add(new VideoInfo()
                                 .setFilePath(file.getAbsolutePath())
@@ -55,7 +58,7 @@ public abstract class MediaThumbnailGenerator extends AsyncTask<File, Void, List
                                 .setFileSize(prettyFileSize(file.length()))
                                 .setThumbnail(ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MICRO_KIND))
                 );
-            } catch (IOException | NullPointerException e) {
+            } catch (IOException | NullPointerException e) { // Because .getMovieBox() returns null on corrupted files or non MP4 files, we lazily ignore them.
                 Log.w(getClass().getName(), "Error while parsing info from video: " + (e.getMessage() == null ? "" : e.getMessage()));
             }
         }

@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.theif519.sakoverlay.Views.TouchInterceptorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="@dimen/sticky_note_width"
     android:layout_height="@dimen/sticky_note_height"
     android:background="@color/sticky_note_background"
     android:orientation="vertical"
-    android:scaleX="@dimen/default_scale_x"
-    android:scaleY="@dimen/default_scale_y">
+    android:scaleX="@dimen/floating_fragment_scale"
+    android:scaleY="@dimen/floating_fragment_scale"
+    app:tilIdentifier="Sticky Note">
 
     <com.theif519.sakoverlay.Views.TitleBar
         android:layout_width="wrap_content"
@@ -44,4 +46,4 @@
 
     </FrameLayout>
 
-</LinearLayout>
+</com.theif519.sakoverlay.Views.TouchInterceptorLayout>

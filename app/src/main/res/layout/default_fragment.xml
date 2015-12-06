@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:scaleX="@dimen/default_scale_x"
-    android:scaleY="@dimen/default_scale_y"
+<com.theif519.sakoverlay.Views.TouchInterceptorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:scaleX="@dimen/floating_fragment_scale"
+    android:scaleY="@dimen/floating_fragment_scale"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/transparent_fragment"
+    app:tilIdentifier=".???"
     android:orientation="vertical">
 
     <com.theif519.sakoverlay.Views.TitleBar
@@ -20,4 +22,4 @@
         android:textStyle="bold|italic"
         android:text="For some reason, we were unable to show the apprioriate widget! Sorry!"/>
 
-</LinearLayout>
+</com.theif519.sakoverlay.Views.TouchInterceptorLayout>

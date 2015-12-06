@@ -14,6 +14,9 @@ import com.theif519.utils.Misc.AttributeRetriever;
 
 /**
  * Created by theif519 on 11/27/2015.
+ *
+ * Encaspulates a Menu Option item. It should be used for any and all menu options, but for now it is
+ * only used with the Icon menu, which lists all applications.
  */
 public class MenuChildItem extends RelativeLayout {
 

@@ -14,6 +14,24 @@ import com.theif519.sakoverlay.R;
 
 /**
  * Created by theif519 on 11/6/2015.
+ *
+ * WebBrowser is a simple WebView with some modifications to make it run faster, because god knows it
+ * needs every bit of optimization/performance boost it can get. It is ungodly slow, and apparently this
+ * is standard somehow.
+ *
+ * I sped things up by enabling the Hardware Acceleration layer as well as disabling caching, and finally
+ * by changing the Rendering thread's priority, which apparently is deprecated, but oh well. The goals
+ * for the end-game Browser isn't too big, however they aren't small either.
+ *
+ * 1) Be able to support tabbing, easily accomplished using a tab view.
+ *
+ * 2) Save user's history, last used page, and last location on said page.
+ *
+ * 3) Proxy everything through an AdBlock or identity hiding/spoofing service, although the web-based
+ * ones are rather rare these days.
+ *
+ * 4) Be able to determine if a link should be opened in another app. I.E, google playstore link should open
+ * in Google Playstore, etc.
  */
 public class WebBrowserFragment extends FloatingFragment {
 
@@ -42,8 +60,13 @@ public class WebBrowserFragment extends FloatingFragment {
         mBrowserForward = (Button) getContentView().findViewById(R.id.browser_action_forward);
         mBrowserForward.setVisibility(View.INVISIBLE);
         mBrowser.getSettings().setJavaScriptEnabled(true);
+        mBrowser.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        // Screw the deprecation, this thing needs as much help as it can get.
+        mBrowser.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
+        mBrowser.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         mBrowser.getSettings().setBuiltInZoomControls(true);
         mBrowser.getSettings().setLoadWithOverviewMode(true);
+        mBrowser.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
         mBrowser.getSettings().setUseWideViewPort(true);
         mBrowser.getSettings().setSupportZoom(true);
         mBrowser.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);

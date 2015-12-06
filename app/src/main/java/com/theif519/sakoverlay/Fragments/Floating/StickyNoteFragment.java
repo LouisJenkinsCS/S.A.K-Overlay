@@ -7,6 +7,25 @@ import com.theif519.sakoverlay.R;
 
 /**
  * Created by theif519 on 10/31/2015.
+ *
+ * Right now Sticky Note is more of a filler. It serializes/saves the user's content, but unless you create
+ * more than one of them, they will not be saved, nor can they be saved meaningfully, and since there is a
+ * bug right now, the persistence of such notes are volatile. However, as stated before, it is very
+ * proof of concept. It is the only FloatingFragment subclass thus far to serialize it's own data, and it
+ * also looks pretty. What can I say? It's a demo.
+ *
+ * In the future, Sticky Note will become NotePad, a personalized note-tasking assistant. It will be
+ * able to do the following...
+ *
+ * 1) Open up txt, .md, .json, .log, etc. files. It will not support proprietary formats, like .pdf
+ * and .docx. LazyInflater, whenever that gets implemented, may allow other people to create their own,
+ * if this app kicks off well enough.
+ *
+ * 2) Be able to save any data, and preferably have syntax highlighting. Yup, you guessed it, Notepad will have
+ * programming syntax. Who would of thought?
+ *
+ * 3) Tabs. The ability to have more than one at any given time, separated in a tab view, or whatever it is called.
+ * This is actually very easily doable. I just do not have the time. Finals and all that.
  */
 public class StickyNoteFragment extends FloatingFragment {
 
@@ -25,20 +44,16 @@ public class StickyNoteFragment extends FloatingFragment {
 
     @Override
     public ArrayMap<String, String> serialize() {
+        // Note how we capture the ArrayMap returned and just append to it.
         ArrayMap<String, String> map = super.serialize();
         map.put(CONTENTS_KEY, ((EditText) getContentView().findViewById(R.id.sticky_note_edit_text)).getText().toString());
         return map;
     }
 
     @Override
-    protected void setup() {
-        super.setup();
-        //((EditText) getContentView().findViewById(R.id.sticky_note_edit_text)).
-    }
-
-    @Override
     public void unpack() {
         super.unpack();
+        // Technically we are supposed to do this in setup(), but ah well.
         ((EditText) getContentView().findViewById(R.id.sticky_note_edit_text)).setText(mMappedContext.get(CONTENTS_KEY));
     }
 }

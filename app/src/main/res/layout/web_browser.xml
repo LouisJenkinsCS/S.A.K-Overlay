@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.theif519.sakoverlay.Views.TouchInterceptorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:scaleX="@dimen/default_scale_x"
-    android:scaleY="@dimen/default_scale_y"
+    android:scaleX="@dimen/floating_fragment_scale"
+    android:scaleY="@dimen/floating_fragment_scale"
     android:layout_width="@dimen/web_browser_width"
     android:layout_height="@dimen/web_browser_height"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    app:tilIdentifier="Web Browser">
 
     <com.theif519.sakoverlay.Views.TitleBar
         android:layout_width="fill_parent"
@@ -72,4 +74,4 @@
 
     </FrameLayout>
 
-</LinearLayout>
+</com.theif519.sakoverlay.Views.TouchInterceptorLayout>

@@ -47,6 +47,9 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
         return row;
     }
 
+    /**
+     * Inner class which implements the standard practice ViewHolder design pattern. Boiler plate code.
+     */
     private class VideoInfoHolder{
         private TextView mDescription, mDuration, mTimeStamp, mFileSize;
         private ImageView mThumbnail;

@@ -1,4 +1,4 @@
-package com.theif519.utils.Misc;
+package com.theif519.sakoverlay.Misc;
 
 import android.content.Context;
 import android.graphics.Point;
@@ -7,32 +7,53 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ListAdapter;
 
-import com.theif519.sakoverlay.Misc.Globals;
-
 /**
  * Created by theif519 on 11/23/2015.
  */
 public final class MeasureTools {
 
-    public static float scaleDiff(float num, float ratio) {
-        return num - (num * ratio);
+    public static int scaleDifferenceWidth(View v) {
+        return (int)(v.getWidth() - (v.getWidth() * Globals.SCALE.get()));
     }
 
-    public static float scale(float num, float ratio) {
-        return num * ratio;
+    public static int scaleDifferenceHeight(View v){
+        return (int)(v.getHeight() - (v.getHeight() * Globals.SCALE.get()));
     }
 
-    public static int scaleDiffToInt(float num, float ratio) {
-        return (int) scaleDiff(num, ratio);
+    public static int scaleDifference(float f){
+        return (int)(f - (f * Globals.SCALE.get()));
     }
 
-    public static int scaleToInt(float num, float ratio) {
-        return (int) scale(num, ratio);
+    public static int scale(float width) {
+        return (int)(width * Globals.SCALE.get());
     }
 
-    public static Point getScaledCoordinates(View view){
-        return new Point((int) view.getX() + scaleDiffToInt(view.getWidth(), Globals.SCALE_X.get())/2,
-                (int) view.getY() + scaleDiffToInt(view.getHeight(), Globals.SCALE_Y.get())/2);
+    public static int scaleWidth(View v){
+        return scale(v.getWidth());
+    }
+
+    public static int scaleHeight(View v){
+        return scale(v.getHeight());
+    }
+
+    public static Point getScaledCoordinates(View v){
+        return new Point((int) v.getX() + scaleDeltaWidth(v), (int) v.getY() + scaleDeltaHeight(v));
+    }
+
+    public static int scaleDeltaWidth(View v){
+        return scaleDifferenceWidth(v)/2;
+    }
+
+    public static int scaleDeltaHeight(View v){
+        return scaleDifferenceHeight(v)/2;
+    }
+
+    public static int scaleDelta(float f){
+        return scaleDifference(f) / 2;
+    }
+
+    public static int scaleInverse(float f){
+        return (int)(f / Globals.SCALE.get());
     }
 
     public static int measureContentWidth(Context context, ListAdapter listAdapter) {
