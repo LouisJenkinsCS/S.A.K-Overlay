@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * Created by theif519 on 11/19/2015.
- *
+ * <p/>
  * An AsyncTask used to retrieve thumbnails and information about the previous ScreenRecorder's recordings.
  */
 public abstract class MediaThumbnailGenerator extends AsyncTask<File, Void, List<VideoInfo>> {
@@ -43,6 +43,12 @@ public abstract class MediaThumbnailGenerator extends AsyncTask<File, Void, List
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
+    /**
+     * For each file, it will parse information and store it in a VideoInfo file, which can be used later
+     * to add to the VideoInfoAdapter
+     * @param params Files to parse.
+     * @return List of VideoInfo, or null on error.
+     */
     @Override
     protected List<VideoInfo> doInBackground(File... params) {
         List<VideoInfo> list = new ArrayList<>();

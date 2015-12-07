@@ -14,7 +14,7 @@ import com.theif519.utils.Misc.AttributeRetriever;
 
 /**
  * Created by theif519 on 11/27/2015.
- *
+ * <p/>
  * Encaspulates a Menu Option item. It should be used for any and all menu options, but for now it is
  * only used with the Icon menu, which lists all applications.
  */
@@ -36,22 +36,22 @@ public class MenuChildItem extends RelativeLayout {
         AttributeRetriever.fillAttributes(getClass(), this, context, attrs);
     }
 
-    @AttributeRetriever.AttributeHelper(source = "mciIcon")
-    public void setIcon(Bitmap icon){
-        mIcon.setImageBitmap(icon);
-    }
-
-    public Bitmap getIcon(){
+    public Bitmap getIcon() {
         return ((BitmapDrawable) mIcon.getDrawable()).getBitmap();
     }
 
-    @AttributeRetriever.AttributeHelper(source = "mciDescription")
-    public void setDescription(String descr){
-        mDescription.setText(descr);
+    @AttributeRetriever.AttributeHelper(source = "mciIcon")
+    public void setIcon(Bitmap icon) {
+        mIcon.setImageBitmap(icon);
     }
 
-    public String getDescription(){
+    public String getDescription() {
         return mDescription.getText().toString();
+    }
+
+    @AttributeRetriever.AttributeHelper(source = "mciDescription")
+    public void setDescription(String descr) {
+        mDescription.setText(descr);
     }
 
 }

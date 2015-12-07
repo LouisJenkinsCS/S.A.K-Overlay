@@ -42,157 +42,29 @@ import rx.subjects.PublishSubject;
 
 /**
  * Created by theif519 on 11/12/2015.
- *
+ * <p/>
  * RecorderService is a service made explicitly for capturing and maintaining a video stream
  * while in the application is in the background. It uses the API level 21 MediaProjection API
  * to accomplish this, and maintains the state of the current recording.
  */
 public class RecorderService extends Service {
 
-    /**
-     * Enumerations used to describe the current state of the object, even
-     * having a direct string representation. It uses a bitmask to allow
-     * more than one state to be compared, specifically for RecorderCommand.
-     */
-    public enum RecorderState {
-        DEAD(1),
-        STARTED(1 << 1),
-        PAUSED(1 << 2),
-        STOPPED(1 << 3);
-
-        private int mMask;
-
-        public int getMask() {
-            return mMask;
-        }
-
-        /**
-         * Very convenient method to get all masks at once, which allows getting all but one or two
-         * super easy to do. It loops through each state then bitwise OR's them into one.
-         *
-         * @return All bitmasks together.
-         */
-        public static int getAllMask() {
-            int totalMask = 0;
-            for (RecorderState state : values()) {
-                totalMask |= state.getMask();
-            }
-            return totalMask;
-        }
-
-        RecorderState(int bitmask) {
-            mMask = bitmask;
-        }
-
-        @Override
-        public String toString() {
-            switch (this) {
-                case DEAD:
-                    return "Dead";
-                case STARTED:
-                    return "Recording";
-                case PAUSED:
-                    return "Paused";
-                case STOPPED:
-                    return "Stopped";
-                default:
-                    return null;
-            }
-        }
-    }
-
-    /**
-     * This enumeration is used to encapsulate a given command from a bound activity/fragment, and
-     * is used as a helper to determine whether or not given command is possible given the current state.
-     * <p/>
-     * | = Bitwise OR
-     * <p/>
-     * & = Bitwise AND
-     * <p/>
-     * &~ = Bitwise NAND
-     */
-    public enum RecorderCommand {
-        START(
-                RecorderState.getAllMask() & ~RecorderState.STARTED.getMask()
-        ),
-        PAUSE(
-                RecorderState.STARTED.getMask()
-        ),
-        STOP(
-                RecorderState.STARTED.getMask() | RecorderState.PAUSED.getMask()
-        ),
-        DIE(
-                RecorderState.getAllMask() & ~RecorderState.DEAD.getMask()
-        );
-
-        /**
-         * Determines whether or not the command is possible by checking if the bit for the possible state
-         * is set.
-         *
-         * @param state State to check.
-         * @return True if it is a possible command for the given state.
-         */
-        public boolean isPossible(RecorderState state) {
-            return (mPossibleStatesMask & state.getMask()) != 0;
-        }
-
-        private int mPossibleStatesMask;
-
-        RecorderCommand(int possibleStates) {
-            mPossibleStatesMask = possibleStates;
-        }
-
-        @Override
-        public String toString() {
-            switch (this) {
-                case START:
-                    return "Start";
-                case PAUSE:
-                    return "Pause";
-                case STOP:
-                    return "Stop";
-                case DIE:
-                    return "Die";
-                default:
-                    return null;
-            }
-        }
-    }
-
-    /**
-     * The IBinder returned when we are bound to an activity/fragment. It allows who we are bound to
-     * to maintain a handle to this instance (which in and of itself allows it to manipulate the current state)
-     * as well as an observable to be notified on any state changes.
-     */
-    public class RecorderBinder extends Binder {
-        public RecorderService getService() {
-            return RecorderService.this;
-        }
-
-        public Observable<RecorderState> observeStateChanges() {
-            return mStateChangeObserver.asObservable();
-        }
-    }
-
     /*
         Current state of recorder.
      */
     private RecorderState mState = RecorderState.DEAD;
-
     private MediaProjection mProjection;
-
     private VirtualDisplay mDisplay;
-
     private MediaRecorder mRecorder;
-
     /*
         Is used to publish/subscribe any state changes to the recorder.
      */
     private PublishSubject<RecorderState> mStateChangeObserver;
+    private RecorderInfo mLastRecorderInfo;
 
     /**
-     *  Initializes the MediaRecorder with the user's requested data if it gets through the checks
-     *  in start().
+     * Initializes the MediaRecorder with the user's requested data if it gets through the checks
+     * in start().
      *
      * @param width        Width of the display
      * @param height       Height of the display
@@ -225,7 +97,7 @@ public class RecorderService extends Service {
         /*
             Whenever we receive a permission response, if the MediaProjection instance is null, we initialize it here.
          */
-       RxBus.subscribe(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
+        RxBus.subscribe(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
             @Override
             public void call(PermissionInfo permissionInfo) {
                 if (mProjection == null) {
@@ -299,7 +171,7 @@ public class RecorderService extends Service {
      * As it is possible for S.A.K-Overlay to be killed in the background while recording, adding a Foreground
      * notification reduces the chances of it happening drastically. As the service run locally in the same process,
      * S.A.K-Overlay will not be killed off unless the service is as well.
-     *
+     * <p/>
      * Consequently, as the overlay can be quite heavy on RAM, making it a juicier target for the OOM killer, this service,
      * if the system is down to critically low memory, is also more likely to be killed as well. I will hopefully remedy this
      * by creating a separate process for this to run in, but that by itself comes with a lot of complication as well.
@@ -324,7 +196,7 @@ public class RecorderService extends Service {
      * The controller can control the state of the recorder, but also is controlled by the state changes
      * as well. I.E, while in STOPPED, it can call START, but if say the ScreenRecorderFragment makes a state change,
      * then the controller's next option will be STOP as the recording will have already been STARTED.
-     *
+     * <p/>
      * Pretty much what I am getting at is that while the observable acts in an asynchronous manner, the controller
      * acts in a synchronized way with the recorder's state.
      */
@@ -380,7 +252,7 @@ public class RecorderService extends Service {
                         initialTouchY = (int) event.getRawY();
                         return true;
                     case MotionEvent.ACTION_UP:
-                        if((int) (event.getRawX()) == initialTouchX || (int)(event.getRawY()) == initialTouchY){
+                        if ((int) (event.getRawX()) == initialTouchX || (int) (event.getRawY()) == initialTouchY) {
                             switch (mState) {
                                 case STARTED:
                                     stop();
@@ -430,6 +302,7 @@ public class RecorderService extends Service {
 
     /**
      * Stops the recording if it's already started.
+     *
      * @return True if possible, false is bad state.
      */
     public boolean stop() {
@@ -450,12 +323,11 @@ public class RecorderService extends Service {
         }
     }
 
-    private RecorderInfo mLastRecorderInfo;
-
     /**
      * Start the recorder, if possible, with the passed information. As can be seen above, the last passed
      * information is kept in memory, so we can easily reuse it from the Controller. There are also simple
      * checks in place to ensure that everything is as it should be.
+     *
      * @param info Information for recording.
      * @return True if possible, false is bad state or an error/bad input.
      */
@@ -498,8 +370,9 @@ public class RecorderService extends Service {
     /**
      * Helper function since the checking of input is making the start() function get too long.
      * It checks to see if they are valid, and if not appends an error message.
-     * @param width Width. Cannot be 0.
-     * @param height Height. Cannot be 0.
+     *
+     * @param width    Width. Cannot be 0.
+     * @param height   Height. Cannot be 0.
      * @param fileName Filename. Cannot be null.
      * @return null if good, a string describing the error if bad.
      */
@@ -518,6 +391,131 @@ public class RecorderService extends Service {
             errMsg.append("Filename cannot be left empty!");
         }
         return errMsg.toString();
+    }
+
+    /**
+     * Enumerations used to describe the current state of the object, even
+     * having a direct string representation. It uses a bitmask to allow
+     * more than one state to be compared, specifically for RecorderCommand.
+     */
+    public enum RecorderState {
+        DEAD(1),
+        STARTED(1 << 1),
+        PAUSED(1 << 2),
+        STOPPED(1 << 3);
+
+        private int mMask;
+
+        RecorderState(int bitmask) {
+            mMask = bitmask;
+        }
+
+        /**
+         * Very convenient method to get all masks at once, which allows getting all but one or two
+         * super easy to do. It loops through each state then bitwise OR's them into one.
+         *
+         * @return All bitmasks together.
+         */
+        public static int getAllMask() {
+            int totalMask = 0;
+            for (RecorderState state : values()) {
+                totalMask |= state.getMask();
+            }
+            return totalMask;
+        }
+
+        public int getMask() {
+            return mMask;
+        }
+
+        @Override
+        public String toString() {
+            switch (this) {
+                case DEAD:
+                    return "Dead";
+                case STARTED:
+                    return "Recording";
+                case PAUSED:
+                    return "Paused";
+                case STOPPED:
+                    return "Stopped";
+                default:
+                    return null;
+            }
+        }
+    }
+
+    /**
+     * This enumeration is used to encapsulate a given command from a bound activity/fragment, and
+     * is used as a helper to determine whether or not given command is possible given the current state.
+     * <p/>
+     * | = Bitwise OR
+     * <p/>
+     * & = Bitwise AND
+     * <p/>
+     * &~ = Bitwise NAND
+     */
+    public enum RecorderCommand {
+        START(
+                RecorderState.getAllMask() & ~RecorderState.STARTED.getMask()
+        ),
+        PAUSE(
+                RecorderState.STARTED.getMask()
+        ),
+        STOP(
+                RecorderState.STARTED.getMask() | RecorderState.PAUSED.getMask()
+        ),
+        DIE(
+                RecorderState.getAllMask() & ~RecorderState.DEAD.getMask()
+        );
+
+        private int mPossibleStatesMask;
+
+        RecorderCommand(int possibleStates) {
+            mPossibleStatesMask = possibleStates;
+        }
+
+        /**
+         * Determines whether or not the command is possible by checking if the bit for the possible state
+         * is set.
+         *
+         * @param state State to check.
+         * @return True if it is a possible command for the given state.
+         */
+        public boolean isPossible(RecorderState state) {
+            return (mPossibleStatesMask & state.getMask()) != 0;
+        }
+
+        @Override
+        public String toString() {
+            switch (this) {
+                case START:
+                    return "Start";
+                case PAUSE:
+                    return "Pause";
+                case STOP:
+                    return "Stop";
+                case DIE:
+                    return "Die";
+                default:
+                    return null;
+            }
+        }
+    }
+
+    /**
+     * The IBinder returned when we are bound to an activity/fragment. It allows who we are bound to
+     * to maintain a handle to this instance (which in and of itself allows it to manipulate the current state)
+     * as well as an observable to be notified on any state changes.
+     */
+    public class RecorderBinder extends Binder {
+        public RecorderService getService() {
+            return RecorderService.this;
+        }
+
+        public Observable<RecorderState> observeStateChanges() {
+            return mStateChangeObserver.asObservable();
+        }
     }
 
 }

@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Created by theif519 on 11/19/2015.
- *
+ * <p/>
  * The adapter to hold the VideoInfo data, used to hold various information like the thumbnail bitmap,
  * the duration, name, etc. It implements the ViewHolder pattern which is the standard for adapters in Android,
  * and overall is mostly boiler plate code.
@@ -25,6 +25,7 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
 
     private static final int RESOURCE_ID = R.layout.list_view_video_info;
     private List<VideoInfo> mVideoInfo = new ArrayList<>();
+
     public VideoInfoAdapter(Context context, List<VideoInfo> objects) {
         super(context, RESOURCE_ID, objects);
         mVideoInfo = objects;
@@ -35,7 +36,7 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
         Context context = getContext();
         View row = convertView;
         VideoInfoHolder holder = null;
-        if(row == null){
+        if (row == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             row = inflater.inflate(RESOURCE_ID, parent, false);
             holder = new VideoInfoHolder(row);
@@ -50,11 +51,11 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
     /**
      * Inner class which implements the standard practice ViewHolder design pattern. Boiler plate code.
      */
-    private class VideoInfoHolder{
+    private class VideoInfoHolder {
         private TextView mDescription, mDuration, mTimeStamp, mFileSize;
         private ImageView mThumbnail;
 
-        public VideoInfoHolder(View view){
+        public VideoInfoHolder(View view) {
             mDescription = (TextView) view.findViewById(R.id.list_view_video_info_description);
             mDuration = (TextView) view.findViewById(R.id.list_view_video_info_duration);
             mTimeStamp = (TextView) view.findViewById(R.id.list_view_video_info_timestamp);
@@ -67,7 +68,7 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
             setup(info);
         }
 
-        public void setup(final VideoInfo info){
+        public void setup(final VideoInfo info) {
             mDescription.setText(info.getDescription());
             mDuration.setText(info.getDuration());
             mTimeStamp.setText(info.getTimestamp());

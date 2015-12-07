@@ -2,13 +2,13 @@ package com.theif519.sakoverlay.POD;
 
 /**
  * Created by theif519 on 12/1/2015.
- *
+ * <p/>
  * Encapsulates ScreenRecorder information passed to the RecorderService.
  */
 public class RecorderInfo {
-    private int mWidth, mHeight;
     boolean mAudioEnabled;
     String mFileName;
+    private int mWidth, mHeight;
 
     public RecorderInfo(int width, int height, boolean audioEnabled, String fileName) {
         mWidth = width;

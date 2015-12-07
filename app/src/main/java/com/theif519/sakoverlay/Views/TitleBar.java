@@ -29,7 +29,7 @@ public class TitleBar extends RelativeLayout {
     }
 
     @AttributeRetriever.AttributeHelper(source = "tbTitle")
-    public void setTitle(String title){
+    public void setTitle(String title) {
         mTitle.setText(title);
         mTitle.invalidate();
         mTitle.requestLayout();

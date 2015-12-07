@@ -27,16 +27,16 @@ import rx.subjects.PublishSubject;
 
 /**
  * Created by theif519 on 11/4/2015.
- *
+ * <p/>
  * A simple Google Maps floating fragment, made more as a proof of concept in the meantime. In the future
  * it will provide the following functionalities...
- *
+ * <p/>
  * 1) Display nearby shops/restaurants/gas stations, etc. I.E, if the user has a preference for Weiss, it will
  * always alert him when one is nearby. Google Maps API would handle and abstract almost everything of course.
- *
+ * <p/>
  * 2) Always display where the user currently is, which right now is implemented, albeit poorly and minimal.
  * Right now it displays the address/current location in a text view embedded on top of the FloatingFragment.
- *
+ * <p/>
  * Right now those are the goals of it. I'm not sure if I care much for navigation, as this app isn't meant
  * for that, it's meant for gaming. Hence, if you are on the go, have your head down in your phone/tablet
  * and you're within a mile or so distance of your favorite store, you may see an alert/notification letting

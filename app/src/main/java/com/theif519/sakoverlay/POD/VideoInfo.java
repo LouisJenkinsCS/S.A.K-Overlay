@@ -6,15 +6,26 @@ import android.os.Parcelable;
 
 /**
  * Created by theif519 on 11/19/2015.
- *
+ * <p/>
  * A Java Bean which encapsulates information about a video, describing it's title, duration, timestamp, file size, and
  * also containing a bitmap for the thumbnail. Used primarily for showing videos inside of ScreenRecorder
  * and is made parcelable in case it needs to be marshalled.
- *
+ * <p/>
  * It is made parcelable in the case that I move RecorderService to it's own process.
  */
 public class VideoInfo implements Parcelable {
 
+    public static final Creator<VideoInfo> CREATOR = new Creator<VideoInfo>() {
+        @Override
+        public VideoInfo createFromParcel(Parcel in) {
+            return new VideoInfo(in);
+        }
+
+        @Override
+        public VideoInfo[] newArray(int size) {
+            return new VideoInfo[size];
+        }
+    };
     private String mDescription, mDuration, mTimestamp, mFileSize, mFilePath;
     private Bitmap mThumbnail;
 
@@ -29,18 +40,6 @@ public class VideoInfo implements Parcelable {
         mFileSize = in.readString();
         mThumbnail = in.readParcelable(Bitmap.class.getClassLoader());
     }
-
-    public static final Creator<VideoInfo> CREATOR = new Creator<VideoInfo>() {
-        @Override
-        public VideoInfo createFromParcel(Parcel in) {
-            return new VideoInfo(in);
-        }
-
-        @Override
-        public VideoInfo[] newArray(int size) {
-            return new VideoInfo[size];
-        }
-    };
 
     @Override
     public int describeContents() {
@@ -83,11 +82,11 @@ public class VideoInfo implements Parcelable {
         return this;
     }
 
-    public String getFileSize(){
+    public String getFileSize() {
         return mFileSize;
     }
 
-    public VideoInfo setFileSize(String mFileSize){
+    public VideoInfo setFileSize(String mFileSize) {
         this.mFileSize = mFileSize;
         return this;
     }
@@ -101,11 +100,11 @@ public class VideoInfo implements Parcelable {
         return this;
     }
 
-    public String getFilePath(){
+    public String getFilePath() {
         return mFilePath;
     }
 
-    public VideoInfo setFilePath(String filePath){
+    public VideoInfo setFilePath(String filePath) {
         mFilePath = filePath;
         return this;
     }

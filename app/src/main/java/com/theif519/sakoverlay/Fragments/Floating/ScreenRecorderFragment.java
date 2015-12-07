@@ -50,15 +50,30 @@ import rx.functions.Action1;
  */
 public class ScreenRecorderFragment extends FloatingFragment {
 
+    protected static final String IDENTIFIER = "Screen Recorder";
     /*
         There can be only one instance of this class. Imagine the nightmare of having two or more of these, it'd
         be useless and redundantly redundant.
      */
     public static Boolean INSTANCE_EXISTS = false;
-
-    protected static final String IDENTIFIER = "Screen Recorder";
-
     private TextView mStateText;
+    /*
+        We maintain a handle to the RecorderService, obtained through the IBinder returned in ServiceConnection.
+     */
+    private RecorderService mServiceHandle;
+    /*
+        We also keep a subscription to the state change observable we are subscribed to so we can unsubscribe in onPause.
+     */
+    private Subscription mStateChangeHandler;
+    /*
+        We must maintain a reference to this so we may unbind later on.
+     */
+    private ServiceConnection mServiceConnectionHandler;
+    /*
+        Much of a finite-state machine, huh? This is manipulated based on state change, and hence determines
+        whether the button calls START or STOP. Simple for now, but gets the job done.
+     */
+    private boolean mIsRunning = false;
 
     public static ScreenRecorderFragment newInstance() {
         if (INSTANCE_EXISTS) return null;
@@ -69,27 +84,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
         INSTANCE_EXISTS = true;
         return fragment;
     }
-
-    /*
-        We maintain a handle to the RecorderService, obtained through the IBinder returned in ServiceConnection.
-     */
-    private RecorderService mServiceHandle;
-
-    /*
-        We also keep a subscription to the state change observable we are subscribed to so we can unsubscribe in onPause.
-     */
-    private Subscription mStateChangeHandler;
-
-    /*
-        We must maintain a reference to this so we may unbind later on.
-     */
-    private ServiceConnection mServiceConnectionHandler;
-
-    /*
-        Much of a finite-state machine, huh? This is manipulated based on state change, and hence determines
-        whether the button calls START or STOP. Simple for now, but gets the job done.
-     */
-    private boolean mIsRunning = false;
 
     @Override
     protected void setup() {

@@ -63,6 +63,18 @@ public class MainActivity extends Activity {
         And of course it is faster this way.
      */
     private PopupWindow mMenuPopup;
+    /*
+        WeakReference to current floating fragments. It allows a seamless and the most efficient way
+        of keeping track of each fragment without having to worry about leaking it, or having it
+        modify a public static collection. This is considered the best practice.
+
+        Why do we need a reference for each FloatingFragment, you may ask? Because we cannot serialize each
+        fragment without it. Why do we use a WeakReference? Because each fragment can be destroyed without the
+        MainActivity knowing (which is a good thing).
+     */
+    private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
+    private int mFloatingFragmentsSetup;
+    private boolean mFinishedSetup = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,21 +147,6 @@ public class MainActivity extends Activity {
         makeImmersive(getWindow().getDecorView());
     }
 
-    /*
-        WeakReference to current floating fragments. It allows a seamless and the most efficient way
-        of keeping track of each fragment without having to worry about leaking it, or having it
-        modify a public static collection. This is considered the best practice.
-
-        Why do we need a reference for each FloatingFragment, you may ask? Because we cannot serialize each
-        fragment without it. Why do we use a WeakReference? Because each fragment can be destroyed without the
-        MainActivity knowing (which is a good thing).
-     */
-    private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
-
-    private int mFloatingFragmentsSetup;
-
-    private boolean mFinishedSetup = false;
-
     /**
      * Sets up and begins the AsyncTask. Unfortunately, we cannot reuse an AsyncTask after using it, or else
      * we would recycle it. A handler would be too wasteful as it would just spin/block and do absolutely nothing,
@@ -177,7 +174,7 @@ public class MainActivity extends Activity {
 
                 @Override
                 protected void onPostExecute(final List<ArrayMap<String, String>> mapList) {
-                    if(mapList.isEmpty()){
+                    if (mapList.isEmpty()) {
                         RxBus.publish("Created new session!");
                         return;
                     }
@@ -196,7 +193,7 @@ public class MainActivity extends Activity {
 
                                 @Override
                                 public void onNext(FloatingFragment fragment) {
-                                    if(++mFloatingFragmentsSetup >= mFragments.size()){
+                                    if (++mFloatingFragmentsSetup >= mFragments.size()) {
                                         mFinishedSetup = true;
                                         RxBus.publish("Session restored!");
                                         unsubscribe();
@@ -214,7 +211,6 @@ public class MainActivity extends Activity {
             }.execute();
         } else RxBus.publish("Created new session!");
     }
-
 
 
     /**
@@ -258,7 +254,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        if(mFinishedSetup) {
+        if (mFinishedSetup) {
             serializeFloatingFragments();
         }
     }
@@ -340,10 +336,11 @@ public class MainActivity extends Activity {
      * Due to the unfortunate fact that onConfigurationChange is called BEFORE all views are measured, we must
      * add a GlobalLayoutListener to the ViewTreeObserver. This means that, we have to poll on it until we see
      * that the overall width and height have changed.
-     *
+     * <p/>
      * However, once again, we only have to deal with this once. We broadcast to any subscribers that are listening
      * for an accurate onConfigurationChange, which includes this same thread (Read: Even though we are our own subscriber,
      * we are also our own publisher too).
+     *
      * @param newConfig New configuration.
      */
     @Override

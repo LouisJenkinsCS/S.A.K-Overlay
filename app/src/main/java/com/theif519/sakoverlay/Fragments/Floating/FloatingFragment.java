@@ -37,23 +37,23 @@ import rx.functions.Action1;
  * everything works, I will summarize it once again here...
  * <p/>
  * The custom life-cycles reflect the MainActivity's life cycles and are also triggered by them.
- * <p/>
+ * <p/><pre>
  * MainActivity methods preceded with a (-)
  * FloatingFragments methods preceded with a (+)
  * FloatingFragments custom lifecycle methods preceded with a (~)
  * - OnCreate()
- * - DeserializeFloatingFragments()
- * + OnCreateView()
- * ~ Unpack()
- * // Will be called if mappedContext passed, as in, if instantiated from the deserializer factory.
- * ~ Setup()
- * + OnDestroy()
- * ~ CleanUp()
+ *  - DeserializeFloatingFragments()
+ *      + OnCreateView()
+ *          ~ Unpack()
+ *              // Will be called if mappedContext passed, as in, if instantiated from the deserializer factory.
+ *  ~ Setup()
+ *      + OnDestroy()
+ *          ~ CleanUp()
  * - OnPause()
- * - SerializeFloatingFragments()
- * ~ Serialize()
- * // Where each FloatingFragment serializes their data.
- * <p/>
+ *  - SerializeFloatingFragments()
+ *      ~ Serialize()
+ *          // Where each FloatingFragment serializes their data.
+ * </pre><p/>
  * <p/>
  * Relatively simplistic flow. Some life cycle methods may be changed or outright removed later (I.E CleanUp)
  * however as of now they remain.
@@ -68,6 +68,10 @@ import rx.functions.Action1;
 public class FloatingFragment extends Fragment {
 
     /*
+        Snap states.
+     */
+    protected static final int RIGHT = 1, LEFT = 1 << 1, UPPER = 1 << 2, BOTTOM = 1 << 3;
+    /*
         I decided to change from having separate instance member variables (x, y, width, height)
         to not only encapsulating them inside of another object, BUT ALSO handle resizing the view
         inside of that object as well. This also makes it possible for other classes to easily manipulate
@@ -77,12 +81,6 @@ public class FloatingFragment extends Fragment {
         while snapped, I would need some elegant of doing so.
      */
     protected ViewProperties mViewProperties;
-
-    /*
-        mIsDead - Determines whether or not this instance is dead but not reaped by the garbage collector.
-     */
-    private boolean mIsDead = false, mIsMaximized = false;
-
     /*
         Tag used to serialize and deserialize/reconstruct with the factory. This must be changed by sub classes.
      */
@@ -93,34 +91,31 @@ public class FloatingFragment extends Fragment {
         the root view. default_fragment is akin to a 404 message.
      */
     protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
-
-    /*
-        We keep track of the root view out of convenience.
-     */
-    private TouchInterceptorLayout mContentView;
-
     /*
         This map should be created when serialize() is called, and also set when created from the factory.
         Unpack relies on this to determine whether or not there is anything to unpack or not.
      */
     protected ArrayMap<String, String> mMappedContext;
-
     /*
         The current snap state of this view. By bitwise OR'ing different snap states, we can get
         combinations like BOTTOM RIGHT and UPPER LEFT.
      */
     protected int mSnapMask;
-
     /*
-        Snap states.
+        mIsDead - Determines whether or not this instance is dead but not reaped by the garbage collector.
      */
-    protected static final int RIGHT = 1, LEFT = 1 << 1, UPPER = 1 << 2, BOTTOM = 1 << 3;
-
+    private boolean mIsDead = false, mIsMaximized = false;
+    /*
+        We keep track of the root view out of convenience.
+     */
+    private TouchInterceptorLayout mContentView;
     /*
         As of now, the task bar at the bottom of the activity isn't very well developed. We only have an
         image button, which the base classes inflates and adds to it in setup(). Very bare-bones, as I said.
      */
     private ImageButton mTaskBarButton;
+    private int touchXOffset, touchYOffset, prevX, prevY;
+    private int tmpX, tmpY;
 
     @SuppressWarnings("unchecked")
     @Nullable
@@ -218,8 +213,6 @@ public class FloatingFragment extends Fragment {
                 });
     }
 
-    private int touchXOffset, touchYOffset, prevX, prevY;
-
     /**
      * Handles the MotionEvent for moving the view. Like Resize(), it is rather complication, however
      * it's readability should be made easier with commenting and MeasureTools syntax.
@@ -272,8 +265,6 @@ public class FloatingFragment extends Fragment {
                 return false;
         }
     }
-
-    private int tmpX, tmpY;
 
     /**
      * Handles resizing of the view. It used to be extremely complicated, however with MeasureTools, while the complexity

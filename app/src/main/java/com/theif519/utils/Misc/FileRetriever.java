@@ -69,7 +69,7 @@ public final class FileRetriever {
         return lineCount;
     }
 
-    public static ArrayList<File> getFiles(String dir){
+    public static ArrayList<File> getFiles(String dir) {
         ArrayList<File> files = new ArrayList<>();
         File f = new File(dir);
         f.mkdirs();

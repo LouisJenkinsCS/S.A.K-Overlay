@@ -12,12 +12,18 @@ import com.theif519.utils.Misc.AttributeRetriever;
 
 /**
  * Created by lpj11535 on 11/30/2015.
+ * <p/>
+ * Custom EditText used for StickyNote (Future NotePad). It adds a black underline to the canvas whenever
+ * onDraw() is called, allowing for it to maintain the illusion of having black underlines. This code has been
+ * modified from a StackOverflow thread, which I cannot find the exact one, but there is a similar one that can
+ * be found here instead.
+ * <p/>
+ * http://stackoverflow.com/questions/4114859/android-edittext-underline
  */
 public class UnderlinedEditText extends EditText {
 
-    private Paint mPaint = new Paint();
-
     Color mUnderlineColor;
+    private Paint mPaint = new Paint();
 
     public UnderlinedEditText(Context context) {
         this(context, null);
@@ -35,11 +41,12 @@ public class UnderlinedEditText extends EditText {
     }
 
     @AttributeRetriever.AttributeHelper(source = "uetColor")
-    private void setColor(int colorCode){
+    private void setColor(int colorCode) {
         mPaint.setColor(colorCode);
     }
 
-    @Override protected void onDraw(Canvas canvas) {
+    @Override
+    protected void onDraw(Canvas canvas) {
         int left = getLeft();
         int right = getRight();
         int paddingTop = getPaddingTop();
@@ -48,10 +55,10 @@ public class UnderlinedEditText extends EditText {
         int paddingRight = getPaddingRight();
         int height = getHeight();
         int lineHeight = getLineHeight();
-        int count = (height-paddingTop-paddingBottom) / lineHeight;
+        int count = (height - paddingTop - paddingBottom) / lineHeight;
         for (int i = 0; i < count; i++) {
-            int baseline = lineHeight * (i+1) + paddingTop;
-            canvas.drawLine(left+paddingLeft, baseline, right-paddingRight, baseline, mPaint);
+            int baseline = lineHeight * (i + 1) + paddingTop;
+            canvas.drawLine(left + paddingLeft, baseline, right - paddingRight, baseline, mPaint);
         }
         super.onDraw(canvas);
     }
