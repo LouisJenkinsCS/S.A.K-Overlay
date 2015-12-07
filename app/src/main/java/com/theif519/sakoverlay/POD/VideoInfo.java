@@ -10,6 +10,8 @@ import android.os.Parcelable;
  * A Java Bean which encapsulates information about a video, describing it's title, duration, timestamp, file size, and
  * also containing a bitmap for the thumbnail. Used primarily for showing videos inside of ScreenRecorder
  * and is made parcelable in case it needs to be marshalled.
+ *
+ * It is made parcelable in the case that I move RecorderService to it's own process.
  */
 public class VideoInfo implements Parcelable {
 

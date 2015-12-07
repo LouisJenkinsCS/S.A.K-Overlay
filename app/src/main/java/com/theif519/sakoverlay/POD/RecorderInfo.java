@@ -2,6 +2,8 @@ package com.theif519.sakoverlay.POD;
 
 /**
  * Created by theif519 on 12/1/2015.
+ *
+ * Encapsulates ScreenRecorder information passed to the RecorderService.
  */
 public class RecorderInfo {
     private int mWidth, mHeight;

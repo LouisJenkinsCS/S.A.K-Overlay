@@ -6,7 +6,6 @@
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Async/FloatingFragmentSerializer.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/FloatingFragment.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/FloatingFragmentFactory.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/IntroductionFragment.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Floating/StickyNoteFragment.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/AttributeRetriever.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/Callbacks.java" charset="windows-1252" />

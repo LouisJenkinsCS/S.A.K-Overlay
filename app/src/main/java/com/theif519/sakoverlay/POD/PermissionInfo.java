@@ -4,6 +4,8 @@ import android.content.Intent;
 
 /**
  * Created by theif519 on 11/26/2015.
+ *
+ * An object used to encapsulate ScreenCaptureIntent's response code and the intent data returned.
  */
 public class PermissionInfo {
     private Intent mIntent;
@@ -27,7 +29,7 @@ public class PermissionInfo {
         return mResultCode;
     }
 
-    public PermissionInfo setmResultCode(int mResultCode) {
+    public PermissionInfo setResultCode(int mResultCode) {
         this.mResultCode = mResultCode;
         return this;
     }

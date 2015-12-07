@@ -8,6 +8,28 @@ import com.theif519.sakoverlay.Misc.MeasureTools;
 
 /**
  * Created by theif519 on 12/4/2015.
+ *
+ * Encapsulates attributes and properties of a view. This class is used to keep track of not only the
+ * view properties/state, but also set them directly. That, in conjunction with it's fluent interface/method chaining,
+ * it allows for easy instantiation, easy updating, and easy serialization/deserialization.
+ *
+ * In the future, if I wish to have a background thread be able to also manipulate a view, I can make the changes
+ * here without interrupting/needing to refactor other classes which uses this class.
+ *
+ * That could be accomplished by doing something along the lines of...
+ *
+ * private Handler mUiHandler = new Handler(); // Automatically gets looper of the current thread, in this case main looper.
+ *
+ * public ViewProperties update(){
+ *     if(Looper.myLooper() != Looper.getMainLooper()){ // Note also we do not need to worry about thread safety
+ *         mUiHandler.post(() -> update()); // Would result in the UI thread calling this method
+ *         return; // Then we return as we do not want this thread to touch anything else.
+ *     }
+ *     // Otherwise if it is the main thread, do it here.
+ * }
+ *
+ * The reasons for needing such checks, of course, is that I plan on making ViewProperties accessible outside
+ * of this class. Meaning, it is a way for other classes and even threads to post updates to through this class.
  */
 public class ViewProperties {
     private int x, y, width, height;
@@ -17,6 +39,14 @@ public class ViewProperties {
         this.v = v;
     }
 
+    /**
+     * This class is generally used to restore the view to a previous state. For instance, when snap() and
+     * maximize() is called, these attributes are never updated, hence it is easiest to just call this method
+     * to restore the previous view's state. It should also be noted that there are checks put in place,
+     * which right now are very simplistic and minimal, to offer a means of bounds checking, in the case
+     * that the user changes orientation.
+     * @return This.
+     */
     public ViewProperties update() {
         int scaleDiffX = MeasureTools.scaleDelta(width);
         int scaleDiffY = MeasureTools.scaleDelta(height);

@@ -9,6 +9,9 @@ import android.widget.ListAdapter;
 
 /**
  * Created by theif519 on 11/23/2015.
+ *
+ * This Utility tool is used to aid in the arduous task of moving and resizing scaled views. They serve
+ * not only as reusable, but also readable. They offer ways to scale (and unscale) views and sizes.
  */
 public final class MeasureTools {
 

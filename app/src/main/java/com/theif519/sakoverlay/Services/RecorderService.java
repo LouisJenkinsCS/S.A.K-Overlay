@@ -37,26 +37,28 @@ import com.theif519.sakoverlay.Rx.RxBus;
 import java.io.IOException;
 
 import rx.Observable;
-import rx.Subscription;
 import rx.functions.Action1;
 import rx.subjects.PublishSubject;
 
 /**
  * Created by theif519 on 11/12/2015.
+ *
+ * RecorderService is a service made explicitly for capturing and maintaining a video stream
+ * while in the application is in the background. It uses the API level 21 MediaProjection API
+ * to accomplish this, and maintains the state of the current recording.
  */
 public class RecorderService extends Service {
 
     /**
      * Enumerations used to describe the current state of the object, even
-     * having a direct string representation. It utilizes bitmasking to allow
+     * having a direct string representation. It uses a bitmask to allow
      * more than one state to be compared, specifically for RecorderCommand.
      */
     public enum RecorderState {
-        // Examples assume one byte.
-        DEAD(1), // 0000 0001
-        STARTED(1 << 1), // 0001 0000
-        PAUSED(1 << 2), // 0010 0000
-        STOPPED(1 << 3); // 0100 0000
+        DEAD(1),
+        STARTED(1 << 1),
+        PAUSED(1 << 2),
+        STOPPED(1 << 3);
 
         private int mMask;
 
@@ -157,6 +159,11 @@ public class RecorderService extends Service {
         }
     }
 
+    /**
+     * The IBinder returned when we are bound to an activity/fragment. It allows who we are bound to
+     * to maintain a handle to this instance (which in and of itself allows it to manipulate the current state)
+     * as well as an observable to be notified on any state changes.
+     */
     public class RecorderBinder extends Binder {
         public RecorderService getService() {
             return RecorderService.this;
@@ -178,12 +185,14 @@ public class RecorderService extends Service {
 
     private MediaRecorder mRecorder;
 
-    private Subscription mPermissionSubscriber;
-
+    /*
+        Is used to publish/subscribe any state changes to the recorder.
+     */
     private PublishSubject<RecorderState> mStateChangeObserver;
 
     /**
-     * Basic initialization block, mostly obtained from a guide which I modified from.
+     *  Initializes the MediaRecorder with the user's requested data if it gets through the checks
+     *  in start().
      *
      * @param width        Width of the display
      * @param height       Height of the display
@@ -213,21 +222,22 @@ public class RecorderService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mPermissionSubscriber = RxBus.subscribe(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
+        /*
+            Whenever we receive a permission response, if the MediaProjection instance is null, we initialize it here.
+         */
+       RxBus.subscribe(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
             @Override
             public void call(PermissionInfo permissionInfo) {
                 if (mProjection == null) {
                     mProjection = ((MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE))
                             .getMediaProjection(permissionInfo.getResultCode(), permissionInfo.getIntent());
                 }
-                mPermissionSubscriber.unsubscribe();
             }
         });
         mStateChangeObserver = PublishSubject.create();
         setupForegroundNotification();
         setupFloatingView();
         changeState(RecorderState.STOPPED);
-        //android.os.Debug.waitForDebugger();
     }
 
     @Nullable
@@ -236,20 +246,8 @@ public class RecorderService extends Service {
         return new RecorderBinder();
     }
 
-    /**
-     * Only used to tell the OS that we want to be restarted if we are killed. After the service is created,
-     * any and all IPC is done through broadcasts, not startService().
-     *
-     * @param intent  Intent
-     * @param flags   Flags
-     * @param startId StartId
-     * @return START_STICKY - Restart if killed by OS.
-     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null && intent.getSerializableExtra(Globals.Keys.RECORDER_COMMAND) != null) {
-            die();
-        }
         return START_NOT_STICKY;
     }
 
@@ -297,27 +295,39 @@ public class RecorderService extends Service {
         Log.i(getClass().getName(), "Published to Subscribers that the State is " + mState.toString());
     }
 
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mPermissionSubscriber.unsubscribe();
-    }
-
+    /**
+     * As it is possible for S.A.K-Overlay to be killed in the background while recording, adding a Foreground
+     * notification reduces the chances of it happening drastically. As the service run locally in the same process,
+     * S.A.K-Overlay will not be killed off unless the service is as well.
+     *
+     * Consequently, as the overlay can be quite heavy on RAM, making it a juicier target for the OOM killer, this service,
+     * if the system is down to critically low memory, is also more likely to be killed as well. I will hopefully remedy this
+     * by creating a separate process for this to run in, but that by itself comes with a lot of complication as well.
+     */
     private void setupForegroundNotification() {
         Intent endIntent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST);
         endIntent.putExtra(Globals.Keys.RECORDER_COMMAND, RecorderCommand.DIE);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, endIntent, 0);
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setContentTitle(getString(R.string.app_name))
-                .setContentText("Tap to End Service!")
+                .setContentText("Generic Foreground Notification")
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.sak_overlay_icon))
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .build();
         startForeground(Globals.RECORDER_NOTIFICATION_ID, notification);
     }
 
+    /**
+     * We add the view controller to the WindowManager, allowing us to draw over other applications.
+     * The controller can control the state of the recorder, but also is controlled by the state changes
+     * as well. I.E, while in STOPPED, it can call START, but if say the ScreenRecorderFragment makes a state change,
+     * then the controller's next option will be STOP as the recording will have already been STARTED.
+     *
+     * Pretty much what I am getting at is that while the observable acts in an asynchronous manner, the controller
+     * acts in a synchronized way with the recorder's state.
+     */
     private void setupFloatingView() {
         final WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
@@ -350,6 +360,10 @@ public class RecorderService extends Service {
                         }
                     }
                 });
+        /*
+            Interesting note: The WindowManager does not need its own bounds checking. Man, if only that were the case
+            with scaled views, my life would have been made 10x easier.
+        */
         controller.setOnTouchListener(new View.OnTouchListener() {
             int initialX, initialY, initialTouchY, initialTouchX;
 
@@ -393,9 +407,13 @@ public class RecorderService extends Service {
         manager.addView(layout, params);
     }
 
+    /**
+     * Sends the command to die, which will release any and all resources if they are currently being
+     * held, changes its state to DEAD, stops the foreground notification, and then stops itself.
+     */
     public void die() {
         if (!RecorderCommand.DIE.isPossible(mState)) return;
-        if (mRecorder != null) {
+        if (mRecorder != null) { // Note that if we call release() without reset(), it may throw an IllegalStateException
             mRecorder.reset();
             mRecorder.release();
         }
@@ -410,6 +428,10 @@ public class RecorderService extends Service {
         stopSelf();
     }
 
+    /**
+     * Stops the recording if it's already started.
+     * @return True if possible, false is bad state.
+     */
     public boolean stop() {
         if (!RecorderCommand.STOP.isPossible(mState)) return false;
         try {
@@ -430,6 +452,13 @@ public class RecorderService extends Service {
 
     private RecorderInfo mLastRecorderInfo;
 
+    /**
+     * Start the recorder, if possible, with the passed information. As can be seen above, the last passed
+     * information is kept in memory, so we can easily reuse it from the Controller. There are also simple
+     * checks in place to ensure that everything is as it should be.
+     * @param info Information for recording.
+     * @return True if possible, false is bad state or an error/bad input.
+     */
     public boolean start(RecorderInfo info) {
         mLastRecorderInfo = info;
         int width = info.getWidth(), height = info.getHeight();
@@ -466,6 +495,14 @@ public class RecorderService extends Service {
         return true;
     }
 
+    /**
+     * Helper function since the checking of input is making the start() function get too long.
+     * It checks to see if they are valid, and if not appends an error message.
+     * @param width Width. Cannot be 0.
+     * @param height Height. Cannot be 0.
+     * @param fileName Filename. Cannot be null.
+     * @return null if good, a string describing the error if bad.
+     */
     private String checkStartParameters(int width, int height, String fileName) {
         StringBuilder errMsg = new StringBuilder();
         if (width == 0) {

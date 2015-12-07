@@ -10,10 +10,14 @@ import android.graphics.BitmapFactory;
 import android.widget.Toast;
 
 import com.theif519.sakoverlay.Activities.MainActivity;
+import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 
 /**
  * Created by theif519 on 11/5/2015.
+ * <p/>
+ * This class is an extremely early attempt at creating a service explicitly for showing a notification
+ * to the user. I would rework it but even as I type this, I am running out of time for what I can do.
  */
 public class NotificationService extends IntentService {
 
@@ -25,12 +29,13 @@ public class NotificationService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if(intent.getBooleanExtra(START_NOTIFICATION, false)){
+        if (intent.getBooleanExtra(START_NOTIFICATION, false)) {
             setupForegroundNotification();
-        } else Toast.makeText(NotificationService.this, "Was unable to start notification!", Toast.LENGTH_SHORT).show();
+        } else
+            Toast.makeText(NotificationService.this, "Was unable to start notification!", Toast.LENGTH_SHORT).show();
     }
 
-    private void setupForegroundNotification(){
+    private void setupForegroundNotification() {
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -45,7 +50,6 @@ public class NotificationService extends IntentService {
                 .setOngoing(true)
                 .build();
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(1, notification);
-        //startForeground(1, notification);
+        manager.notify(Globals.OVERLAY_NOTIFICATION_ID, notification);
     }
 }
