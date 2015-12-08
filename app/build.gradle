@@ -1,8 +1,14 @@
 apply plugin: 'com.android.application'
+apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.1"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     defaultConfig {
         applicationId "com.theif519.sakoverlay"
@@ -23,6 +29,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile 'com.google.android.gms:play-services:8.1.0'
+    compile 'com.annimon:stream:1.0.5'
     compile fileTree(include: '*.jar', dir: 'libs')
     compile files('libs/ISOParser/isoparser-1.1.17.jar')
     compile files('libs/ReactiveX/rxandroid-1.0.1.jar')

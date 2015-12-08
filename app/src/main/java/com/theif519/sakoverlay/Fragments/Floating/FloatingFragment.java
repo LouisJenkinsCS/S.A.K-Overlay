@@ -22,8 +22,6 @@ import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Views.TouchInterceptorLayout;
 
-import rx.functions.Action1;
-
 /**
  * Created by theif519 on 10/29/2015.
  * <p/>
@@ -128,14 +126,11 @@ public class FloatingFragment extends Fragment {
             minimize();
         }
         // Ensures that the following methods are called after the view is fully drawn and setup.
-        mContentView.post(new Runnable() {
-            @Override
-            public void run() {
-                mViewProperties = new ViewProperties(mContentView);
-                if (mMappedContext != null) unpack();
-                setup();
-                RxBus.publish(FloatingFragment.this);
-            }
+        mContentView.post(() -> {
+            mViewProperties = new ViewProperties(mContentView);
+            if (mMappedContext != null) unpack();
+            setup();
+            RxBus.publish(FloatingFragment.this);
         });
         return mContentView;
     }
@@ -146,15 +141,12 @@ public class FloatingFragment extends Fragment {
     private void setupTaskItem() {
         mTaskBarButton = new ImageButton(getActivity());
         mTaskBarButton.setImageResource(ICON_ID);
-        mTaskBarButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mContentView.getVisibility() == View.INVISIBLE) {
-                    mContentView.setVisibility(View.VISIBLE);
-                    mContentView.bringToFront();
-                } else {
-                    mContentView.setVisibility(View.INVISIBLE);
-                }
+        mTaskBarButton.setOnClickListener(v -> {
+            if (mContentView.getVisibility() == View.INVISIBLE) {
+                mContentView.setVisibility(View.VISIBLE);
+                mContentView.bringToFront();
+            } else {
+                mContentView.setVisibility(View.INVISIBLE);
             }
         });
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).addView(mTaskBarButton);
@@ -164,51 +156,27 @@ public class FloatingFragment extends Fragment {
      * Where we initialize all of our listeners.
      */
     private void setupListeners() {
-        mContentView.findViewById(R.id.title_bar_close).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getActivity().getFragmentManager().beginTransaction().remove(FloatingFragment.this).commit();
-                mIsDead = true;
+        mContentView.findViewById(R.id.title_bar_close).setOnClickListener(v -> {
+            getActivity().getFragmentManager().beginTransaction().remove(FloatingFragment.this).commit();
+            mIsDead = true;
+        });
+        mContentView.findViewById(R.id.title_bar_minimize).setOnClickListener(v -> minimize());
+        mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(v -> {
+            if (mIsMaximized) {
+                restoreOriginal();
+            } else {
+                maximize();
             }
         });
-        mContentView.findViewById(R.id.title_bar_minimize).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                minimize();
-            }
-        });
-        mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mIsMaximized) {
-                    restoreOriginal();
-                } else {
-                    maximize();
-                }
-            }
-        });
-        mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return move(event);
-            }
-        });
-        mContentView.findViewById(R.id.resize_button).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return resize(event);
-            }
-        });
+        mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(this::move);
+        mContentView.findViewById(R.id.resize_button).setOnTouchListener(this::resize);
         // Whenever the screen configurations has changed, we get alerted through the event bus.
         RxBus.subscribe(Configuration.class)
-                .subscribe(new Action1<Configuration>() {
-                    @Override
-                    public void call(Configuration configuration) {
-                        boundsCheck();
-                        snap();
-                        if (mIsMaximized) {
-                            maximize();
-                        }
+                .subscribe(configuration -> {
+                    boundsCheck();
+                    snap();
+                    if (mIsMaximized) {
+                        maximize();
                     }
                 });
     }
@@ -218,9 +186,10 @@ public class FloatingFragment extends Fragment {
      * it's readability should be made easier with commenting and MeasureTools syntax.
      *
      * @param event MotionEvent.
+     * @param v Ignored view, there for Method Reference.
      * @return If event has been completed.
      */
-    public boolean move(MotionEvent event) {
+    public boolean move(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 // We bring the current view to the front, so the user gets to clearly see which view is being moved.
@@ -271,9 +240,10 @@ public class FloatingFragment extends Fragment {
      * has remained the same, the readability hsa increased dramatically.
      *
      * @param event MotionEvent
+     * @param v Ignored view, there for Method Reference.
      * @return If event has been handled.
      */
-    public boolean resize(MotionEvent event) {
+    public boolean resize(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 // We bring the current view to the front, so the user gets to clearly see which view is being resized.

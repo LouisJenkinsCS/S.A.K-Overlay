@@ -11,13 +11,7 @@ import com.theif519.sakoverlay.Misc.Globals;
  * the array map, where it will obtain the LAYOUT_TAG from the map, and depending on what it is, it inflates
  * it and passes the map to it for it handle setting itself up.
  */
-public class FloatingFragmentFactory {
-    // Singleton
-    private static final FloatingFragmentFactory INSTANCE = new FloatingFragmentFactory();
-
-    public static FloatingFragmentFactory getInstance() {
-        return INSTANCE;
-    }
+public final class FloatingFragmentFactory {
 
     /**
      * Obtain a FloatingFragment from a passed serialized attribute map.
@@ -25,7 +19,7 @@ public class FloatingFragmentFactory {
      * @param map Map filled with Attributes.
      * @return The fragment, or null if not found.
      */
-    public FloatingFragment getFragment(ArrayMap<String, String> map) {
+    public static FloatingFragment getFragment(ArrayMap<String, String> map) {
         FloatingFragment fragment = createFragment(map.get(Globals.Keys.LAYOUT_TAG));
         if (fragment == null) return null;
         fragment.mMappedContext = map;
@@ -38,7 +32,7 @@ public class FloatingFragmentFactory {
      * @param layoutTag Layout Tag as IDENTIFIER.
      * @return FloatingFragment, or null if tag is invalid.
      */
-    private FloatingFragment createFragment(String layoutTag) {
+    private static FloatingFragment createFragment(String layoutTag) {
         switch (layoutTag) {
             case StickyNoteFragment.IDENTIFIER:
                 return StickyNoteFragment.newInstance();

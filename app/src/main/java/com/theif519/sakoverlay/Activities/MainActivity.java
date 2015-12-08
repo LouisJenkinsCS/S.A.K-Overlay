@@ -2,13 +2,10 @@ package com.theif519.sakoverlay.Activities;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.FragmentTransaction;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.ArrayMap;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -18,6 +15,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Async.FloatingFragmentDeserializer;
 import com.theif519.sakoverlay.Async.FloatingFragmentSerializer;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
@@ -37,8 +35,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import rx.Subscriber;
-import rx.functions.Action1;
+import rx.Subscription;
 
 
 /**
@@ -55,6 +52,8 @@ import rx.functions.Action1;
  * 5) Maintain consistency by updating the maximum vertical and horizontal size of the screen on configuration change.
  */
 public class MainActivity extends Activity {
+
+    private View mLayout, mRoot;
 
     /*
         This is the menu PopupWindow inflated and created ahead of time. By inflating ahead of time,
@@ -76,9 +75,13 @@ public class MainActivity extends Activity {
     private int mFloatingFragmentsSetup;
     private boolean mFinishedSetup = false;
 
+    private Subscription mSetupSubscription;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mLayout = findViewById(R.id.main_layout);
+        mRoot = findViewById(R.id.main_root);
         // The below sets up Immersize mode full screne, which unfortunately requires API level 21.
         makeImmersive(getWindow().getDecorView());
         setContentView(R.layout.activity_main);
@@ -86,31 +89,18 @@ public class MainActivity extends Activity {
         setupPopupWindow();
         RxBus.publish("Starting Overlay Notification Service if not already...");
         // We start the service if it hasn't already been started.
-        ServiceTools.startService(this, NotificationService.class, new ServiceTools.SetupIntent() {
-            @Override
-            public void setup(Intent intent) {
-                intent.putExtra(NotificationService.START_NOTIFICATION, true);
-            }
-        });
+        ServiceTools.startService(this, NotificationService.class, intent -> intent.putExtra(NotificationService.START_NOTIFICATION, true));
         // Set the initial MAX_X and MAX_Y when the root view is fully inflated as well as deserialize the floating fragments.
-        findViewById(R.id.main_layout).post(new Runnable() {
-            @Override
-            public void run() {
-                updateMaxCoordinates();
-                // The floating fragments are assured to be called after MainActivity has finished inflating it's view.
-                deserializeFloatingFragments();
-            }
+        findViewById(R.id.main_layout).post(() -> {
+            updateMaxCoordinates();
+            // The floating fragments are assured to be called after MainActivity has finished inflating it's view.
+            deserializeFloatingFragments();
         });
         // We also setup the floating fragment scale in onCreate as it should never change.
         Globals.SCALE.set(getDimension(R.dimen.floating_fragment_scale));
         // Any time there is a configuration change, we update the bounds of the screen here.
         RxBus.subscribe(Configuration.class)
-                .subscribe(new Action1<Configuration>() {
-                    @Override
-                    public void call(Configuration configuration) {
-                        updateMaxCoordinates();
-                    }
-                });
+                .subscribe(C -> updateMaxCoordinates());
     }
 
     /**
@@ -124,20 +114,10 @@ public class MainActivity extends Activity {
         actionbar.setHomeButtonEnabled(false);
         actionbar.setCustomView(R.layout.menu_bar);
         final View icon = actionbar.getCustomView().findViewById(R.id.menu_bar_icon);
-        icon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight());
-            }
-        });
+        icon.setOnClickListener(v -> mMenuPopup.showAtLocation(mLayout, Gravity.NO_GRAVITY, 0, getActionBar().getHeight()));
         final TextView info = (TextView) actionbar.getCustomView().findViewById(R.id.menu_bar_info);
         RxBus.subscribe(String.class)
-                .subscribe(new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        info.setText(s);
-                    }
-                });
+                .subscribe(info::setText);
     }
 
     @Override
@@ -153,7 +133,7 @@ public class MainActivity extends Activity {
      * no matter how "cheap" threads are.
      * <p/>
      * It must also be noted that, while I could not fix the issue it is noted here, that sometimes
-     * onPuase() AND onStop() is called immediately after onCreate(), and sometimes even onDestroy() (???)
+     * onPause() AND onStop() is called immediately after onCreate(), and sometimes even onDestroy() (???)
      * so it may throw an IllegalStateException because onSaveInstanceState has already been called and these operations
      * cannot be started. This results in a corrupted file (???) as it completely disappears when this happens.
      * <p/>
@@ -180,34 +160,18 @@ public class MainActivity extends Activity {
                         return;
                     }
                     RxBus.publish("Restoring previous session...");
-                    RxBus.subscribe(FloatingFragment.class)
-                            .subscribe(new Subscriber<FloatingFragment>() {
-                                @Override
-                                public void onCompleted() {
-
-                                }
-
-                                @Override
-                                public void onError(Throwable e) {
-
-                                }
-
-                                @Override
-                                public void onNext(FloatingFragment fragment) {
-                                    if (++mFloatingFragmentsSetup >= mFragments.size()) {
-                                        mFinishedSetup = true;
-                                        RxBus.publish("Session restored!");
-                                        unsubscribe();
-                                    }
-                                    Log.i(getClass().getName(), "Setup FloatingFragment " + mFloatingFragmentsSetup + "/" + mFragments.size());
+                    mSetupSubscription = RxBus.subscribe(FloatingFragment.class)
+                            .subscribe(fragment -> {
+                                if (++mFloatingFragmentsSetup >= mFragments.size()) {
+                                    mFinishedSetup = true;
+                                    RxBus.publish("Session restored!");
+                                    mSetupSubscription.unsubscribe();
                                 }
                             });
-                    FloatingFragmentFactory factory = FloatingFragmentFactory.getInstance();
-                    FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                    for (ArrayMap<String, String> map : mapList) {
-                        addFragment(factory.getFragment(map));
-                    }
-                    transaction.commit(); // This may cause a crash if onStop() called before finish.
+                    Stream.of(mapList)
+                            .map(FloatingFragmentFactory::getFragment)
+                            .filter(f -> f != null)
+                            .forEach(MainActivity.this::addFragment);
                 }
             }.execute();
         } else {
@@ -279,33 +243,21 @@ public class MainActivity extends Activity {
         // As stated above, when focus changes, including from a PopupWindow, it loses Immersive Mode, hence we reset here.
         makeImmersive(view);
         mMenuPopup = new PopupWindow(view);
-        mMenuPopup.getContentView().findViewById(R.id.menu_bar_browser_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addFragment(WebBrowserFragment.newInstance());
-                mMenuPopup.dismiss();
-            }
+        mMenuPopup.getContentView().findViewById(R.id.menu_bar_browser_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
+            addFragment(WebBrowserFragment.newInstance());
+            mMenuPopup.dismiss();
         });
-        mMenuPopup.getContentView().findViewById(R.id.menu_bar_maps_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addFragment(GoogleMapsFragment.newInstance());
-                mMenuPopup.dismiss();
-            }
+        mMenuPopup.getContentView().findViewById(R.id.menu_bar_maps_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
+            addFragment(GoogleMapsFragment.newInstance());
+            mMenuPopup.dismiss();
         });
-        mMenuPopup.getContentView().findViewById(R.id.menu_bar_recorder_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addFragment(ScreenRecorderFragment.newInstance());
-                mMenuPopup.dismiss();
-            }
+        mMenuPopup.getContentView().findViewById(R.id.menu_bar_recorder_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
+            addFragment(ScreenRecorderFragment.newInstance());
+            mMenuPopup.dismiss();
         });
-        mMenuPopup.getContentView().findViewById(R.id.menu_bar_sticky_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addFragment(StickyNoteFragment.newInstance());
-                mMenuPopup.dismiss();
-            }
+        mMenuPopup.getContentView().findViewById(R.id.menu_bar_sticky_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
+            addFragment(StickyNoteFragment.newInstance());
+            mMenuPopup.dismiss();
         });
         mMenuPopup.setFocusable(true);
         mMenuPopup.setBackgroundDrawable(new BitmapDrawable());
