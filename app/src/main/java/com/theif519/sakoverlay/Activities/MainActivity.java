@@ -174,8 +174,9 @@ public class MainActivity extends Activity {
 
                 @Override
                 protected void onPostExecute(final List<ArrayMap<String, String>> mapList) {
-                    if (mapList.isEmpty()) {
+                    if (mapList == null || mapList.isEmpty()) {
                         RxBus.publish("Created new session!");
+                        mFinishedSetup = true;
                         return;
                     }
                     RxBus.publish("Restoring previous session...");
@@ -209,7 +210,10 @@ public class MainActivity extends Activity {
                     transaction.commit(); // This may cause a crash if onStop() called before finish.
                 }
             }.execute();
-        } else RxBus.publish("Created new session!");
+        } else {
+            RxBus.publish("Created new session!");
+            mFinishedSetup = true;
+        }
     }
 
 
