@@ -9,7 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.theif519.sakoverlay.Misc.Globals;
-import com.theif519.sakoverlay.POD.PermissionInfo;
+import com.theif519.sakoverlay.POJO.PermissionInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 

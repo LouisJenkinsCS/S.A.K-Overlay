@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.POD;
+package com.theif519.sakoverlay.POJO;
 
 /**
  * Created by theif519 on 12/1/2015.

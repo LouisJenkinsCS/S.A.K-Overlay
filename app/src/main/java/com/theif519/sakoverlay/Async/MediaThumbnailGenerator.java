@@ -7,7 +7,7 @@ import android.util.Log;
 
 import com.coremedia.iso.IsoFile;
 import com.googlecode.mp4parser.FileDataSourceImpl;
-import com.theif519.sakoverlay.POD.VideoInfo;
+import com.theif519.sakoverlay.POJO.VideoInfo;
 
 import java.io.File;
 import java.io.IOException;

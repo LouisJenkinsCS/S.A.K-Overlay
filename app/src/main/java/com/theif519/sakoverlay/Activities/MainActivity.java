@@ -15,6 +15,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Async.FloatingFragmentDeserializer;
 import com.theif519.sakoverlay.Async.FloatingFragmentSerializer;
@@ -53,8 +54,6 @@ import rx.Subscription;
  */
 public class MainActivity extends Activity {
 
-    private View mLayout, mRoot;
-
     /*
         This is the menu PopupWindow inflated and created ahead of time. By inflating ahead of time,
         it reduces the f of the heap marginally, by not having to create and destroy each time.
@@ -80,8 +79,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mLayout = findViewById(R.id.main_layout);
-        mRoot = findViewById(R.id.main_root);
         // The below sets up Immersize mode full screne, which unfortunately requires API level 21.
         makeImmersive(getWindow().getDecorView());
         setContentView(R.layout.activity_main);
@@ -114,7 +111,7 @@ public class MainActivity extends Activity {
         actionbar.setHomeButtonEnabled(false);
         actionbar.setCustomView(R.layout.menu_bar);
         final View icon = actionbar.getCustomView().findViewById(R.id.menu_bar_icon);
-        icon.setOnClickListener(v -> mMenuPopup.showAtLocation(mLayout, Gravity.NO_GRAVITY, 0, getActionBar().getHeight()));
+        icon.setOnClickListener(v -> mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight()));
         final TextView info = (TextView) actionbar.getCustomView().findViewById(R.id.menu_bar_info);
         RxBus.subscribe(String.class)
                 .subscribe(info::setText);
@@ -188,15 +185,11 @@ public class MainActivity extends Activity {
      */
     @SuppressWarnings("unchecked")
     private void serializeFloatingFragments() {
-        List<ArrayMap<String, String>> mapList = new ArrayList<>();
-        for (WeakReference<FloatingFragment> fragmentWeakReference : mFragments) {
-            // Atomic operation, once obtained as strong reference, it is safe to dereference.
-            FloatingFragment fragment = fragmentWeakReference.get();
-            // A fragment is dead when it is dismissed and is still contained in this list.
-            if (fragment != null && !fragment.isDead()) {
-                mapList.add(fragment.serialize());
-            }
-        }
+        List <ArrayMap<String, String>> mapList = Stream.of(mFragments)
+                .map(WeakReference::get)
+                .filter(fragment -> fragment != null && !fragment.isDead())
+                .map(FloatingFragment::serialize)
+                .collect(Collectors.toList());
         new FloatingFragmentSerializer() {
             @Override
             protected void onPreExecute() {

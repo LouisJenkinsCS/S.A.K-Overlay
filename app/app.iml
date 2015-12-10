@@ -133,6 +133,7 @@
     <orderEntry type="library" exported="" name="support-annotations-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="stream-1.0.5" level="project" />
     <orderEntry type="library" exported="" name="play-services-appinvite-8.1.0" level="project" />
+    <orderEntry type="library" exported="" name="gson-2.5" level="project" />
     <orderEntry type="library" exported="" name="play-services-ads-8.1.0" level="project" />
     <orderEntry type="library" exported="" name="isoparser-1.1.17" level="project" />
     <orderEntry type="library" exported="" name="play-services-appstate-8.1.0" level="project" />

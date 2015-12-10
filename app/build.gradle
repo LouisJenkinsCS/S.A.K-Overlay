@@ -35,4 +35,5 @@ dependencies {
     compile files('libs/ReactiveX/rxandroid-1.0.1.jar')
     compile files('libs/ReactiveX/rxjava-1.0.16.jar')
     compile files('libs/ReactiveX/rxbindings-0.3.0.jar')
+    compile files('libs/GSON/gson-2.5.jar')
 }

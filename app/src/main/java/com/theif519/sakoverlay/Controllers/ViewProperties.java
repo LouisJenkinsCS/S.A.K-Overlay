@@ -1,5 +1,8 @@
-package com.theif519.sakoverlay.POD;
+package com.theif519.sakoverlay.Controllers;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -36,8 +39,10 @@ import com.theif519.sakoverlay.Misc.MeasureTools;
 public class ViewProperties {
     private int x, y, width, height;
     private View v;
+    public Handler mHandler;
 
-    public ViewProperties(View v) {
+    public ViewProperties(@NonNull View v) {
+        mHandler = new Handler(Looper.getMainLooper());
         this.v = v;
     }
 
@@ -51,6 +56,10 @@ public class ViewProperties {
      * @return This.
      */
     public ViewProperties update() {
+        if(!isUIThread()){
+            mHandler.post(this::update);
+            return this;
+        }
         int scaleDiffX = MeasureTools.scaleDelta(width);
         int scaleDiffY = MeasureTools.scaleDelta(height);
         int minX = -scaleDiffX;
@@ -76,6 +85,10 @@ public class ViewProperties {
     }
 
     public ViewProperties setX(int x) {
+        if(!isUIThread()){
+            mHandler.post(() -> setX(x));
+            return this;
+        }
         this.x = x;
         v.setX(x);
         return this;
@@ -86,6 +99,10 @@ public class ViewProperties {
     }
 
     public ViewProperties setY(int y) {
+        if(!isUIThread()){
+            mHandler.post(() -> setY(y));
+            return this;
+        }
         if (this.y == y) return this;
         this.y = y;
         v.setY(y);
@@ -97,6 +114,10 @@ public class ViewProperties {
     }
 
     public ViewProperties setWidth(int width) {
+        if(!isUIThread()){
+            mHandler.post(() -> setWidth(width));
+            return this;
+        }
         if (this.width == width) return this;
         this.width = width;
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
@@ -110,6 +131,10 @@ public class ViewProperties {
     }
 
     public ViewProperties setHeight(int height) {
+        if(!isUIThread()){
+            mHandler.post(() -> setHeight(height));
+            return this;
+        }
         if (this.height == height) return this;
         this.height = height;
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
@@ -119,16 +144,28 @@ public class ViewProperties {
     }
 
     public ViewProperties setCoordinates(int x, int y) {
+        if(!isUIThread()){
+            mHandler.post(() -> setCoordinates(x, y));
+            return this;
+        }
         v.setX(x);
         v.setY(y);
         return this;
     }
 
     public ViewProperties setSize(int width, int height) {
+        if(!isUIThread()){
+            mHandler.post(() -> setSize(width, height));
+            return this;
+        }
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
         params.width = width;
         params.height = height;
         v.setLayoutParams(params);
         return this;
+    }
+
+    private boolean isUIThread(){
+        return Looper.myLooper() == Looper.getMainLooper();
     }
 }

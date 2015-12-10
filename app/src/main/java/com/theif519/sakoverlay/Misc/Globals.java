@@ -37,7 +37,6 @@ public final class Globals {
                 MINIMIZED = "Minimized", WIDTH = "Width", HEIGHT = "Height", LAYOUT_TAG = "Layout Tag", SNAP_MASK = "Snap Mask",
                 MAXIMIZED = "Maximized";
         public static final String RECORDER_COMMAND_REQUEST = "Recorder Command Request Key", RECORDER_COMMAND = "Recorder Command";
-        public static final String GEOCODER_DECODE_LOCATION = "Geocoder Decode Location", GEOCODER_DECODED_LOCATION = "Geocoder Decoded Location";
 
         private Keys() {
         }

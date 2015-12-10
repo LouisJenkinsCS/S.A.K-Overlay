@@ -29,8 +29,8 @@ import android.widget.Toast;
 
 import com.theif519.sakoverlay.Activities.PermissionActivity;
 import com.theif519.sakoverlay.Misc.Globals;
-import com.theif519.sakoverlay.POD.PermissionInfo;
-import com.theif519.sakoverlay.POD.RecorderInfo;
+import com.theif519.sakoverlay.POJO.PermissionInfo;
+import com.theif519.sakoverlay.POJO.RecorderInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 

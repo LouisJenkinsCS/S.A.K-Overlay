@@ -17,7 +17,7 @@ import android.widget.LinearLayout;
 
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
-import com.theif519.sakoverlay.POD.ViewProperties;
+import com.theif519.sakoverlay.Controllers.ViewProperties;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Views.TouchInterceptorLayout;
@@ -217,13 +217,7 @@ public class FloatingFragment extends Fragment {
                 updateSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
                 prevX = tmpX;
                 prevY = tmpY;
-                int width = mViewProperties.getWidth(), height = mViewProperties.getHeight();
-                int scaleDeltaX = MeasureTools.scaleDeltaWidth(mContentView);
-                int scaleDeltaY = MeasureTools.scaleDeltaHeight(mContentView);
-                // We make sure we inside of bounds, and move the view, keeping in mind the original touch offset.
-                int moveX = Math.min(Math.max(tmpX - touchXOffset, -scaleDeltaX), Globals.MAX_X.get() - width + scaleDeltaX);
-                int moveY = Math.min(Math.max(tmpY - touchYOffset, -scaleDeltaY), Globals.MAX_Y.get() - height + scaleDeltaY);
-                mViewProperties.setX(moveX).setY(moveY);
+                mViewProperties.setX(tmpX - touchXOffset).setY(tmpY - touchYOffset);
                 return false;
             case MotionEvent.ACTION_UP:
                 boundsCheck();
@@ -412,26 +406,22 @@ public class FloatingFragment extends Fragment {
     private void boundsCheck() {
         Point p = MeasureTools.getScaledCoordinates(mContentView);
         if (p.x < 0) {
-            mContentView.setX(-MeasureTools.scaleDeltaWidth(mContentView));
+            mViewProperties.setX(-MeasureTools.scaleDeltaWidth(mContentView));
         }
         if (p.y < 0) {
-            mContentView.setY(-MeasureTools.scaleDeltaHeight(mContentView));
+            mViewProperties.setY(-MeasureTools.scaleDeltaHeight(mContentView));
         }
         if (p.x + MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
-            mContentView.setX(Globals.MAX_X.get() - MeasureTools.scaleDeltaWidth(mContentView) - MeasureTools.scaleWidth(mContentView));
+            mViewProperties.setX(Globals.MAX_X.get() - MeasureTools.scaleDeltaWidth(mContentView) - MeasureTools.scaleWidth(mContentView));
         }
         if (p.y + MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
-            mContentView.setY(Globals.MAX_Y.get() - MeasureTools.scaleDeltaHeight(mContentView) - MeasureTools.scaleHeight(mContentView));
+            mViewProperties.setY(Globals.MAX_Y.get() - MeasureTools.scaleDeltaHeight(mContentView) - MeasureTools.scaleHeight(mContentView));
         }
         if (MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-            params.width = MeasureTools.scaleInverse(Globals.MAX_X.get());
-            mContentView.setLayoutParams(params);
+            mViewProperties.setWidth(MeasureTools.scaleInverse(Globals.MAX_X.get()));
         }
         if (MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-            params.height = MeasureTools.scaleInverse(Globals.MAX_Y.get());
-            mContentView.setLayoutParams(params);
+            mViewProperties.setHeight(MeasureTools.scaleInverse(Globals.MAX_Y.get()));
         }
     }
 

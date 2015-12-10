@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.POD;
+package com.theif519.sakoverlay.POJO;
 
 import android.graphics.Bitmap;
 import android.os.Parcel;
