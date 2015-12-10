@@ -15,9 +15,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.theif519.sakoverlay.Controllers.ViewController;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
-import com.theif519.sakoverlay.Controllers.ViewProperties;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Views.TouchInterceptorLayout;
@@ -69,6 +69,7 @@ public class FloatingFragment extends Fragment {
         Snap states.
      */
     protected static final int RIGHT = 1, LEFT = 1 << 1, UPPER = 1 << 2, BOTTOM = 1 << 3;
+
     /*
         I decided to change from having separate instance member variables (x, y, width, height)
         to not only encapsulating them inside of another object, BUT ALSO handle resizing the view
@@ -78,7 +79,7 @@ public class FloatingFragment extends Fragment {
         For example, if I wanted to, say, implement gestured or maybe resizing other views when I resize my own
         while snapped, I would need some elegant of doing so.
      */
-    protected ViewProperties mViewProperties;
+    protected ViewController mViewController;
     /*
         Tag used to serialize and deserialize/reconstruct with the factory. This must be changed by sub classes.
      */
@@ -88,7 +89,7 @@ public class FloatingFragment extends Fragment {
         These protected variables MUST be changed by subclasses, and is used during the onCreateView() to initialize
         the root view. default_fragment is akin to a 404 message.
      */
-    protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
+    protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings, UNIQUE_ID = -1;
     /*
         This map should be created when serialize() is called, and also set when created from the factory.
         Unpack relies on this to determine whether or not there is anything to unpack or not.
@@ -127,7 +128,7 @@ public class FloatingFragment extends Fragment {
         }
         // Ensures that the following methods are called after the view is fully drawn and setup.
         mContentView.post(() -> {
-            mViewProperties = new ViewProperties(mContentView);
+            mViewController = new ViewController(mContentView);
             if (mMappedContext != null) unpack();
             setup();
             RxBus.publish(FloatingFragment.this);
@@ -189,7 +190,7 @@ public class FloatingFragment extends Fragment {
      * @param v Ignored view, there for Method Reference.
      * @return If event has been completed.
      */
-    public boolean move(View v, MotionEvent event) {
+    private boolean move(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 // We bring the current view to the front, so the user gets to clearly see which view is being moved.
@@ -197,19 +198,19 @@ public class FloatingFragment extends Fragment {
                 // If the view is currently snapped or maximized, restore it's original size.
                 if (mSnapMask != 0 || mIsMaximized) {
                     restoreOriginal();
-                    mViewProperties.setCoordinates(
+                    mViewController.setCoordinates(
                             (int) event.getRawX() - MeasureTools.scaleDeltaWidth(mContentView),
                             (int) event.getRawY() - MeasureTools.scaleDeltaHeight(mContentView)
                     );
                     Point p = MeasureTools.getScaledCoordinates(mContentView);
-                    prevX = touchXOffset = p.x - mViewProperties.getX();
-                    prevY = touchYOffset = p.y - mViewProperties.getY();
+                    prevX = touchXOffset = p.x - mViewController.getX();
+                    prevY = touchYOffset = p.y - mViewController.getY();
                 } else {
                     // Get the offsets of the user's original touch so the view moves with it.
-                    prevX = touchXOffset = (int) event.getRawX() - mViewProperties.getX();
-                    prevY = touchYOffset = (int) event.getRawY() - mViewProperties.getY();
+                    prevX = touchXOffset = (int) event.getRawX() - mViewController.getX();
+                    prevY = touchYOffset = (int) event.getRawY() - mViewController.getY();
                 }
-                //mViewProperties.setCoordinates(prevX = (int) event.getRawX() - touchXOffset, prevY = (int) event.getRawY() - touchYOffset);
+                //mViewController.setCoordinates(prevX = (int) event.getRawX() - touchXOffset, prevY = (int) event.getRawY() - touchYOffset);
                 return false;
             case MotionEvent.ACTION_MOVE:
                 int tmpX, tmpY;
@@ -217,7 +218,7 @@ public class FloatingFragment extends Fragment {
                 updateSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
                 prevX = tmpX;
                 prevY = tmpY;
-                mViewProperties.setX(tmpX - touchXOffset).setY(tmpY - touchYOffset);
+                mViewController.setX(tmpX - touchXOffset).setY(tmpY - touchYOffset);
                 return false;
             case MotionEvent.ACTION_UP:
                 boundsCheck();
@@ -237,7 +238,7 @@ public class FloatingFragment extends Fragment {
      * @param v Ignored view, there for Method Reference.
      * @return If event has been handled.
      */
-    public boolean resize(View v, MotionEvent event) {
+    private boolean resize(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 // We bring the current view to the front, so the user gets to clearly see which view is being resized.
@@ -265,7 +266,7 @@ public class FloatingFragment extends Fragment {
                 int scaleDiffY = MeasureTools.scaleDifferenceHeight(mContentView);
                 int width = Math.min(Math.max(MeasureTools.scaleInverse(diffX), 250), Globals.MAX_X.get() + scaleDiffX);
                 int height = Math.min(Math.max(MeasureTools.scaleInverse(diffY), 250), Globals.MAX_Y.get() + scaleDiffY);
-                mViewProperties.setWidth(width).setHeight(height);
+                mViewController.setWidth(width).setHeight(height);
                 return false;
             case MotionEvent.ACTION_UP:
                 boundsCheck();
@@ -282,7 +283,7 @@ public class FloatingFragment extends Fragment {
      * to retrieve set bits/attributes. Unlike other operations, such as move() and resize(), changes to the mContentView's
      * size and coordinates are not saved, to easily allow the view to go back to it's original size easily.
      */
-    public void snap() {
+    private void snap() {
         if (mSnapMask == 0) return;
         int maxWidth = Globals.MAX_X.get();
         int maxHeight = Globals.MAX_Y.get();
@@ -335,7 +336,7 @@ public class FloatingFragment extends Fragment {
      * @param newX The new x-coordinate. By finding the difference between new and old we can determine which horizontal direction the user is going.
      * @param newY The new y-coordinate. By finding the difference between new and old, we can determine which vertical direction the user is going.
      */
-    public void updateSnapMask(int oldX, int oldY, int newX, int newY) {
+    private void updateSnapMask(int oldX, int oldY, int newX, int newY) {
         mSnapMask = 0;
         int transitionX = newX - oldX;
         int transitionY = newY - oldY;
@@ -365,11 +366,11 @@ public class FloatingFragment extends Fragment {
     public ArrayMap<String, String> serialize() {
         ArrayMap<String, String> map = new ArrayMap<>();
         map.put(Globals.Keys.LAYOUT_TAG, LAYOUT_TAG);
-        map.put(Globals.Keys.X_COORDINATE, Integer.toString(mViewProperties.getX()));
-        map.put(Globals.Keys.Y_COORDINATE, Integer.toString(mViewProperties.getY()));
+        map.put(Globals.Keys.X_COORDINATE, Integer.toString(mViewController.getX()));
+        map.put(Globals.Keys.Y_COORDINATE, Integer.toString(mViewController.getY()));
         map.put(Globals.Keys.Z_COORDINATE, Integer.toString((int) mContentView.getZ()));
-        map.put(Globals.Keys.WIDTH, Integer.toString(mViewProperties.getWidth()));
-        map.put(Globals.Keys.HEIGHT, Integer.toString(mViewProperties.getHeight()));
+        map.put(Globals.Keys.WIDTH, Integer.toString(mViewController.getWidth()));
+        map.put(Globals.Keys.HEIGHT, Integer.toString(mViewController.getHeight()));
         map.put(Globals.Keys.MINIMIZED, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
         map.put(Globals.Keys.MAXIMIZED, Boolean.toString(mIsMaximized));
         map.put(Globals.Keys.SNAP_MASK, Integer.toString(mSnapMask));
@@ -384,7 +385,7 @@ public class FloatingFragment extends Fragment {
      * It is safe to call getContentView() and should be used to update the view associated with this fragment.
      */
     protected void unpack() {
-        mViewProperties
+        mViewController
                 .setX(Integer.parseInt(mMappedContext.get(Globals.Keys.X_COORDINATE)))
                 .setY(Integer.parseInt(mMappedContext.get(Globals.Keys.Y_COORDINATE)))
                 .setWidth(Integer.parseInt(mMappedContext.get(Globals.Keys.WIDTH)))
@@ -406,22 +407,22 @@ public class FloatingFragment extends Fragment {
     private void boundsCheck() {
         Point p = MeasureTools.getScaledCoordinates(mContentView);
         if (p.x < 0) {
-            mViewProperties.setX(-MeasureTools.scaleDeltaWidth(mContentView));
+            mViewController.setX(-MeasureTools.scaleDeltaWidth(mContentView));
         }
         if (p.y < 0) {
-            mViewProperties.setY(-MeasureTools.scaleDeltaHeight(mContentView));
+            mViewController.setY(-MeasureTools.scaleDeltaHeight(mContentView));
         }
         if (p.x + MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
-            mViewProperties.setX(Globals.MAX_X.get() - MeasureTools.scaleDeltaWidth(mContentView) - MeasureTools.scaleWidth(mContentView));
+            mViewController.setX(Globals.MAX_X.get() - MeasureTools.scaleDeltaWidth(mContentView) - MeasureTools.scaleWidth(mContentView));
         }
         if (p.y + MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
-            mViewProperties.setY(Globals.MAX_Y.get() - MeasureTools.scaleDeltaHeight(mContentView) - MeasureTools.scaleHeight(mContentView));
+            mViewController.setY(Globals.MAX_Y.get() - MeasureTools.scaleDeltaHeight(mContentView) - MeasureTools.scaleHeight(mContentView));
         }
         if (MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
-            mViewProperties.setWidth(MeasureTools.scaleInverse(Globals.MAX_X.get()));
+            mViewController.setWidth(MeasureTools.scaleInverse(Globals.MAX_X.get()));
         }
         if (MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
-            mViewProperties.setHeight(MeasureTools.scaleInverse(Globals.MAX_Y.get()));
+            mViewController.setHeight(MeasureTools.scaleInverse(Globals.MAX_Y.get()));
         }
     }
 
@@ -432,8 +433,8 @@ public class FloatingFragment extends Fragment {
     protected void setup() {
         // Release as we no longer need, to prevent memory leak.
         mMappedContext = null;
-        if (mViewProperties.getWidth() == 0 || mViewProperties.getHeight() == 0) {
-            mViewProperties
+        if (mViewController.getWidth() == 0 || mViewController.getHeight() == 0) {
+            mViewController
                     .setWidth(mContentView.getWidth())
                     .setHeight(mContentView.getHeight());
         }
@@ -453,7 +454,7 @@ public class FloatingFragment extends Fragment {
     }
 
     /**
-     * Maximizes the view. Note that it does not alter the view's X and Y coordinate through the ViewProperties
+     * Maximizes the view. Note that it does not alter the view's X and Y coordinate through the ViewController
      * instance, as we do not really want it to be saved. This allows for the view to go back to it's
      * previous size and coordinates easily, as the previous are remembered. In fact,  what's really cool about
      * it is that because it is not set, but the state of whether or not it is maximized is, it will allow the user
@@ -476,7 +477,7 @@ public class FloatingFragment extends Fragment {
      * to their original states.
      */
     private void restoreOriginal() {
-        mViewProperties.update();
+        mViewController.update();
         mIsMaximized = false;
         mSnapMask = 0;
     }
@@ -516,4 +517,15 @@ public class FloatingFragment extends Fragment {
         return mIsDead;
     }
 
+    public ViewController getViewProperties(){
+        return mViewController;
+    }
+
+    public String getLayoutTag() {
+        return LAYOUT_TAG;
+    }
+
+    public int getUniqueId(){
+        return UNIQUE_ID;
+    }
 }

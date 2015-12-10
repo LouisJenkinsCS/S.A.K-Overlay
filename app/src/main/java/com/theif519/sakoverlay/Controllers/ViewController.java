@@ -24,7 +24,7 @@ import com.theif519.sakoverlay.Misc.MeasureTools;
  * <code> <pre>
  * private Handler mUiHandler = new Handler(); // Automatically gets looper of the current thread, in this case main looper.
  *
- * public ViewProperties update(){
+ * public ViewController update(){
  *      if(Looper.myLooper() != Looper.getMainLooper()){ // Note also we do not need to worry about thread safety
  *          mUiHandler.post(() -> update()); // Would result in the UI thread calling this method
  *          return; // Then we return as we do not want this thread to touch anything else.
@@ -33,15 +33,16 @@ import com.theif519.sakoverlay.Misc.MeasureTools;
  * }
  * </pre> </code>
  * <p/>
- * The reasons for needing such checks, of course, is that I plan on making ViewProperties accessible outside
+ * The reasons for needing such checks, of course, is that I plan on making ViewController accessible outside
  * of this class. Meaning, it is a way for other classes and even threads to post updates to through this class.
  */
-public class ViewProperties {
+public class ViewController {
+
     private int x, y, width, height;
     private View v;
     public Handler mHandler;
 
-    public ViewProperties(@NonNull View v) {
+    public ViewController(@NonNull View v) {
         mHandler = new Handler(Looper.getMainLooper());
         this.v = v;
     }
@@ -55,7 +56,7 @@ public class ViewProperties {
      *
      * @return This.
      */
-    public ViewProperties update() {
+    public ViewController update() {
         if(!isUIThread()){
             mHandler.post(this::update);
             return this;
@@ -84,7 +85,7 @@ public class ViewProperties {
         return x;
     }
 
-    public ViewProperties setX(int x) {
+    public ViewController setX(int x) {
         if(!isUIThread()){
             mHandler.post(() -> setX(x));
             return this;
@@ -98,7 +99,7 @@ public class ViewProperties {
         return y;
     }
 
-    public ViewProperties setY(int y) {
+    public ViewController setY(int y) {
         if(!isUIThread()){
             mHandler.post(() -> setY(y));
             return this;
@@ -113,7 +114,7 @@ public class ViewProperties {
         return width;
     }
 
-    public ViewProperties setWidth(int width) {
+    public ViewController setWidth(int width) {
         if(!isUIThread()){
             mHandler.post(() -> setWidth(width));
             return this;
@@ -130,7 +131,7 @@ public class ViewProperties {
         return height;
     }
 
-    public ViewProperties setHeight(int height) {
+    public ViewController setHeight(int height) {
         if(!isUIThread()){
             mHandler.post(() -> setHeight(height));
             return this;
@@ -143,7 +144,7 @@ public class ViewProperties {
         return this;
     }
 
-    public ViewProperties setCoordinates(int x, int y) {
+    public ViewController setCoordinates(int x, int y) {
         if(!isUIThread()){
             mHandler.post(() -> setCoordinates(x, y));
             return this;
@@ -153,7 +154,7 @@ public class ViewProperties {
         return this;
     }
 
-    public ViewProperties setSize(int width, int height) {
+    public ViewController setSize(int width, int height) {
         if(!isUIThread()){
             mHandler.post(() -> setSize(width, height));
             return this;

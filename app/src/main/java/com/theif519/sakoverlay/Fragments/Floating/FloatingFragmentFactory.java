@@ -1,8 +1,7 @@
 package com.theif519.sakoverlay.Fragments.Floating;
 
-import android.util.ArrayMap;
-
-import com.theif519.sakoverlay.Misc.Globals;
+import com.google.gson.Gson;
+import com.theif519.sakoverlay.Sessions.WidgetSessionData;
 
 /**
  * Created by theif519 on 10/31/2015.
@@ -14,16 +13,15 @@ import com.theif519.sakoverlay.Misc.Globals;
 public final class FloatingFragmentFactory {
 
     /**
-     * Obtain a FloatingFragment from a passed serialized attribute map.
+     * Deserialize a Widget based on the passed serialized information.
      *
-     * @param map Map filled with Attributes.
-     * @return The fragment, or null if not found.
+     * @param data Data to recreate Widget
+     * @return The Widget, or null if not found.
      */
-    public static FloatingFragment getFragment(ArrayMap<String, String> map) {
-        FloatingFragment fragment = createFragment(map.get(Globals.Keys.LAYOUT_TAG));
-        if (fragment == null) return null;
-        fragment.mMappedContext = map;
-        return fragment;
+    public static FloatingFragment getFragment(WidgetSessionData data) {
+        Class<? extends FloatingFragment> clazz = getFragmentClass(data.getTag());
+        if (clazz == null) return null;
+        return new Gson().fromJson(new String(data.getData()), clazz);
     }
 
     /**
@@ -32,16 +30,16 @@ public final class FloatingFragmentFactory {
      * @param layoutTag Layout Tag as IDENTIFIER.
      * @return FloatingFragment, or null if tag is invalid.
      */
-    private static FloatingFragment createFragment(String layoutTag) {
+    private static Class<? extends FloatingFragment> getFragmentClass(String layoutTag) {
         switch (layoutTag) {
             case StickyNoteFragment.IDENTIFIER:
-                return StickyNoteFragment.newInstance();
+                return StickyNoteFragment.class;
             case GoogleMapsFragment.IDENTIFIER:
-                return GoogleMapsFragment.newInstance();
+                return GoogleMapsFragment.class;
             case WebBrowserFragment.IDENTIFIER:
-                return WebBrowserFragment.newInstance();
+                return WebBrowserFragment.class;
             case ScreenRecorderFragment.IDENTIFIER:
-                return ScreenRecorderFragment.newInstance();
+                return ScreenRecorderFragment.class;
             default:
                 return null;
         }

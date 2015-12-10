@@ -5,8 +5,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.ArrayMap;
 import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by theif519 on 12/10/2015.
@@ -77,7 +79,7 @@ public class SessionDatabase extends SQLiteOpenHelper {
      * to instantiate it.
      * @return Map of WidgetSessionData mapped to their tag.
      */
-    public ArrayMap<String, WidgetSessionData> readAll(){
+    public List<WidgetSessionData> readAll(){
         if(mDatabase == null) mDatabase = this.getWritableDatabase();
         Cursor cursor = mDatabase.query(TABLE_NAME, new String[] {
                 WIDGET_ID, WIDGET_TAG, WIDGET_DATA
@@ -86,14 +88,13 @@ public class SessionDatabase extends SQLiteOpenHelper {
             Log.w(getClass().getName(), "Sorry, the table is empty!");
             return null;
         }
-        ArrayMap<String, WidgetSessionData> map = new ArrayMap<>();
+        List<WidgetSessionData> list = new ArrayList<>();
         cursor.moveToFirst();
         do {
-            WidgetSessionData data = parse(cursor);
-            map.put(data.getTag(), data);
+            list.add(parse(cursor));
         } while(cursor.moveToNext());
         cursor.close();
-        return map;
+        return list;
     }
 
     /**
