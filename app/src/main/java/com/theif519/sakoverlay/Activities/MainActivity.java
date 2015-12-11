@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.res.Configuration;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.util.ArrayMap;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -15,12 +14,8 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
-import com.theif519.sakoverlay.Async.FloatingFragmentDeserializer;
-import com.theif519.sakoverlay.Async.FloatingFragmentSerializer;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
-import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
 import com.theif519.sakoverlay.Fragments.Floating.GoogleMapsFragment;
 import com.theif519.sakoverlay.Fragments.Floating.ScreenRecorderFragment;
 import com.theif519.sakoverlay.Fragments.Floating.StickyNoteFragment;
@@ -29,9 +24,9 @@ import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Services.NotificationService;
+import com.theif519.sakoverlay.Sessions.SessionManager;
 import com.theif519.utils.Misc.ServiceTools;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,7 +86,11 @@ public class MainActivity extends Activity {
         findViewById(R.id.main_layout).post(() -> {
             updateMaxCoordinates();
             // The floating fragments are assured to be called after MainActivity has finished inflating it's view.
-            deserializeFloatingFragments();
+            SessionManager.getInstance().restoreSession(this)
+                    .subscribe(
+                            list -> Stream.of(list)
+                            .forEach(MainActivity.this::addFragment)
+                    );
         });
         // We also setup the floating fragment scale in onCreate as it should never change.
         Globals.SCALE.set(getDimension(R.dimen.floating_fragment_scale));
@@ -125,80 +124,6 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Sets up and begins the AsyncTask. Unfortunately, we cannot reuse an AsyncTask after using it, or else
-     * we would recycle it. A handler would be too wasteful as it would just spin/block and do absolutely nothing,
-     * no matter how "cheap" threads are.
-     * <p/>
-     * It must also be noted that, while I could not fix the issue it is noted here, that sometimes
-     * onPause() AND onStop() is called immediately after onCreate(), and sometimes even onDestroy() (???)
-     * so it may throw an IllegalStateException because onSaveInstanceState has already been called and these operations
-     * cannot be started. This results in a corrupted file (???) as it completely disappears when this happens.
-     * <p/>
-     * I was thinking of using Rx to handle this, but it wouldn't really solve the actual problem. From what else
-     * I can pinpoint, the issue is that .commit() is called after the MainActivity is in the Background. Some probable
-     * "solutions" in the mean time is probably to setup a Runnable that the MainActivity can check for, in case
-     * it needs to inflate each FloatingFragment later.
-     */
-    private void deserializeFloatingFragments() {
-        final File jsonFile = new File(getExternalFilesDir(null), Globals.JSON_FILENAME);
-        if (jsonFile.exists()) {
-            RxBus.publish("Checking for previous session...");
-            new FloatingFragmentDeserializer() {
-                @Override
-                protected void onPreExecute() {
-                    this.file = jsonFile;
-                } // Sets the file handle.
-
-                @Override
-                protected void onPostExecute(final List<ArrayMap<String, String>> mapList) {
-                    if (mapList == null || mapList.isEmpty()) {
-                        RxBus.publish("Created new session!");
-                        mFinishedSetup = true;
-                        return;
-                    }
-                    RxBus.publish("Restoring previous session...");
-                    mSetupSubscription = RxBus.subscribe(FloatingFragment.class)
-                            .subscribe(fragment -> {
-                                if (++mFloatingFragmentsSetup >= mFragments.size()) {
-                                    mFinishedSetup = true;
-                                    RxBus.publish("Session restored!");
-                                    mSetupSubscription.unsubscribe();
-                                }
-                            });
-                    Stream.of(mapList)
-                            .map(FloatingFragmentFactory::getFragment)
-                            .filter(f -> f != null)
-                            .forEach(MainActivity.this::addFragment);
-                }
-            }.execute();
-        } else {
-            RxBus.publish("Created new session!");
-            mFinishedSetup = true;
-        }
-    }
-
-
-    /**
-     * Simply serializes each view. By utilizing WeakReferences, I do not need to worry about
-     * memory leaks, nor the issues with a static variable. It basically calls serialize() on each
-     * fragment, then flushes it to disk.
-     */
-    @SuppressWarnings("unchecked")
-    private void serializeFloatingFragments() {
-        List <ArrayMap<String, String>> mapList = Stream.of(mFragments)
-                .map(WeakReference::get)
-                .filter(fragment -> fragment != null && !fragment.isDead())
-                .map(FloatingFragment::serialize)
-                .collect(Collectors.toList());
-        new FloatingFragmentSerializer() {
-            @Override
-            protected void onPreExecute() {
-                this.file = new File(getExternalFilesDir(null), Globals.JSON_FILENAME);
-            }
-        }.execute(mapList.toArray(new ArrayMap[mapList.size()]));
-    }
-
-    /**
      * Convenience method to quickly add a new FloatingFragment to the list and to the FragmentManager.
      *
      * @param fragment Fragment to add.
@@ -212,21 +137,12 @@ public class MainActivity extends Activity {
         getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (mFinishedSetup) {
-            serializeFloatingFragments();
-        }
-    }
-
     /**
      * When back button is pressed, it moves this instance of MainActivity to the backstack, helps with going
      * back to the previous application open. It also serializes as if it was onPause.
      */
     @Override
     public void onBackPressed() {
-        serializeFloatingFragments();
         moveTaskToBack(true);
     }
 

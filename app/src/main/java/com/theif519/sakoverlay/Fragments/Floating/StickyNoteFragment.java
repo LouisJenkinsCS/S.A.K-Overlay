@@ -1,8 +1,5 @@
 package com.theif519.sakoverlay.Fragments.Floating;
 
-import android.util.ArrayMap;
-import android.widget.EditText;
-
 import com.theif519.sakoverlay.R;
 
 /**
@@ -42,18 +39,5 @@ public class StickyNoteFragment extends FloatingFragment {
     }
 
 
-    @Override
-    public ArrayMap<String, String> serialize() {
-        // Note how we capture the ArrayMap returned and just append to it.
-        ArrayMap<String, String> map = super.serialize();
-        map.put(CONTENTS_KEY, ((EditText) getContentView().findViewById(R.id.sticky_note_edit_text)).getText().toString());
-        return map;
-    }
 
-    @Override
-    public void unpack() {
-        super.unpack();
-        // Technically we are supposed to do this in setup(), but ah well.
-        ((EditText) getContentView().findViewById(R.id.sticky_note_edit_text)).setText(mMappedContext.get(CONTENTS_KEY));
-    }
 }

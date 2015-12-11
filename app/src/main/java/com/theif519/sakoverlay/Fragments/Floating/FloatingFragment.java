@@ -15,11 +15,14 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.google.gson.Gson;
 import com.theif519.sakoverlay.Controllers.ViewController;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
+import com.theif519.sakoverlay.Sessions.SessionManager;
+import com.theif519.sakoverlay.Sessions.WidgetSessionData;
 import com.theif519.sakoverlay.Views.TouchInterceptorLayout;
 
 /**
@@ -121,15 +124,14 @@ public class FloatingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = (TouchInterceptorLayout) inflater.inflate(LAYOUT_ID, container, false);
-        setupListeners();
         setupTaskItem();
         if (mMappedContext != null && Boolean.valueOf(mMappedContext.get(Globals.Keys.MINIMIZED))) {
             minimize();
         }
         // Ensures that the following methods are called after the view is fully drawn and setup.
         mContentView.post(() -> {
+            setupListeners();
             mViewController = new ViewController(mContentView);
-            if (mMappedContext != null) unpack();
             setup();
             RxBus.publish(FloatingFragment.this);
         });
@@ -224,6 +226,7 @@ public class FloatingFragment extends Fragment {
                 boundsCheck();
                 // We only snap on ACTION_UP to prevent it from annoyingly snapping on everything.
                 snap();
+                SessionManager.getInstance().updateSession(this);
                 return true;
             default:
                 return false;
@@ -270,6 +273,7 @@ public class FloatingFragment extends Fragment {
                 return false;
             case MotionEvent.ACTION_UP:
                 boundsCheck();
+                SessionManager.getInstance().updateSession(this);
                 return true;
             default:
                 return false;
@@ -363,18 +367,8 @@ public class FloatingFragment extends Fragment {
      *
      * @return ArrayMap containing serialized key-value pairs.
      */
-    public ArrayMap<String, String> serialize() {
-        ArrayMap<String, String> map = new ArrayMap<>();
-        map.put(Globals.Keys.LAYOUT_TAG, LAYOUT_TAG);
-        map.put(Globals.Keys.X_COORDINATE, Integer.toString(mViewController.getX()));
-        map.put(Globals.Keys.Y_COORDINATE, Integer.toString(mViewController.getY()));
-        map.put(Globals.Keys.Z_COORDINATE, Integer.toString((int) mContentView.getZ()));
-        map.put(Globals.Keys.WIDTH, Integer.toString(mViewController.getWidth()));
-        map.put(Globals.Keys.HEIGHT, Integer.toString(mViewController.getHeight()));
-        map.put(Globals.Keys.MINIMIZED, Boolean.toString(mContentView.getVisibility() == View.INVISIBLE));
-        map.put(Globals.Keys.MAXIMIZED, Boolean.toString(mIsMaximized));
-        map.put(Globals.Keys.SNAP_MASK, Integer.toString(mSnapMask));
-        return map;
+    public WidgetSessionData serialize() {
+        return new WidgetSessionData(UNIQUE_ID, LAYOUT_TAG, new Gson().toJson(this).getBytes());
     }
 
     /**
