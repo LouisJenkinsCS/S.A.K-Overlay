@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class SessionDatabase extends SQLiteOpenHelper {
 
-    public static final String TABLE_NAME = "Widget Session Data", WIDGET_ID = "Identifier", WIDGET_DATA = "Data", WIDGET_TAG = "Tag";
+    public static final String TABLE_NAME = "Widget_Session_Data", WIDGET_ID = "Id", WIDGET_DATA = "Data", WIDGET_TAG = "Tag";
 
     SQLiteDatabase mDatabase;
 
@@ -44,23 +44,11 @@ public class SessionDatabase extends SQLiteOpenHelper {
     }
 
     private WidgetSessionData parse(Cursor c) {
-        int id = -1;
-        String tag = null;
-        byte data[] = null;
-        for (int i = 0; i < c.getColumnCount(); i++) {
-            switch (c.getColumnName(i)) {
-                case WIDGET_TAG:
-                    tag = c.getString(i);
-                    break;
-                case WIDGET_DATA:
-                    data = c.getBlob(i);
-                    break;
-                case WIDGET_ID:
-                    id = c.getInt(i);
-                    break;
-            }
-        }
-        return new WidgetSessionData(id, tag, data);
+        return new WidgetSessionData(
+                c.getLong(c.getColumnIndex(WIDGET_ID)),
+                c.getString(c.getColumnIndex(WIDGET_TAG)),
+                c.getBlob(c.getColumnIndex(WIDGET_DATA))
+        );
     }
 
     private void setupIfNecessary() {
@@ -100,7 +88,7 @@ public class SessionDatabase extends SQLiteOpenHelper {
         Cursor cursor = mDatabase.query(TABLE_NAME, new String[]{
                 WIDGET_ID, WIDGET_TAG, WIDGET_DATA
         }, null, null, null, null, null);
-        if (cursor == null) {
+        if (cursor == null || cursor.getCount() == 0) {
             Log.w(getClass().getName(), "Sorry, the table is empty!");
             return null;
         }

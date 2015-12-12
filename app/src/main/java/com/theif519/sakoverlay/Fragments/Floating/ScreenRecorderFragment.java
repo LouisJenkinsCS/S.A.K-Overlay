@@ -4,19 +4,18 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Point;
 import android.os.IBinder;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.annotations.Expose;
 import com.theif519.sakoverlay.Adapters.VideoInfoAdapter;
 import com.theif519.sakoverlay.Async.MediaThumbnailGenerator;
 import com.theif519.sakoverlay.Misc.Globals;
@@ -30,21 +29,20 @@ import java.io.File;
 import java.util.List;
 
 import rx.Subscription;
-import rx.functions.Action1;
 
 /**
  * Created by theif519 on 11/12/2015.
- * <p/>
+ * <p>
  * ScreenRecorder FloatingFragment right now is very ugly, and I'm not just saying that. UI-wise, it is
  * far from complete, however, that does not mean it is lacking in functionality.
- * <p/>
+ * <p>
  * ScreenRecorder launches and binds to the RecorderService, which allows it to act as both
  * a controller and to be controlled (thanks to RxJava). It can call start(), stop(), pause() and die()
  * on the RecorderService, but for example, start() and stop() can be called from the same button, which is determined
  * by the state (which we observe). Hence, when the state is STARTED, the next command is STOPPED. And of course
  * vice verse. This is extremely useful as the controller button (attached to the WindowManager) can change the state
  * at will and also has the same controller/controller relationship as this FloatingFragment.
- * <p/>
+ * <p>
  * It also has a ListAdapter for previous screen recorderings, which display it's description and duration
  * and more information the user may be interested in. When this FloatingFragment is killed, the service dies with it.
  */
@@ -56,24 +54,25 @@ public class ScreenRecorderFragment extends FloatingFragment {
         be useless and redundantly redundant.
      */
     public static Boolean INSTANCE_EXISTS = false;
-    private transient TextView mStateText;
+    @Expose
+    private TextView mStateText;
     /*
         We maintain a handle to the RecorderService, obtained through the IBinder returned in ServiceConnection.
      */
-    private transient RecorderService mServiceHandle;
+    private RecorderService mServiceHandle;
     /*
         We also keep a subscription to the state change observable we are subscribed to so we can unsubscribe in onPause.
      */
-    private transient Subscription mStateChangeHandler;
+    private Subscription mStateChangeHandler;
     /*
         We must maintain a reference to this so we may unbind later on.
      */
-    private transient ServiceConnection mServiceConnectionHandler;
+    private ServiceConnection mServiceConnectionHandler;
     /*
         Much of a finite-state machine, huh? This is manipulated based on state change, and hence determines
         whether the button calls START or STOP. Simple for now, but gets the job done.
      */
-    private transient boolean mIsRunning = false;
+    private boolean mIsRunning = false;
 
     public static ScreenRecorderFragment newInstance() {
         if (INSTANCE_EXISTS) return null;
@@ -89,14 +88,11 @@ public class ScreenRecorderFragment extends FloatingFragment {
     protected void setup() {
         super.setup();
         mStateText = (TextView) getActivity().findViewById(R.id.screen_recorder_state_text);
-        getContentView().findViewById(R.id.screen_recorder_record_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mIsRunning) {
-                    mServiceHandle.stop();
-                } else {
-                    createDialog();
-                }
+        getContentView().findViewById(R.id.screen_recorder_record_button).setOnClickListener(v -> {
+            if (mIsRunning) {
+                mServiceHandle.stop();
+            } else {
+                createDialog();
             }
         });
         final ListView listView = (ListView) getContentView().findViewById(R.id.screen_recorder_file_list);
@@ -120,19 +116,16 @@ public class ScreenRecorderFragment extends FloatingFragment {
                 mStateChangeHandler = ((RecorderService.RecorderBinder) service)
                         .observeStateChanges() // Method we declared, returns an observable we can observe.
                         .distinctUntilChanged() // Not needed, but if someone (in the future of course) requests the current state, we don't want to update the textview twice.
-                        .subscribe(new Action1<RecorderService.RecorderState>() { // On any unique change of state...
-                            @Override
-                            public void call(RecorderService.RecorderState recorderState) {
-                                mStateText.setText(recorderState.toString());
-                                switch (recorderState) {
-                                    case STARTED:
-                                        mIsRunning = true;
-                                        ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Stop");
-                                        break;
-                                    case STOPPED:
-                                        mIsRunning = false;
-                                        ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Start");
-                                }
+                        .subscribe(recorderState -> {
+                            mStateText.setText(recorderState.toString());
+                            switch (recorderState) {
+                                case STARTED:
+                                    mIsRunning = true;
+                                    ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Stop");
+                                    break;
+                                case STOPPED:
+                                    mIsRunning = false;
+                                    ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Start");
                             }
                         });
                 mStateText.setText(mServiceHandle.getState().toString());
@@ -153,22 +146,16 @@ public class ScreenRecorderFragment extends FloatingFragment {
      */
     private void createDialog() {
         final AlertDialog dialog = new AlertDialog.Builder(getActivity()).setView(R.layout.dialog_recorder_details)
-                .setTitle("Recorder Info").setPositiveButton("Start", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        EditText width = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_resolution_width);
-                        EditText height = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_resolution_height);
-                        CheckBox audio = (CheckBox) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_audio_checkbox);
-                        EditText fileName = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_recorder_filename_name);
-                        mServiceHandle.start(new RecorderInfo(Integer.parseInt(width.getText().toString()), Integer.parseInt(height.getText().toString()),
-                                audio.isChecked(), fileName.getText().toString()));
-                        dialog.dismiss();
-                    }
-                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
+                .setTitle("Recorder Info").setPositiveButton("Start", (dialog1, which) -> {
+                    EditText width = (EditText) ((AlertDialog) dialog1).findViewById(R.id.dialog_recorder_resolution_width);
+                    EditText height = (EditText) ((AlertDialog) dialog1).findViewById(R.id.dialog_recorder_resolution_height);
+                    CheckBox audio = (CheckBox) ((AlertDialog) dialog1).findViewById(R.id.dialog_recorder_audio_checkbox);
+                    EditText fileName = (EditText) ((AlertDialog) dialog1).findViewById(R.id.dialog_recorder_filename_name);
+                    mServiceHandle.start(new RecorderInfo(Integer.parseInt(width.getText().toString()), Integer.parseInt(height.getText().toString()),
+                            audio.isChecked(), fileName.getText().toString()));
+                    dialog1.dismiss();
+                }).setNegativeButton("Cancel", (dialog1, which) -> {
+                    dialog1.dismiss();
                 }).show();
         Point size = new Point();
         getActivity().getWindowManager().getDefaultDisplay().getRealSize(size);

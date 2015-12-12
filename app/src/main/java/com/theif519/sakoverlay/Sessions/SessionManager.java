@@ -4,9 +4,12 @@ import android.content.Context;
 import android.util.Log;
 
 import com.annimon.stream.Stream;
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
+import com.theif519.sakoverlay.Rx.RxBus;
+
+import java.util.List;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -52,7 +55,16 @@ public class SessionManager {
                 .asObservable()
                 .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
-                .map(fragment -> new WidgetSessionData(fragment.getId(), fragment.getTag(), new Gson().toJson(fragment).getBytes()))
+                .map(fragment -> new WidgetSessionData(
+                                fragment.getId(),
+                                fragment.getTag(),
+                                new GsonBuilder()
+                                        .excludeFieldsWithoutExposeAnnotation()
+                                        .create()
+                                        .toJson(fragment)
+                                        .getBytes()
+                        )
+                )
                 .subscribe(mDatabase::update);
         Log.i(getClass().getName(), "Created Database and setup publish subscription!");
     }
@@ -65,10 +77,13 @@ public class SessionManager {
                 .create(new Observable.OnSubscribe<FloatingFragment>() {
                     @Override
                     public void call(Subscriber<? super FloatingFragment> subscriber) {
-                        Stream.of(mDatabase.readAll())
-                                .map(FloatingFragmentFactory::getFragment)
-                                .filter(f -> f != null)
-                                .forEach(subscriber::onNext);
+                        List<WidgetSessionData> dataList = mDatabase.readAll();
+                        if (dataList != null) {
+                            Stream.of(dataList)
+                                    .map(FloatingFragmentFactory::getFragment)
+                                    .filter(f -> f != null)
+                                    .forEach(subscriber::onNext);
+                        } else RxBus.publish("Created new session!");
                         subscriber.onCompleted();
                     }
                 })

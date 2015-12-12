@@ -1,6 +1,7 @@
 package com.theif519.sakoverlay.Fragments.Floating;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Sessions.WidgetSessionData;
 
 /**
@@ -21,7 +22,11 @@ public final class FloatingFragmentFactory {
     public static FloatingFragment getFragment(WidgetSessionData data) {
         Class<? extends FloatingFragment> clazz = getFragmentClass(data.getTag());
         if (clazz == null) return null;
-        return new Gson().fromJson(new String(data.getData()), clazz);
+        FloatingFragment fragment = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(new String(data.getData()), clazz);
+        fragment.LAYOUT_ID = getFragmentResourceId(data.getTag());
+        fragment.ICON_ID = getFragmentIconResourceId(data.getTag());
+        if(data.getTag() == ScreenRecorderFragment.IDENTIFIER) ((ScreenRecorderFragment) fragment).INSTANCE_EXISTS = true;
+        return fragment;
     }
 
     /**
@@ -42,6 +47,36 @@ public final class FloatingFragmentFactory {
                 return ScreenRecorderFragment.class;
             default:
                 return null;
+        }
+    }
+
+    private static int getFragmentResourceId(String layoutTag){
+        switch (layoutTag) {
+            case StickyNoteFragment.IDENTIFIER:
+                return R.layout.sticky_note;
+            case GoogleMapsFragment.IDENTIFIER:
+                return R.layout.google_maps;
+            case WebBrowserFragment.IDENTIFIER:
+                return R.layout.web_browser;
+            case ScreenRecorderFragment.IDENTIFIER:
+                return R.layout.screen_recorder;
+            default:
+                return R.layout.default_fragment;
+        }
+    }
+
+    private static int getFragmentIconResourceId(String layoutTag){
+        switch (layoutTag) {
+            case StickyNoteFragment.IDENTIFIER:
+                return R.drawable.sticky_note;
+            case GoogleMapsFragment.IDENTIFIER:
+                return R.drawable.maps;
+            case WebBrowserFragment.IDENTIFIER:
+                return R.drawable.browser;
+            case ScreenRecorderFragment.IDENTIFIER:
+                return R.drawable.screen_recorder;
+            default:
+                return R.drawable.close;
         }
     }
 }

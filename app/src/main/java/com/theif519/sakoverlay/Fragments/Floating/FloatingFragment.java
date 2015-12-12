@@ -14,6 +14,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.google.gson.annotations.Expose;
 import com.theif519.sakoverlay.Controllers.ViewController;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
@@ -74,31 +75,33 @@ public class FloatingFragment extends Fragment {
         For example, if I wanted to, say, implement gestured or maybe resizing other views when I resize my own
         while snapped, I would need some elegant of doing so.
      */
+    @Expose
     protected ViewController mVC;
+
     /*
         Tag used to serialize and deserialize/reconstruct with the factory. This must be changed by sub classes.
      */
-    protected transient String LAYOUT_TAG = "DefaultFragment";
+    protected String LAYOUT_TAG = "DefaultFragment";
 
     /*
         These protected variables MUST be changed by subclasses, and is used during the onCreateView() to initialize
         the root view. default_fragment is akin to a 404 message.
      */
-    protected transient int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
+    protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
 
     protected long id = -1;
 
     /*
         We keep track of the root view out of convenience.
      */
-    private transient TouchInterceptorLayout mContentView;
+    private TouchInterceptorLayout mContentView;
 
     /*
         As of now, the task bar at the bottom of the activity isn't very well developed. We only have an
         image button, which the base classes inflates and adds to it in setup(). Very bare-bones, as I said.
      */
-    private transient ImageButton mTaskBarButton;
-    private transient int touchXOffset, touchYOffset, prevX, prevY, tmpX, tmpY;
+    private ImageButton mTaskBarButton;
+    private int touchXOffset, touchYOffset, prevX, prevY, tmpX, tmpY;
 
     @SuppressWarnings("unchecked")
     @Nullable
@@ -110,7 +113,6 @@ public class FloatingFragment extends Fragment {
         mContentView.post(() -> {
             setupListeners();
             setup();
-            RxBus.publish(FloatingFragment.this);
         });
         return mContentView;
     }
@@ -380,6 +382,11 @@ public class FloatingFragment extends Fragment {
                     .setWidth(mContentView.getWidth())
                     .setHeight(mContentView.getHeight());
         }
+        if(mVC.getId() != -1 && this.id == -1){
+            this.id = mVC.getId();
+        } else if(this.id != -1 && mVC.getId() == -1){
+            mVC.setId(this.id);
+        }
         if (mVC.isSnapped()) {
             snap();
         }
@@ -389,6 +396,7 @@ public class FloatingFragment extends Fragment {
         if(mVC.isMinimized()){
             minimize();
         }
+        mVC.update();
     }
 
     /**
@@ -474,7 +482,8 @@ public class FloatingFragment extends Fragment {
     }
 
     public void setUniqueId(long id){
-
+        this.id = id;
+        if(mVC != null) mVC.setId(id);
     }
 
 }

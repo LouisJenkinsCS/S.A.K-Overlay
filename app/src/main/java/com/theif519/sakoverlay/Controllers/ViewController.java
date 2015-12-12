@@ -6,24 +6,25 @@ import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.google.gson.annotations.Expose;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
 
 /**
  * Created by theif519 on 12/4/2015.
- * <p/>
+ * <p>
  * Encapsulates attributes and properties of a view. This class is used to keep track of not only the
  * view properties/state, but also set them directly. That, in conjunction with it's fluent interface/method chaining,
  * it allows for easy instantiation, easy updating, and easy serialization/deserialization.
- * <p/>
+ * <p>
  * In the future, if I wish to have a background thread be able to also manipulate a view, I can make the changes
  * here without interrupting/needing to refactor other classes which uses this class.
- * <p/>
+ * <p>
  * That could be accomplished by doing something along the lines of...
- * <p/>
+ * <p>
  * <code> <pre>
  * private Handler mUiHandler = new Handler(); // Automatically gets looper of the current thread, in this case main looper.
- *
+ * <p>
  * public ViewController update(){
  *      if(Looper.myLooper() != Looper.getMainLooper()){ // Note also we do not need to worry about thread safety
  *          mUiHandler.post(() -> update()); // Would result in the UI thread calling this method
@@ -32,27 +33,38 @@ import com.theif519.sakoverlay.Misc.MeasureTools;
  *      // Otherwise if it is the main thread, do it here.
  * }
  * </pre> </code>
- * <p/>
+ * <p>
  * The reasons for needing such checks, of course, is that I plan on making ViewController accessible outside
  * of this class. Meaning, it is a way for other classes and even threads to post updates to through this class.
  */
 public class ViewController {
 
+    @Expose
     private String tag;
 
+    @Expose
     private long id;
 
+    @Expose
     private int stateMask = 0;
 
     public static final int RIGHT = 1, LEFT = 1 << 1, UPPER = 1 << 2, BOTTOM = 1 << 3;
 
     public static final int MINIMIZED = 1 << 4, MAXIMIZED = 1 << 5, DEAD = 1 << 6;
 
-    private int x, y, width, height;
-    private transient View v;
-    private transient Handler mHandler;
+    @Expose
+    private int x;
+    @Expose
+    private int y;
+    @Expose
+    private int width;
+    @Expose
+    private int height;
 
-    public ViewController(){
+    private View v;
+    private Handler mHandler;
+
+    public ViewController() {
         mHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -73,7 +85,7 @@ public class ViewController {
      * @return This.
      */
     public ViewController update() {
-        if(!isUIThread()){
+        if (!isUIThread()) {
             mHandler.post(this::update);
             return this;
         }
@@ -102,7 +114,7 @@ public class ViewController {
     }
 
     public ViewController setX(int x) {
-        if(!isUIThread()){
+        if (!isUIThread()) {
             mHandler.post(() -> setX(x));
             return this;
         }
@@ -116,7 +128,7 @@ public class ViewController {
     }
 
     public ViewController setY(int y) {
-        if(!isUIThread()){
+        if (!isUIThread()) {
             mHandler.post(() -> setY(y));
             return this;
         }
@@ -131,7 +143,7 @@ public class ViewController {
     }
 
     public ViewController setWidth(int width) {
-        if(!isUIThread()){
+        if (!isUIThread()) {
             mHandler.post(() -> setWidth(width));
             return this;
         }
@@ -148,7 +160,7 @@ public class ViewController {
     }
 
     public ViewController setHeight(int height) {
-        if(!isUIThread()){
+        if (!isUIThread()) {
             mHandler.post(() -> setHeight(height));
             return this;
         }
@@ -160,56 +172,56 @@ public class ViewController {
         return this;
     }
 
-    public ViewController addState(int mask){
+    public ViewController addState(int mask) {
         stateMask |= mask;
         return this;
     }
 
-    public ViewController removeState(int mask){
+    public ViewController removeState(int mask) {
         stateMask &= ~mask;
         return this;
     }
 
-    public ViewController toggleState(int mask){
+    public ViewController toggleState(int mask) {
         stateMask ^= mask;
         return this;
     }
 
-    public int getState(){
+    public int getState() {
         return stateMask;
     }
 
-    public boolean isStateSet(int mask){
+    public boolean isStateSet(int mask) {
         return (stateMask & mask) != 0;
     }
 
-    public boolean hasState(){
+    public boolean hasState() {
         return stateMask != 0;
     }
 
-    public ViewController resetState(){
+    public ViewController resetState() {
         stateMask = 0;
         return this;
     }
 
-    public boolean isMaximized(){
+    public boolean isMaximized() {
         return isStateSet(MAXIMIZED);
     }
 
-    public boolean isMinimized(){
+    public boolean isMinimized() {
         return isStateSet(MINIMIZED);
     }
 
-    public boolean isSnapped(){
+    public boolean isSnapped() {
         return isStateSet(RIGHT | LEFT | BOTTOM | UPPER);
     }
 
-    public ViewController resetSnap(){
+    public ViewController resetSnap() {
         return removeState(RIGHT | LEFT | BOTTOM | UPPER);
     }
 
     public ViewController setCoordinates(int x, int y) {
-        if(!isUIThread()){
+        if (!isUIThread()) {
             mHandler.post(() -> setCoordinates(x, y));
             return this;
         }
@@ -219,7 +231,7 @@ public class ViewController {
     }
 
     public ViewController setSize(int width, int height) {
-        if(!isUIThread()){
+        if (!isUIThread()) {
             mHandler.post(() -> setSize(width, height));
             return this;
         }
@@ -238,17 +250,17 @@ public class ViewController {
         return id;
     }
 
-    public ViewController setId(long id){
+    public ViewController setId(long id) {
         this.id = id;
         return this;
     }
 
-    public ViewController setTag(String tag){
+    public ViewController setTag(String tag) {
         this.tag = tag;
         return this;
     }
 
-    private boolean isUIThread(){
+    private boolean isUIThread() {
         return Looper.myLooper() == Looper.getMainLooper();
     }
 }

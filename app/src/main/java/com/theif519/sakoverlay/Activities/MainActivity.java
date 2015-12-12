@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.res.Configuration;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -112,7 +113,12 @@ public class MainActivity extends Activity {
         icon.setOnClickListener(v -> mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight()));
         final TextView info = (TextView) actionbar.getCustomView().findViewById(R.id.menu_bar_info);
         RxBus.subscribe(String.class)
-                .subscribe(info::setText);
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(msg -> {
+                    if (Looper.getMainLooper() != Looper.myLooper()) {
+                        runOnUiThread(() -> info.setText(msg));
+                    } else info.setText(msg);
+                });
     }
 
     @Override
@@ -132,7 +138,7 @@ public class MainActivity extends Activity {
             Toast.makeText(MainActivity.this, "There can only be one instance of this widget!", Toast.LENGTH_LONG).show();
             return;
         }
-        if(insert) SessionManager
+        if (insert) SessionManager
                 .getInstance()
                 .appendSession(fragment)
                 .observeOn(AndroidSchedulers.mainThread())

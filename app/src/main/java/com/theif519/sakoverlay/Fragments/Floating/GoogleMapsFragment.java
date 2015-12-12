@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.theif519.sakoverlay.R;
 
@@ -18,9 +17,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
@@ -46,17 +45,17 @@ public class GoogleMapsFragment extends FloatingFragment {
 
     protected static final String IDENTIFIER = "Google Maps";
 
-    private transient GoogleMap mMap;
+    private GoogleMap mMap;
 
-    private transient Geocoder mGeocoder;
+    private Geocoder mGeocoder;
 
-    private transient TextView mAddress;
+    private TextView mAddress;
 
     /*
         Utilizing a PublishSubject, we can publish a new task which allows us to delegate it to a background
         thread, which is handled whenever we emit a new item/task. Handy.
     */
-    private transient PublishSubject<Location> mOnNextAddress = PublishSubject.create();
+    private PublishSubject<Location> mOnNextAddress = PublishSubject.create();
 
     public static GoogleMapsFragment newInstance() {
         GoogleMapsFragment fragment = new GoogleMapsFragment();
@@ -70,27 +69,22 @@ public class GoogleMapsFragment extends FloatingFragment {
     public void setup() {
         super.setup();
         mAddress = (TextView) getContentView().findViewById(R.id.google_maps_address);
-        ((MapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(GoogleMap googleMap) {
-                mMap = googleMap;
-                mMap.setMyLocationEnabled(true);
-                mMap.getMyLocation();
-                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-                mMap.setTrafficEnabled(true);
-                mMap.setBuildingsEnabled(true);
-                mGeocoder = new Geocoder(getActivity(), Locale.getDefault());
-                mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
-                    @Override
-                    public void onMyLocationChange(Location location) {
-                        mOnNextAddress.onNext(location);
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 18.0f));
-                    }
-                });
-            }
+        ((MapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMapAsync(googleMap -> {
+            mMap = googleMap;
+            mMap.setMyLocationEnabled(true);
+            mMap.getMyLocation();
+            mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+            mMap.setTrafficEnabled(true);
+            mMap.setBuildingsEnabled(true);
+            mGeocoder = new Geocoder(getActivity(), Locale.getDefault());
+            mMap.setOnMyLocationChangeListener(location -> {
+                mOnNextAddress.onNext(location);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 18.0f));
+            });
         });
         mOnNextAddress
                 .observeOn(Schedulers.io()) // Do processing of next address change on a background IO-Bound thread, as geocoder can block.
+                .throttleLast(5, TimeUnit.SECONDS)
                 .map(new Func1<Location, String>() { // Turn each location update into the String address. Geocoder blocks on getFromLocation, hence the IO scheduler.
                     @Override
                     public String call(Location location) {
@@ -111,19 +105,9 @@ public class GoogleMapsFragment extends FloatingFragment {
                         return address;
                     }
                 })
-                .filter(new Func1<String, Boolean>() { // Anything that returns null gets filtered out here.
-                    @Override
-                    public Boolean call(String s) {
-                        return s != null;
-                    }
-                })
+                .filter(s -> s != null)
                 .observeOn(AndroidSchedulers.mainThread()) // Swap back to the main thread for the easy bit.
-                .subscribe(new Action1<String>() { // Now the UI does literally next to no work.
-                    @Override
-                    public void call(String s) {
-                        mAddress.setText(s);
-                    }
-                });
+                .subscribe(mAddress::setText);
     }
 
 }
