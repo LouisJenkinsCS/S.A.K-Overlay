@@ -14,7 +14,6 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.GoogleMapsFragment;
 import com.theif519.sakoverlay.Fragments.Floating.ScreenRecorderFragment;
@@ -32,15 +31,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 
 
 /**
  * Created by theif519 on ???. Forgot the date
- * <p/>
+ * <p>
  * This is the entry point for the program, and also acts as the main context for all Fragments, Views,
  * Toasts, Services, etc. It's main purpose is to do the following before relinquishing the main thread
  * to handle other matters, with exception to it's life cycle methods.
- * <p/>
+ * <p>
  * 1) Inflate and initialize the menu PopupWindow ahead of time.
  * 2) Deserialize in onCreate() through a factory
  * 3) Keep WeakReferences to all FloatingFragments
@@ -88,8 +88,7 @@ public class MainActivity extends Activity {
             // The floating fragments are assured to be called after MainActivity has finished inflating it's view.
             SessionManager.getInstance().restoreSession(this)
                     .subscribe(
-                            list -> Stream.of(list)
-                            .forEach(MainActivity.this::addFragment)
+                            fragment -> addFragment(fragment, false)
                     );
         });
         // We also setup the floating fragment scale in onCreate as it should never change.
@@ -128,13 +127,24 @@ public class MainActivity extends Activity {
      *
      * @param fragment Fragment to add.
      */
-    private void addFragment(FloatingFragment fragment) {
+    private void addFragment(FloatingFragment fragment, boolean insert) {
         if (fragment == null) {
             Toast.makeText(MainActivity.this, "There can only be one instance of this widget!", Toast.LENGTH_LONG).show();
             return;
         }
-        mFragments.add(new WeakReference<>(fragment));
-        getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
+        if(insert) SessionManager
+                .getInstance()
+                .appendSession(fragment)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(fragment::setUniqueId)
+                .subscribe(id -> {
+                    mFragments.add(new WeakReference<>(fragment));
+                    getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
+                });
+        else {
+            mFragments.add(new WeakReference<>(fragment));
+            getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
+        }
     }
 
     /**
@@ -153,19 +163,19 @@ public class MainActivity extends Activity {
         makeImmersive(view);
         mMenuPopup = new PopupWindow(view);
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_browser_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(WebBrowserFragment.newInstance());
+            addFragment(WebBrowserFragment.newInstance(), true);
             mMenuPopup.dismiss();
         });
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_maps_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(GoogleMapsFragment.newInstance());
+            addFragment(GoogleMapsFragment.newInstance(), true);
             mMenuPopup.dismiss();
         });
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_recorder_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(ScreenRecorderFragment.newInstance());
+            addFragment(ScreenRecorderFragment.newInstance(), true);
             mMenuPopup.dismiss();
         });
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_sticky_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(StickyNoteFragment.newInstance());
+            addFragment(StickyNoteFragment.newInstance(), true);
             mMenuPopup.dismiss();
         });
         mMenuPopup.setFocusable(true);
@@ -201,7 +211,7 @@ public class MainActivity extends Activity {
      * Due to the unfortunate fact that onConfigurationChange is called BEFORE all views are measured, we must
      * add a GlobalLayoutListener to the ViewTreeObserver. This means that, we have to poll on it until we see
      * that the overall width and height have changed.
-     * <p/>
+     * <p>
      * However, once again, we only have to deal with this once. We broadcast to any subscribers that are listening
      * for an accurate onConfigurationChange, which includes this same thread (Read: Even though we are our own subscriber,
      * we are also our own publisher too).

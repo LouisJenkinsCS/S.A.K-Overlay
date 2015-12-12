@@ -1,6 +1,11 @@
 package com.theif519.sakoverlay.Fragments.Floating;
 
+import android.widget.EditText;
+
+import com.jakewharton.rxbinding.widget.RxTextView;
 import com.theif519.sakoverlay.R;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by theif519 on 10/31/2015.
@@ -30,6 +35,8 @@ public class StickyNoteFragment extends FloatingFragment {
     protected static final String CONTENTS_KEY = "Contents";
     protected static final String IDENTIFIER = "Sticky Note";
 
+    private String mContents;
+
     public static StickyNoteFragment newInstance() {
         StickyNoteFragment fragment = new StickyNoteFragment();
         fragment.LAYOUT_ID = R.layout.sticky_note;
@@ -38,6 +45,11 @@ public class StickyNoteFragment extends FloatingFragment {
         return fragment;
     }
 
-
-
+    @Override
+    protected void setup() {
+        super.setup();
+        RxTextView.textChanges((EditText) getContentView().findViewById(R.id.sticky_note_edit_text))
+                .throttleLast(1, TimeUnit.SECONDS)
+                .subscribe(str -> mContents = str.toString());
+    }
 }

@@ -46,17 +46,17 @@ public class GoogleMapsFragment extends FloatingFragment {
 
     protected static final String IDENTIFIER = "Google Maps";
 
-    private GoogleMap mMap;
+    private transient GoogleMap mMap;
 
-    private Geocoder mGeocoder;
+    private transient Geocoder mGeocoder;
 
-    private TextView mAddress;
+    private transient TextView mAddress;
 
     /*
         Utilizing a PublishSubject, we can publish a new task which allows us to delegate it to a background
         thread, which is handled whenever we emit a new item/task. Handy.
     */
-    private PublishSubject<Location> mOnNextAddress = PublishSubject.create();
+    private transient PublishSubject<Location> mOnNextAddress = PublishSubject.create();
 
     public static GoogleMapsFragment newInstance() {
         GoogleMapsFragment fragment = new GoogleMapsFragment();

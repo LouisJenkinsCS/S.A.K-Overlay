@@ -1,17 +1,16 @@
 package com.theif519.sakoverlay.Sessions;
 
 import android.content.Context;
+import android.util.Log;
 
-import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
+import com.google.gson.Gson;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
 
-import java.util.List;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-
 import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
@@ -25,45 +24,60 @@ public class SessionManager {
     private SessionDatabase mDatabase;
     private static final PublishSubject<FloatingFragment> mPublishUpdate = PublishSubject.create();
 
-    public static SessionManager getInstance(){
+    public static SessionManager getInstance() {
         return INSTANCE;
     }
 
-    private SessionManager(){
+    private SessionManager() {
 
     }
 
-    private void setup(){
+    public Observable<Long> appendSession(FloatingFragment fragment) {
+        Log.i(getClass().getName(), "Appending a new fragment to session data!");
+        return Observable
+                .create(new Observable.OnSubscribe<Long>() {
+                    @Override
+                    public void call(Subscriber<? super Long> subscriber) {
+                        subscriber.onNext(mDatabase.insert(new WidgetSessionData(fragment)));
+                        subscriber.onCompleted();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    private void setup(Context context) {
+        mDatabase = new SessionDatabase(context);
         mPublishUpdate
                 .asObservable()
                 .observeOn(Schedulers.io())
-                .throttleLast(1, TimeUnit.SECONDS)
-                .filter(f -> f != null)
-                .map(FloatingFragment::serialize)
+                .subscribeOn(Schedulers.io())
+                .map(fragment -> new WidgetSessionData(fragment.getId(), fragment.getTag(), new Gson().toJson(fragment).getBytes()))
                 .subscribe(mDatabase::update);
+        Log.i(getClass().getName(), "Created Database and setup publish subscription!");
     }
 
-    public Observable<List<FloatingFragment>> restoreSession(Context context) {
-        if(mDatabase == null) {
-            mDatabase = new SessionDatabase(context);
-            mPublishUpdate
-                    .asObservable()
-                    .observeOn(Schedulers.io())
-                    .subscribeOn(Schedulers.io())
-                    .throttleLast(1, TimeUnit.SECONDS)
-                    .filter(f -> f != null)
-                    .map(FloatingFragment::serialize)
-                    .subscribe(mDatabase::update);
+    public Observable<FloatingFragment> restoreSession(Context context) {
+        if (mDatabase == null) {
+            setup(context);
         }
-        return Observable.from(new FutureTask<>(
-                () -> Stream.of(mDatabase.readAll())
-                        .map(FloatingFragmentFactory::getFragment)
-                        .filter(f -> f != null)
-                        .collect(Collectors.toList())
-        ), Schedulers.io());
+        return Observable
+                .create(new Observable.OnSubscribe<FloatingFragment>() {
+                    @Override
+                    public void call(Subscriber<? super FloatingFragment> subscriber) {
+                        Stream.of(mDatabase.readAll())
+                                .map(FloatingFragmentFactory::getFragment)
+                                .filter(f -> f != null)
+                                .forEach(subscriber::onNext);
+                        subscriber.onCompleted();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
-    public void updateSession(FloatingFragment fragment){
+    public void updateSession(FloatingFragment fragment) {
+        Log.i(getClass().getName(), "Updating fragment!");
         mPublishUpdate.onNext(fragment);
     }
 

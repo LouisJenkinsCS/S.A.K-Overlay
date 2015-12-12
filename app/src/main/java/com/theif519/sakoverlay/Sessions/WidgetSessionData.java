@@ -1,26 +1,39 @@
 package com.theif519.sakoverlay.Sessions;
 
+import com.google.gson.Gson;
+import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
+
 /**
  * Created by theif519 on 12/10/2015.
  *
  * TODO: Make this more recylceable.
  */
 public class WidgetSessionData {
-    private int id;
+    private long id;
     private String tag;
     private byte[] data;
 
-    public WidgetSessionData(int id, String tag, byte[] data) {
+    public WidgetSessionData(long id, String tag, byte[] data) {
         this.id = id;
         this.tag = tag;
         this.data = data;
     }
 
-    public int getId() {
+    public WidgetSessionData(){
+
+    }
+
+    public WidgetSessionData(FloatingFragment fragment){
+        this.id = fragment.getId();
+        this.tag = fragment.getTag();
+        this.data = new Gson().toJson(fragment).getBytes();
+    }
+
+    public long getId() {
         return id;
     }
 
-    public WidgetSessionData setId(int id) {
+    public WidgetSessionData setId(long id) {
         this.id = id;
         return this;
     }
@@ -41,5 +54,10 @@ public class WidgetSessionData {
     public WidgetSessionData setData(byte[] data) {
         this.data = data;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "WidgetSessionData: { Tag: " + tag + ", Id: " + id + ", Data: {" + new String(data) + "} }";
     }
 }

@@ -38,12 +38,28 @@ import com.theif519.sakoverlay.Misc.MeasureTools;
  */
 public class ViewController {
 
-    private int x, y, width, height;
-    private View v;
-    public Handler mHandler;
+    private String tag;
 
-    public ViewController(@NonNull View v) {
+    private long id;
+
+    private int stateMask = 0;
+
+    public static final int RIGHT = 1, LEFT = 1 << 1, UPPER = 1 << 2, BOTTOM = 1 << 3;
+
+    public static final int MINIMIZED = 1 << 4, MAXIMIZED = 1 << 5, DEAD = 1 << 6;
+
+    private int x, y, width, height;
+    private transient View v;
+    private transient Handler mHandler;
+
+    public ViewController(){
         mHandler = new Handler(Looper.getMainLooper());
+    }
+
+    public ViewController(@NonNull View v, String tag, long id) {
+        mHandler = new Handler(Looper.getMainLooper());
+        this.tag = tag;
+        this.id = id;
         this.v = v;
     }
 
@@ -144,6 +160,54 @@ public class ViewController {
         return this;
     }
 
+    public ViewController addState(int mask){
+        stateMask |= mask;
+        return this;
+    }
+
+    public ViewController removeState(int mask){
+        stateMask &= ~mask;
+        return this;
+    }
+
+    public ViewController toggleState(int mask){
+        stateMask ^= mask;
+        return this;
+    }
+
+    public int getState(){
+        return stateMask;
+    }
+
+    public boolean isStateSet(int mask){
+        return (stateMask & mask) != 0;
+    }
+
+    public boolean hasState(){
+        return stateMask != 0;
+    }
+
+    public ViewController resetState(){
+        stateMask = 0;
+        return this;
+    }
+
+    public boolean isMaximized(){
+        return isStateSet(MAXIMIZED);
+    }
+
+    public boolean isMinimized(){
+        return isStateSet(MINIMIZED);
+    }
+
+    public boolean isSnapped(){
+        return isStateSet(RIGHT | LEFT | BOTTOM | UPPER);
+    }
+
+    public ViewController resetSnap(){
+        return removeState(RIGHT | LEFT | BOTTOM | UPPER);
+    }
+
     public ViewController setCoordinates(int x, int y) {
         if(!isUIThread()){
             mHandler.post(() -> setCoordinates(x, y));
@@ -163,6 +227,24 @@ public class ViewController {
         params.width = width;
         params.height = height;
         v.setLayoutParams(params);
+        return this;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public ViewController setId(long id){
+        this.id = id;
+        return this;
+    }
+
+    public ViewController setTag(String tag){
+        this.tag = tag;
         return this;
     }
 

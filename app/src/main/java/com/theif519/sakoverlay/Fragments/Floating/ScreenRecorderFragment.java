@@ -56,24 +56,24 @@ public class ScreenRecorderFragment extends FloatingFragment {
         be useless and redundantly redundant.
      */
     public static Boolean INSTANCE_EXISTS = false;
-    private TextView mStateText;
+    private transient TextView mStateText;
     /*
         We maintain a handle to the RecorderService, obtained through the IBinder returned in ServiceConnection.
      */
-    private RecorderService mServiceHandle;
+    private transient RecorderService mServiceHandle;
     /*
         We also keep a subscription to the state change observable we are subscribed to so we can unsubscribe in onPause.
      */
-    private Subscription mStateChangeHandler;
+    private transient Subscription mStateChangeHandler;
     /*
         We must maintain a reference to this so we may unbind later on.
      */
-    private ServiceConnection mServiceConnectionHandler;
+    private transient ServiceConnection mServiceConnectionHandler;
     /*
         Much of a finite-state machine, huh? This is manipulated based on state change, and hence determines
         whether the button calls START or STOP. Simple for now, but gets the job done.
      */
-    private boolean mIsRunning = false;
+    private transient boolean mIsRunning = false;
 
     public static ScreenRecorderFragment newInstance() {
         if (INSTANCE_EXISTS) return null;

@@ -1,10 +1,10 @@
 package com.theif519.sakoverlay.Sessions;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -15,34 +15,40 @@ import java.util.List;
  */
 public class SessionDatabase extends SQLiteOpenHelper {
 
-    private SQLiteDatabase mDatabase;
-
     public static final String TABLE_NAME = "Widget Session Data", WIDGET_ID = "Identifier", WIDGET_DATA = "Data", WIDGET_TAG = "Tag";
 
-    public SessionDatabase(Context context){
+    SQLiteDatabase mDatabase;
+
+    private SQLiteStatement mUpdate;
+
+    private SQLiteStatement mInsert;
+
+    public SessionDatabase(Context context) {
         super(context, "SessionData.db", null, 1);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(
-                "CREATE TABLE " + TABLE_NAME + "(" + WIDGET_ID + " INTEGER PRIMARY KEY,"
+                "CREATE TABLE " + TABLE_NAME + "(Id INTEGER PRIMARY KEY AUTOINCREMENT,"
                         + WIDGET_TAG + " TEXT," + WIDGET_DATA + " BLOB)"
         );
+        Log.i(getClass().getName(), "Created the database!");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
+        Log.i(getClass().getName(), "Upgraded database!");
     }
 
-    private WidgetSessionData parse(Cursor c){
+    private WidgetSessionData parse(Cursor c) {
         int id = -1;
         String tag = null;
         byte data[] = null;
-        for(int i = 0; i < c.getColumnCount(); i++){
-            switch(c.getColumnName(i)){
+        for (int i = 0; i < c.getColumnCount(); i++) {
+            switch (c.getColumnName(i)) {
                 case WIDGET_TAG:
                     tag = c.getString(i);
                     break;
@@ -57,19 +63,28 @@ public class SessionDatabase extends SQLiteOpenHelper {
         return new WidgetSessionData(id, tag, data);
     }
 
+    private void setupIfNecessary() {
+        if (mDatabase == null) mDatabase = getWritableDatabase();
+        if (mUpdate == null) mUpdate = mDatabase.compileStatement("UPDATE " + TABLE_NAME + " SET "
+                + WIDGET_DATA + "=? WHERE " + WIDGET_ID + "=?");
+        if (mInsert == null)
+            mInsert = mDatabase.compileStatement("INSERT INTO " + TABLE_NAME + " VALUES (NULL, ?,?)");
+    }
 
-    public WidgetSessionData read(int id){
-        if(mDatabase == null) mDatabase = this.getWritableDatabase();
+
+    public WidgetSessionData read(int id) {
+        setupIfNecessary();
         Cursor cursor = mDatabase.query(TABLE_NAME, new String[]{
                 WIDGET_ID, WIDGET_TAG, WIDGET_DATA
         }, WIDGET_ID + "=" + id, null, null, null, null);
-        if(cursor == null){
+        if (cursor == null) {
             Log.w(getClass().getName(), "Sorry, the table for id: " + id + " does not exist!");
             return null;
         }
         cursor.moveToFirst();
         WidgetSessionData data = parse(cursor);
         cursor.close();
+        Log.i(getClass().getName(), "Read: " + data);
         return data;
     }
 
@@ -77,59 +92,62 @@ public class SessionDatabase extends SQLiteOpenHelper {
      * Will read all session data from the table if possible. It returns a
      * ArrayMap which maps each WidgetSessionData to it's Tag, making it very easy
      * to instantiate it.
+     *
      * @return Map of WidgetSessionData mapped to their tag.
      */
-    public List<WidgetSessionData> readAll(){
-        if(mDatabase == null) mDatabase = this.getWritableDatabase();
-        Cursor cursor = mDatabase.query(TABLE_NAME, new String[] {
+    public List<WidgetSessionData> readAll() {
+        setupIfNecessary();
+        Cursor cursor = mDatabase.query(TABLE_NAME, new String[]{
                 WIDGET_ID, WIDGET_TAG, WIDGET_DATA
         }, null, null, null, null, null);
-        if(cursor == null){
+        if (cursor == null) {
             Log.w(getClass().getName(), "Sorry, the table is empty!");
             return null;
         }
         List<WidgetSessionData> list = new ArrayList<>();
         cursor.moveToFirst();
         do {
-            list.add(parse(cursor));
-        } while(cursor.moveToNext());
+            WidgetSessionData data = parse(cursor);
+            list.add(data);
+            Log.i(getClass().getName(), "Read: " + data);
+        } while (cursor.moveToNext());
+        Log.i(getClass().getName(), "Read all session data!");
         cursor.close();
         return list;
     }
 
     /**
      * Determines whether a row exists in the main table.
+     *
      * @param id Id
      * @return If exists
      */
-    private boolean exists(int id){
+    private boolean exists(int id) {
         Cursor cursor = mDatabase.rawQuery("Select * from " + TABLE_NAME + " where " + WIDGET_ID + " = " + id, null);
         boolean exists = cursor.getCount() > 0;
         cursor.close();
         return exists;
     }
 
+    public long insert(WidgetSessionData session){
+        setupIfNecessary();
+        mInsert.bindString(1, session.getTag());
+        mInsert.bindBlob(2, session.getData());
+        Log.i(getClass().getName(), "Inserted " + session);
+        return mInsert.executeInsert();
+    }
+
     /**
      * Updates a row in the table with the passed information, and if not exists it will create a new one.
      * If it does exist, it will only update the passed data.
+     *
      * @param session The data to be updated to disk.
      */
-    public void update(WidgetSessionData session){
-        if(mDatabase == null) mDatabase = this.getWritableDatabase();
-        try {
-            mDatabase.beginTransaction();
-            ContentValues values = new ContentValues();
-            values.put(WIDGET_DATA, session.getData());
-            if(exists(session.getId())){
-                mDatabase.update(TABLE_NAME, values, WIDGET_ID + "=" + session.getId(), null);
-            } else {
-                values.put(WIDGET_ID, session.getId());
-                values.put(WIDGET_TAG, session.getTag());
-                mDatabase.insert(TABLE_NAME, null, values);
-            }
-            mDatabase.setTransactionSuccessful();
-        } finally {
-            mDatabase.endTransaction();
-        }
+    public void update(WidgetSessionData session) {
+        setupIfNecessary();
+        mUpdate.bindBlob(1, session.getData());
+        mUpdate.bindLong(2, session.getId());
+        Log.i(getClass().getName(), "Updated: " + session);
+        mUpdate.executeUpdateDelete();
     }
 }
