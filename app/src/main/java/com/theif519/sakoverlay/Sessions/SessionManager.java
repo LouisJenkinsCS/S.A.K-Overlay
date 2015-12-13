@@ -4,10 +4,11 @@ import android.content.Context;
 import android.util.Log;
 
 import com.annimon.stream.Stream;
-import com.google.gson.GsonBuilder;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
 import com.theif519.sakoverlay.Rx.RxBus;
+
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class SessionManager {
                 .create(new Observable.OnSubscribe<Long>() {
                     @Override
                     public void call(Subscriber<? super Long> subscriber) {
-                        subscriber.onNext(mDatabase.insert(new WidgetSessionData(fragment)));
+                        subscriber.onNext(mDatabase.insert(new WidgetSessionData(fragment.getUniqueId(), fragment.getLayoutTag(), JSONObject.NULL.toString().getBytes())));
                         subscriber.onCompleted();
                     }
                 })
@@ -55,16 +56,7 @@ public class SessionManager {
                 .asObservable()
                 .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
-                .map(fragment -> new WidgetSessionData(
-                                fragment.getId(),
-                                fragment.getTag(),
-                                new GsonBuilder()
-                                        .excludeFieldsWithoutExposeAnnotation()
-                                        .create()
-                                        .toJson(fragment)
-                                        .getBytes()
-                        )
-                )
+                .map(WidgetSessionData::new)
                 .subscribe(mDatabase::update);
         Log.i(getClass().getName(), "Created Database and setup publish subscription!");
     }

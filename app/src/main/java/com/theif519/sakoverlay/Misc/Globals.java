@@ -33,9 +33,7 @@ public final class Globals {
                 Used to save key-values for certain attributes, either as a form of IPC (Inter-Process Communication,
                 think Bundle/Intent) or for serialization/deserialization.
          */
-        public static final String X_COORDINATE = "X Coordinate", Y_COORDINATE = "Y Coordinate", Z_COORDINATE = "Z Coordinate",
-                MINIMIZED = "Minimized", WIDTH = "Width", HEIGHT = "Height", LAYOUT_TAG = "Layout Tag", SNAP_MASK = "Snap Mask",
-                MAXIMIZED = "Maximized";
+        public static final String X = "X", Y = "Y", WIDTH = "Width", HEIGHT = "Height", STATE = "State";
         public static final String RECORDER_COMMAND_REQUEST = "Recorder Command Request Key", RECORDER_COMMAND = "Recorder Command";
 
         private Keys() {

@@ -35,19 +35,19 @@ import com.theif519.sakoverlay.R;
  */
 public class WebBrowserFragment extends FloatingFragment {
 
+    public WebBrowserFragment() {
+        LAYOUT_ID = R.layout.web_browser;
+        ICON_ID = R.drawable.browser;
+        LAYOUT_TAG = IDENTIFIER;
+    }
+
+
+
     protected static final String IDENTIFIER = "Web Browser";
     private static final String DEFAULT_HOMEPAGE = "http://www.google.com", HOME = "Home", REFRESH = "Refresh";
     private WebView mBrowser;
 
     private Button mBrowserBack, mBrowserForward;
-
-    public static WebBrowserFragment newInstance() {
-        WebBrowserFragment fragment = new WebBrowserFragment();
-        fragment.LAYOUT_ID = R.layout.web_browser;
-        fragment.LAYOUT_TAG = IDENTIFIER;
-        fragment.ICON_ID = R.drawable.browser;
-        return fragment;
-    }
 
     @Override
     public void setup() {
@@ -88,37 +88,24 @@ public class WebBrowserFragment extends FloatingFragment {
         });
         mBrowser.setWebChromeClient(new WebChromeClient());
         mBrowser.setInitialScale(1);
-        getContentView().findViewById(R.id.browser_action_back).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mBrowser.goBack();
-            }
-        });
-        getContentView().findViewById(R.id.browser_action_forward).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mBrowser.goForward();
-            }
-        });
+        getContentView().findViewById(R.id.browser_action_back).setOnClickListener(v -> mBrowser.goBack());
+        getContentView().findViewById(R.id.browser_action_forward).setOnClickListener(v -> mBrowser.goForward());
         /*
             Here we allow hitting enter/return on the edit text to submit and send HTTP requests. We also
             check to see if the URL begins with the necessary prefix, "http" or "https", appending our own if
             need be.
          */
-        getContentView().findViewById(R.id.browser_action_text).setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                    String url = ((EditText) v).getText().toString();
-                    StringBuilder completeUrl = new StringBuilder();
-                    if (!url.toLowerCase().startsWith("http://") && !url.toLowerCase().startsWith("https://")) {
-                        completeUrl.append("http://");
-                    }
-                    completeUrl.append(url);
-                    mBrowser.loadUrl(completeUrl.toString());
+        getContentView().findViewById(R.id.browser_action_text).setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                String url = ((EditText) v).getText().toString();
+                StringBuilder completeUrl = new StringBuilder();
+                if (!url.toLowerCase().startsWith("http://") && !url.toLowerCase().startsWith("https://")) {
+                    completeUrl.append("http://");
                 }
-                return true;
+                completeUrl.append(url);
+                mBrowser.loadUrl(completeUrl.toString());
             }
+            return true;
         });
         mBrowser.loadUrl(DEFAULT_HOMEPAGE);
         ((EditText) getContentView().findViewById(R.id.browser_action_text)).setText(DEFAULT_HOMEPAGE);

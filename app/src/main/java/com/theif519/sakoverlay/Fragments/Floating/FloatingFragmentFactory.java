@@ -1,6 +1,5 @@
 package com.theif519.sakoverlay.Fragments.Floating;
 
-import com.google.gson.GsonBuilder;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Sessions.WidgetSessionData;
 
@@ -20,12 +19,11 @@ public final class FloatingFragmentFactory {
      * @return The Widget, or null if not found.
      */
     public static FloatingFragment getFragment(WidgetSessionData data) {
-        Class<? extends FloatingFragment> clazz = getFragmentClass(data.getTag());
-        if (clazz == null) return null;
-        FloatingFragment fragment = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(new String(data.getData()), clazz);
-        fragment.LAYOUT_ID = getFragmentResourceId(data.getTag());
-        fragment.ICON_ID = getFragmentIconResourceId(data.getTag());
-        if(data.getTag() == ScreenRecorderFragment.IDENTIFIER) ((ScreenRecorderFragment) fragment).INSTANCE_EXISTS = true;
+        FloatingFragment fragment = getFragment(data.getTag());
+        if(fragment != null){
+            fragment.setUniqueId(data.getId());
+            fragment.deserialize(data.getData());
+        }
         return fragment;
     }
 
@@ -35,16 +33,16 @@ public final class FloatingFragmentFactory {
      * @param layoutTag Layout Tag as IDENTIFIER.
      * @return FloatingFragment, or null if tag is invalid.
      */
-    private static Class<? extends FloatingFragment> getFragmentClass(String layoutTag) {
+    private static FloatingFragment getFragment(String layoutTag) {
         switch (layoutTag) {
             case StickyNoteFragment.IDENTIFIER:
-                return StickyNoteFragment.class;
+                return new StickyNoteFragment();
             case GoogleMapsFragment.IDENTIFIER:
-                return GoogleMapsFragment.class;
+                return new GoogleMapsFragment();
             case WebBrowserFragment.IDENTIFIER:
-                return WebBrowserFragment.class;
+                return new WebBrowserFragment();
             case ScreenRecorderFragment.IDENTIFIER:
-                return ScreenRecorderFragment.class;
+                return new ScreenRecorderFragment();
             default:
                 return null;
         }

@@ -6,6 +6,7 @@ import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -22,6 +23,9 @@ import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Sessions.SessionManager;
 import com.theif519.sakoverlay.Views.TouchInterceptorLayout;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Created by theif519 on 10/29/2015.
@@ -81,13 +85,13 @@ public class FloatingFragment extends Fragment {
     /*
         Tag used to serialize and deserialize/reconstruct with the factory. This must be changed by sub classes.
      */
-    protected String LAYOUT_TAG = "DefaultFragment";
+    protected String LAYOUT_TAG;
 
     /*
         These protected variables MUST be changed by subclasses, and is used during the onCreateView() to initialize
         the root view. default_fragment is akin to a 404 message.
      */
-    protected int LAYOUT_ID = R.layout.default_fragment, ICON_ID = R.drawable.settings;
+    protected int LAYOUT_ID, ICON_ID;
 
     protected long id = -1;
 
@@ -375,28 +379,50 @@ public class FloatingFragment extends Fragment {
      */
     protected void setup() {
         if(mVC == null){
-            mVC = new ViewController(mContentView, LAYOUT_TAG, id);
-        }
+            mVC = new ViewController(mContentView);
+        } else mVC.setView(mContentView);
+        mVC.update();
         if (mVC.getWidth() == 0 || mVC.getHeight() == 0) {
             mVC
                     .setWidth(mContentView.getWidth())
                     .setHeight(mContentView.getHeight());
         }
-        if(mVC.getId() != -1 && this.id == -1){
-            this.id = mVC.getId();
-        } else if(this.id != -1 && mVC.getId() == -1){
-            mVC.setId(this.id);
-        }
-        if (mVC.isSnapped()) {
-            snap();
-        }
+        snap();
         if (mVC.isMaximized()) {
             maximize();
         }
         if(mVC.isMinimized()){
             minimize();
         }
-        mVC.update();
+    }
+
+    protected JSONObject pack() {
+        try {
+            return mVC.deserialize();
+        } catch (JSONException e){
+            Log.w(getClass().getName(), e.getMessage());
+            return null;
+        }
+    }
+
+    protected void unpack(JSONObject obj){
+        try {
+            mVC = new ViewController().serialize(obj);
+        } catch(JSONException e){
+            Log.w(getClass().getName(), e.getMessage());
+        }
+    }
+
+    public void deserialize(byte[] data){
+        try {
+            unpack(new JSONObject(new String(data)));
+        } catch(JSONException e){
+            Log.w(getClass().getName(), e.getMessage());
+        }
+    }
+
+    public byte[] serialize(){
+        return pack().toString().getBytes();
     }
 
     /**
@@ -483,7 +509,6 @@ public class FloatingFragment extends Fragment {
 
     public void setUniqueId(long id){
         this.id = id;
-        if(mVC != null) mVC.setId(id);
     }
 
 }

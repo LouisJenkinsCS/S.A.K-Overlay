@@ -1,6 +1,5 @@
 package com.theif519.sakoverlay.Sessions;
 
-import com.google.gson.GsonBuilder;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 
 /**
@@ -24,13 +23,9 @@ public class WidgetSessionData {
     }
 
     public WidgetSessionData(FloatingFragment fragment){
-        this.id = fragment.getId();
+        this.id = fragment.getUniqueId();
         this.tag = fragment.getLayoutTag();
-        this.data = new GsonBuilder()
-                .excludeFieldsWithoutExposeAnnotation()
-                .create()
-                .toJson(fragment)
-                .getBytes();
+        this.data = fragment.serialize();
     }
 
     public long getId() {

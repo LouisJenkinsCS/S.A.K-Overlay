@@ -31,7 +31,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 
 
@@ -67,10 +66,6 @@ public class MainActivity extends Activity {
         MainActivity knowing (which is a good thing).
      */
     private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
-    private int mFloatingFragmentsSetup;
-    private boolean mFinishedSetup = false;
-
-    private Subscription mSetupSubscription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,19 +164,19 @@ public class MainActivity extends Activity {
         makeImmersive(view);
         mMenuPopup = new PopupWindow(view);
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_browser_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(WebBrowserFragment.newInstance(), true);
+            addFragment(new WebBrowserFragment(), true);
             mMenuPopup.dismiss();
         });
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_maps_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(GoogleMapsFragment.newInstance(), true);
+            addFragment(new GoogleMapsFragment(), true);
             mMenuPopup.dismiss();
         });
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_recorder_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(ScreenRecorderFragment.newInstance(), true);
+            addFragment(new ScreenRecorderFragment(), true);
             mMenuPopup.dismiss();
         });
         mMenuPopup.getContentView().findViewById(R.id.menu_bar_sticky_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(StickyNoteFragment.newInstance(), true);
+            addFragment(new StickyNoteFragment(), true);
             mMenuPopup.dismiss();
         });
         mMenuPopup.setFocusable(true);

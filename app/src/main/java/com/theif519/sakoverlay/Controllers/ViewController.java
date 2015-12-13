@@ -2,13 +2,14 @@ package com.theif519.sakoverlay.Controllers;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import com.google.gson.annotations.Expose;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Created by theif519 on 12/4/2015.
@@ -39,26 +40,19 @@ import com.theif519.sakoverlay.Misc.MeasureTools;
  */
 public class ViewController {
 
-    @Expose
-    private String tag;
-
-    @Expose
-    private long id;
-
-    @Expose
     private int stateMask = 0;
 
     public static final int RIGHT = 1, LEFT = 1 << 1, UPPER = 1 << 2, BOTTOM = 1 << 3;
 
     public static final int MINIMIZED = 1 << 4, MAXIMIZED = 1 << 5, DEAD = 1 << 6;
 
-    @Expose
+
     private int x;
-    @Expose
+
     private int y;
-    @Expose
+
     private int width;
-    @Expose
+
     private int height;
 
     private View v;
@@ -68,10 +62,8 @@ public class ViewController {
         mHandler = new Handler(Looper.getMainLooper());
     }
 
-    public ViewController(@NonNull View v, String tag, long id) {
+    public ViewController(View v) {
         mHandler = new Handler(Looper.getMainLooper());
-        this.tag = tag;
-        this.id = id;
         this.v = v;
     }
 
@@ -242,21 +234,26 @@ public class ViewController {
         return this;
     }
 
-    public String getTag() {
-        return tag;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public ViewController setId(long id) {
-        this.id = id;
+    public ViewController serialize(JSONObject data) throws JSONException {
+        x = data.getInt(Globals.Keys.X);
+        y = data.getInt(Globals.Keys.Y);
+        width = data.getInt(Globals.Keys.WIDTH);
+        height = data.getInt(Globals.Keys.HEIGHT);
+        stateMask = data.getInt(Globals.Keys.STATE);
         return this;
     }
 
-    public ViewController setTag(String tag) {
-        this.tag = tag;
+    public JSONObject deserialize() throws JSONException {
+        return new JSONObject()
+                .put(Globals.Keys.X, x)
+                .put(Globals.Keys.Y, y)
+                .put(Globals.Keys.WIDTH, width)
+                .put(Globals.Keys.HEIGHT, height)
+                .put(Globals.Keys.STATE, stateMask);
+    }
+
+    public ViewController setView(View v){
+        this.v = v;
         return this;
     }
 

@@ -43,6 +43,12 @@ import rx.subjects.PublishSubject;
  */
 public class GoogleMapsFragment extends FloatingFragment {
 
+    public GoogleMapsFragment() {
+        LAYOUT_ID = R.layout.google_maps;
+        ICON_ID = R.drawable.maps;
+        LAYOUT_TAG = IDENTIFIER;
+    }
+
     protected static final String IDENTIFIER = "Google Maps";
 
     private GoogleMap mMap;
@@ -56,14 +62,6 @@ public class GoogleMapsFragment extends FloatingFragment {
         thread, which is handled whenever we emit a new item/task. Handy.
     */
     private PublishSubject<Location> mOnNextAddress = PublishSubject.create();
-
-    public static GoogleMapsFragment newInstance() {
-        GoogleMapsFragment fragment = new GoogleMapsFragment();
-        fragment.LAYOUT_ID = R.layout.google_maps;
-        fragment.LAYOUT_TAG = IDENTIFIER;
-        fragment.ICON_ID = R.drawable.maps;
-        return fragment;
-    }
 
     @Override
     public void setup() {

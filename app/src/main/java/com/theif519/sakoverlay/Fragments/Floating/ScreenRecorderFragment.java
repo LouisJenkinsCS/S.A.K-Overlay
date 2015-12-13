@@ -48,7 +48,14 @@ import rx.Subscription;
  */
 public class ScreenRecorderFragment extends FloatingFragment {
 
+    public ScreenRecorderFragment() {
+        LAYOUT_ID = R.layout.screen_recorder;
+        ICON_ID = R.drawable.screen_recorder;
+        LAYOUT_TAG = IDENTIFIER;
+    }
+
     protected static final String IDENTIFIER = "Screen Recorder";
+
     /*
         There can be only one instance of this class. Imagine the nightmare of having two or more of these, it'd
         be useless and redundantly redundant.
@@ -73,16 +80,6 @@ public class ScreenRecorderFragment extends FloatingFragment {
         whether the button calls START or STOP. Simple for now, but gets the job done.
      */
     private boolean mIsRunning = false;
-
-    public static ScreenRecorderFragment newInstance() {
-        if (INSTANCE_EXISTS) return null;
-        ScreenRecorderFragment fragment = new ScreenRecorderFragment();
-        fragment.LAYOUT_ID = R.layout.screen_recorder;
-        fragment.LAYOUT_TAG = IDENTIFIER;
-        fragment.ICON_ID = R.drawable.screen_recorder;
-        INSTANCE_EXISTS = true;
-        return fragment;
-    }
 
     @Override
     protected void setup() {
