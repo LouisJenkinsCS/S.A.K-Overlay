@@ -6,6 +6,7 @@ import android.util.Log;
 import android.widget.EditText;
 
 import com.theif519.sakoverlay.R;
+import com.theif519.sakoverlay.Sessions.SessionManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -73,6 +74,7 @@ public class StickyNoteFragment extends FloatingFragment {
         if (mContents != null) {
             editText.setText(mContents);
         }
+        final Runnable runnable = () -> SessionManager.getInstance().updateSession(this);
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -82,6 +84,8 @@ public class StickyNoteFragment extends FloatingFragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 mContents = s.toString();
+                getContentView().removeCallbacks(runnable);
+                getContentView().postDelayed(runnable, 5000);
             }
 
             @Override

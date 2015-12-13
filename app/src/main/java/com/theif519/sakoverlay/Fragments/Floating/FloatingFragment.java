@@ -143,6 +143,7 @@ public class FloatingFragment extends Fragment {
      */
     private void setupListeners() {
         mContentView.findViewById(R.id.title_bar_close).setOnClickListener(v -> {
+            SessionManager.getInstance().deleteSession(FloatingFragment.this);
             getActivity().getFragmentManager().beginTransaction().remove(FloatingFragment.this).commit();
             mVC.addState(ViewController.DEAD);
         });

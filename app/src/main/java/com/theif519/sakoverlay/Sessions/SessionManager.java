@@ -27,6 +27,7 @@ public class SessionManager {
 
     private SessionDatabase mDatabase;
     private static final PublishSubject<FloatingFragment> mPublishUpdate = PublishSubject.create();
+    private static final PublishSubject<FloatingFragment> mPublishDelete = PublishSubject.create();
 
     public static SessionManager getInstance() {
         return INSTANCE;
@@ -58,6 +59,12 @@ public class SessionManager {
                 .subscribeOn(Schedulers.io())
                 .map(WidgetSessionData::new)
                 .subscribe(mDatabase::update);
+        mPublishDelete
+                .asObservable()
+                .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io())
+                .map(FloatingFragment::getUniqueId)
+                .subscribe(mDatabase::delete);
         Log.i(getClass().getName(), "Created Database and setup publish subscription!");
     }
 
@@ -86,6 +93,11 @@ public class SessionManager {
     public void updateSession(FloatingFragment fragment) {
         Log.i(getClass().getName(), "Updating fragment!");
         mPublishUpdate.onNext(fragment);
+    }
+
+    public void deleteSession(FloatingFragment fragment){
+        Log.i(getClass().getName(), "Deleting fragment!");
+        mPublishDelete.onNext(fragment);
     }
 
 }

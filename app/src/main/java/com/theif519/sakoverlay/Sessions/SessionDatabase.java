@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Looper;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -22,6 +23,8 @@ public class SessionDatabase extends SQLiteOpenHelper {
     private SQLiteStatement mUpdate;
 
     private SQLiteStatement mInsert;
+
+    private SQLiteStatement mDelete;
 
     public SessionDatabase(Context context) {
         super(context, "SessionData.db", null, 1);
@@ -52,11 +55,15 @@ public class SessionDatabase extends SQLiteOpenHelper {
     }
 
     private void setupIfNecessary() {
+        if(Looper.getMainLooper() == Looper.myLooper()) throw new RuntimeException("Sorry, wrong thread buddy!");
         if (mDatabase == null) mDatabase = getWritableDatabase();
         if (mUpdate == null) mUpdate = mDatabase.compileStatement("UPDATE " + TABLE_NAME + " SET "
                 + WIDGET_DATA + "=? WHERE " + WIDGET_ID + "=?");
         if (mInsert == null)
             mInsert = mDatabase.compileStatement("INSERT INTO " + TABLE_NAME + " VALUES (NULL, ?,?)");
+        if(mDelete == null){
+            mDelete = mDatabase.compileStatement("DELETE FROM " + TABLE_NAME + " WHERE " + WIDGET_ID + "=?");
+        }
     }
 
 
@@ -137,5 +144,12 @@ public class SessionDatabase extends SQLiteOpenHelper {
         mUpdate.bindLong(2, session.getId());
         Log.i(getClass().getName(), "Updated: " + session);
         mUpdate.executeUpdateDelete();
+    }
+
+    public void delete(long id){
+        setupIfNecessary();
+        mDelete.bindLong(1, id);
+        Log.i(getClass().getName(), "Deleted: #" + id);
+        mDelete.executeUpdateDelete();
     }
 }
