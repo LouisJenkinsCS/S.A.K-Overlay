@@ -29,7 +29,7 @@ import org.json.JSONObject;
  * Created by theif519 on 10/29/2015.
  */
 public class FloatingFragment extends Fragment {
-    protected ViewState mVC;
+    protected ViewState mViewState;
     protected String LAYOUT_TAG;
     protected int mLayoutId, mIconId, mMinWidth = MeasureTools.scaleInverse(250), mMinHeight = MeasureTools.scaleInverse(250);
     protected long id = -1;
@@ -75,9 +75,9 @@ public class FloatingFragment extends Fragment {
         });
         mContentView.findViewById(R.id.title_bar_minimize).setOnClickListener(v -> minimize());
         mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(v -> {
-            if (mVC.isMaximized()) {
-                mVC.setMaximized(false);
-                if(mVC.isSnapped()){
+            if (mViewState.isMaximized()) {
+                mViewState.setMaximized(false);
+                if(mViewState.isSnapped()){
                     snap();
                 } else restoreState();
             } else {
@@ -93,19 +93,19 @@ public class FloatingFragment extends Fragment {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         mContentView.bringToFront();
-                        if (mVC.isMaximized() || mVC.isSnapped()) {
-                            mVC.resetState();
+                        if (mViewState.isMaximized() || mViewState.isSnapped()) {
+                            mViewState.resetState();
                             restoreState();
                             setCoordinates(
                                     (int) event.getRawX() - MeasureTools.scaleDeltaWidth(mContentView),
                                     (int) event.getRawY() - MeasureTools.scaleDeltaHeight(mContentView)
                             );
                             Point p = MeasureTools.getScaledCoordinates(mContentView);
-                            prevX = touchXOffset = p.x - mVC.getX();
-                            prevY = touchYOffset = p.y - mVC.getY();
+                            prevX = touchXOffset = p.x - mViewState.getX();
+                            prevY = touchYOffset = p.y - mViewState.getY();
                         } else {
-                            prevX = touchXOffset = (int) event.getRawX() - mVC.getX();
-                            prevY = touchYOffset = (int) event.getRawY() - mVC.getY();
+                            prevX = touchXOffset = (int) event.getRawX() - mViewState.getX();
+                            prevY = touchYOffset = (int) event.getRawY() - mViewState.getY();
                         }
                         return false;
                     case MotionEvent.ACTION_MOVE:
@@ -138,7 +138,7 @@ public class FloatingFragment extends Fragment {
                         tmpY = p.y;
                         return false;
                     case MotionEvent.ACTION_MOVE:
-                        mVC.resetState();
+                        mViewState.resetState();
                         setSize(
                                 Math.abs(MeasureTools.scaleInverse((int) event.getRawX() - tmpX)),
                                 Math.abs(MeasureTools.scaleInverse((int) event.getRawY() - tmpY))
@@ -157,14 +157,14 @@ public class FloatingFragment extends Fragment {
                 .subscribe(configuration -> {
                     boundsCheck();
                     snap();
-                    if (mVC.isStateSet(ViewState.MAXIMIZED)) {
+                    if (mViewState.isMaximized()) {
                         maximize();
                     }
                 });
     }
 
     private void setSize(int width, int height) {
-        mVC
+        mViewState
                 .setWidth(width)
                 .setHeight(height);
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
@@ -174,7 +174,7 @@ public class FloatingFragment extends Fragment {
     }
 
     private void setCoordinates(int x, int y){
-        mVC
+        mViewState
                 .setX(x)
                 .setY(y);
         mContentView.setX(x);
@@ -182,13 +182,13 @@ public class FloatingFragment extends Fragment {
     }
 
     private void setX(int x){
-        mVC
+        mViewState
                 .setX(x);
         mContentView.setX(x);
     }
 
     private void setY(int y){
-        mVC
+        mViewState
                 .setY(y);
         mContentView.setY(y);
     }
@@ -206,11 +206,11 @@ public class FloatingFragment extends Fragment {
     }
 
     private void restoreState(){
-        mContentView.setX(mVC.getX());
-        mContentView.setY(mVC.getY());
+        mContentView.setX(mViewState.getX());
+        mContentView.setY(mViewState.getY());
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-        params.width = mVC.getWidth();
-        params.height = mVC.getHeight();
+        params.width = mViewState.getWidth();
+        params.height = mViewState.getHeight();
         mContentView.setLayoutParams(params);
     }
 
@@ -222,26 +222,26 @@ public class FloatingFragment extends Fragment {
      * size and coordinates are not saved, to easily allow the view to go back to it's original size easily.
      */
     private void snap() {
-        if(!mVC.isSnapped()) return;
+        if(!mViewState.isSnapped()) return;
         int maxWidth = Globals.MAX_X.get();
         int maxHeight = Globals.MAX_Y.get();
         int width = 0, height = 0, x = 0, y = 0;
-        if (mVC.isStateSet(ViewState.RIGHT )) {
+        if (mViewState.isStateSet(ViewState.RIGHT )) {
             width = maxWidth / 2;
             height = maxHeight;
             x = maxWidth / 2;
         }
-        if (mVC.isStateSet(ViewState.LEFT)) {
+        if (mViewState.isStateSet(ViewState.LEFT)) {
             width = maxWidth / 2;
             height = maxHeight;
         }
-        if (mVC.isStateSet(ViewState.UPPER)) {
+        if (mViewState.isStateSet(ViewState.UPPER)) {
             if (width == 0) {
                 width = maxWidth;
             }
             height = maxHeight / 2;
         }
-        if (mVC.isStateSet(ViewState.BOTTOM)) {
+        if (mViewState.isStateSet(ViewState.BOTTOM)) {
             if (width == 0) {
                 width = maxWidth;
             }
@@ -269,22 +269,22 @@ public class FloatingFragment extends Fragment {
      * @param newY The new y-coordinate. By finding the difference between new and old, we can determine which vertical direction the user is going.
      */
     private void updateSnapMask(int oldX, int oldY, int newX, int newY) {
-        mVC.resetSnap();
+        mViewState.resetSnap();
         int transitionX = newX - oldX;
         int transitionY = newY - oldY;
         int snapOffsetX = Globals.MAX_X.get() / 10;
         int snapOffsetY = Globals.MAX_Y.get() / 10;
         if (transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()) {
-            mVC.addState(ViewState.RIGHT);
+            mViewState.addState(ViewState.RIGHT);
         }
         if (transitionX < 0 && newX <= snapOffsetX) {
-            mVC.addState(ViewState.LEFT);
+            mViewState.addState(ViewState.LEFT);
         }
         if (transitionY < 0 && newY <= snapOffsetY) {
-            mVC.addState(ViewState.UPPER);
+            mViewState.addState(ViewState.UPPER);
         }
         if (transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()) {
-            mVC.addState(ViewState.BOTTOM);
+            mViewState.addState(ViewState.BOTTOM);
         }
     }
 
@@ -330,18 +330,18 @@ public class FloatingFragment extends Fragment {
      * necessary to setup.
      */
     protected void setup() {
-        if(mVC == null){
-            mVC = new ViewState();
+        if(mViewState == null){
+            mViewState = new ViewState();
         }
         restoreState();
-        if (mVC.getWidth() == 0 || mVC.getHeight() == 0) {
+        if (mViewState.getWidth() == 0 || mViewState.getHeight() == 0) {
             setSize(mMinWidth, mMinHeight);
         }
         snap();
-        if (mVC.isMaximized()) {
+        if (mViewState.isMaximized()) {
             maximize();
         }
-        if(mVC.isMinimized()){
+        if(mViewState.isMinimized()){
             minimize();
         }
         SessionManager.getInstance().finishedSetup();
@@ -349,7 +349,7 @@ public class FloatingFragment extends Fragment {
 
     protected JSONObject pack() {
         try {
-            return mVC.deserialize();
+            return mViewState.deserialize();
         } catch (JSONException e){
             Log.w(getClass().getName(), e.getMessage());
             return null;
@@ -358,7 +358,7 @@ public class FloatingFragment extends Fragment {
 
     protected void unpack(JSONObject obj){
         try {
-            mVC = new ViewState(obj);
+            mViewState = new ViewState(obj);
         } catch(JSONException e){
             Log.w(getClass().getName(), e.getMessage());
         }
@@ -399,7 +399,7 @@ public class FloatingFragment extends Fragment {
         params.height = maxY;
         mContentView.setLayoutParams(params);
         mContentView.bringToFront();
-        mVC.setMaximized(true);
+        mViewState.setMaximized(true);
     }
 
     /**
@@ -407,7 +407,7 @@ public class FloatingFragment extends Fragment {
      */
     private void minimize() {
         mContentView.setVisibility(View.INVISIBLE);
-        mVC.setMinimized(true);
+        mViewState.setMinimized(true);
         SessionManager.getInstance().updateSession(this);
     }
 
@@ -431,7 +431,7 @@ public class FloatingFragment extends Fragment {
     }
 
     public ViewState getViewProperties(){
-        return mVC;
+        return mViewState;
     }
 
     public String getLayoutTag() {
