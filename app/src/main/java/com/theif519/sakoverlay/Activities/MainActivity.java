@@ -27,10 +27,6 @@ import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.sakoverlay.Sessions.SessionManager;
 import com.theif519.utils.Misc.ServiceTools;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
-
 import rx.android.schedulers.AndroidSchedulers;
 
 
@@ -56,16 +52,6 @@ public class MainActivity extends Activity {
         And of course it is faster this way.
      */
     private PopupWindow mMenuPopup;
-    /*
-        WeakReference to current floating fragments. It allows a seamless and the most efficient way
-        of keeping track of each fragment without having to worry about leaking it, or having it
-        modify a public static collection. This is considered the best practice.
-
-        Why do we need a reference for each FloatingFragment, you may ask? Because we cannot serialize each
-        fragment without it. Why do we use a WeakReference? Because each fragment can be destroyed without the
-        MainActivity knowing (which is a good thing).
-     */
-    private List<WeakReference<FloatingFragment>> mFragments = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +64,7 @@ public class MainActivity extends Activity {
         RxBus.publish("Starting Overlay Notification Service if not already...");
         // We start the service if it hasn't already been started.
         ServiceTools.startService(this, NotificationService.class, intent -> intent.putExtra(NotificationService.START_NOTIFICATION, true));
+        RxBus.publish("Waiting for layout to finish inflating...");
         // Set the initial MAX_X and MAX_Y when the root view is fully inflated as well as deserialize the floating fragments.
         findViewById(R.id.main_layout).post(() -> {
             updateMaxCoordinates();
@@ -108,7 +95,6 @@ public class MainActivity extends Activity {
         icon.setOnClickListener(v -> mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight()));
         final TextView info = (TextView) actionbar.getCustomView().findViewById(R.id.menu_bar_info);
         RxBus.subscribe(String.class)
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(msg -> {
                     if (Looper.getMainLooper() != Looper.myLooper()) {
                         runOnUiThread(() -> info.setText(msg));
@@ -138,12 +124,8 @@ public class MainActivity extends Activity {
                 .appendSession(fragment)
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(fragment::setUniqueId)
-                .subscribe(id -> {
-                    mFragments.add(new WeakReference<>(fragment));
-                    getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
-                });
+                .subscribe(id -> getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit());
         else {
-            mFragments.add(new WeakReference<>(fragment));
             getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
         }
     }

@@ -36,8 +36,8 @@ import com.theif519.sakoverlay.R;
 public class WebBrowserFragment extends FloatingFragment {
 
     public WebBrowserFragment() {
-        LAYOUT_ID = R.layout.web_browser;
-        ICON_ID = R.drawable.browser;
+        mLayoutId = R.layout.web_browser;
+        mIconId = R.drawable.browser;
         LAYOUT_TAG = IDENTIFIER;
     }
 

@@ -29,6 +29,8 @@ public class SessionManager {
     private static final PublishSubject<FloatingFragment> mPublishUpdate = PublishSubject.create();
     private static final PublishSubject<FloatingFragment> mPublishDelete = PublishSubject.create();
 
+    private static int mWidgetSetupNum = 0;
+
     public static SessionManager getInstance() {
         return INSTANCE;
     }
@@ -37,13 +39,20 @@ public class SessionManager {
 
     }
 
+    /**
+     * Appends the widget to the database, which asynchronously returns the ID associated with it
+     * in an observable.
+     *
+     * @param fragment Widget to append
+     * @return Observable which emits the unique id for it.
+     */
     public Observable<Long> appendSession(FloatingFragment fragment) {
         Log.i(getClass().getName(), "Appending a new fragment to session data!");
         return Observable
                 .create(new Observable.OnSubscribe<Long>() {
                     @Override
                     public void call(Subscriber<? super Long> subscriber) {
-                        subscriber.onNext(mDatabase.insert(new WidgetSessionData(fragment.getUniqueId(), fragment.getLayoutTag(), JSONObject.NULL.toString().getBytes())));
+                        subscriber.onNext(mDatabase.insert(new WidgetSessionData(-1, fragment.getLayoutTag(), JSONObject.quote("{}").getBytes())));
                         subscriber.onCompleted();
                     }
                 })
@@ -78,10 +87,13 @@ public class SessionManager {
                     public void call(Subscriber<? super FloatingFragment> subscriber) {
                         List<WidgetSessionData> dataList = mDatabase.readAll();
                         if (dataList != null) {
-                            Stream.of(dataList)
+                            mWidgetSetupNum = dataList.size();
+                            Stream
+                                    .of(dataList)
                                     .map(FloatingFragmentFactory::getFragment)
                                     .filter(f -> f != null)
                                     .forEach(subscriber::onNext);
+                            RxBus.publish("Restoring session...");
                         } else RxBus.publish("Created new session!");
                         subscriber.onCompleted();
                     }
@@ -95,9 +107,15 @@ public class SessionManager {
         mPublishUpdate.onNext(fragment);
     }
 
-    public void deleteSession(FloatingFragment fragment){
+    public void deleteSession(FloatingFragment fragment) {
         Log.i(getClass().getName(), "Deleting fragment!");
         mPublishDelete.onNext(fragment);
+    }
+
+    public void finishedSetup(){
+        if(--mWidgetSetupNum == 0){
+            RxBus.publish("Restored Session!");
+        }
     }
 
 }

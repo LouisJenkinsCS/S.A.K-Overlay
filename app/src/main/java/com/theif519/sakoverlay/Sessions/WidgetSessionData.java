@@ -18,10 +18,6 @@ public class WidgetSessionData {
         this.data = data;
     }
 
-    public WidgetSessionData(){
-
-    }
-
     public WidgetSessionData(FloatingFragment fragment){
         this.id = fragment.getUniqueId();
         this.tag = fragment.getLayoutTag();

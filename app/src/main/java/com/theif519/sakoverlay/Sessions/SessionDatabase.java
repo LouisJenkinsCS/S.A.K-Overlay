@@ -128,8 +128,9 @@ public class SessionDatabase extends SQLiteOpenHelper {
         setupIfNecessary();
         mInsert.bindString(1, session.getTag());
         mInsert.bindBlob(2, session.getData());
-        Log.i(getClass().getName(), "Inserted " + session);
-        return mInsert.executeInsert();
+        long id = mInsert.executeInsert();
+        Log.i(getClass().getName(), "Inserted #" + id + " with Tag: " + session.getTag());
+        return id;
     }
 
     /**

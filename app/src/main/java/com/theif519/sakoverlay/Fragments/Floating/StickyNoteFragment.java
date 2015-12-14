@@ -36,8 +36,8 @@ import org.json.JSONObject;
 public class StickyNoteFragment extends FloatingFragment {
 
     public StickyNoteFragment() {
-        LAYOUT_ID = R.layout.sticky_note;
-        ICON_ID = R.drawable.sticky_note;
+        mLayoutId = R.layout.sticky_note;
+        mIconId = R.drawable.sticky_note;
         LAYOUT_TAG = IDENTIFIER;
     }
 

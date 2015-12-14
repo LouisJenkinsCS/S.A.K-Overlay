@@ -44,8 +44,8 @@ import rx.subjects.PublishSubject;
 public class GoogleMapsFragment extends FloatingFragment {
 
     public GoogleMapsFragment() {
-        LAYOUT_ID = R.layout.google_maps;
-        ICON_ID = R.drawable.maps;
+        mLayoutId = R.layout.google_maps;
+        mIconId = R.drawable.maps;
         LAYOUT_TAG = IDENTIFIER;
     }
 

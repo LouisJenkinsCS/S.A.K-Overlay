@@ -49,8 +49,8 @@ import rx.Subscription;
 public class ScreenRecorderFragment extends FloatingFragment {
 
     public ScreenRecorderFragment() {
-        LAYOUT_ID = R.layout.screen_recorder;
-        ICON_ID = R.drawable.screen_recorder;
+        mLayoutId = R.layout.screen_recorder;
+        mIconId = R.drawable.screen_recorder;
         LAYOUT_TAG = IDENTIFIER;
     }
 
