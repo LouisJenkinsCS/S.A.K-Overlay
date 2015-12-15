@@ -31,7 +31,7 @@
         android:layout_marginStart="5dp"
         android:layout_below="@id/menu_child_item_top_separator"
         android:layout_above="@+id/menu_child_item_bottom_separator"
-        android:id="@+id/menu_child_item_icon" />
+        android:id="@+id/menu_option_icon" />
 
     <TextView
         android:layout_width="fill_parent"

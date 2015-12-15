@@ -31,7 +31,7 @@ public class MenuChildItem extends RelativeLayout {
         super(context, attrs);
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.menu_child_item, this);
-        mDescriptionIcon = (ImageView) findViewById(R.id.menu_child_item_icon);
+        mDescriptionIcon = (ImageView) findViewById(R.id.menu_option_icon);
         mDescriptionText = (TextView) findViewById(R.id.menu_option_description);
         AttributeRetriever.fillAttributes(getClass(), this, context, attrs);
     }

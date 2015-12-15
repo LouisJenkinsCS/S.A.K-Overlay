@@ -14,7 +14,7 @@ public class MenuOptionInfo {
     public enum MenuOptionType {
         SEPARATOR,
         MENU_OPTION
-    };
+    }
 
     public MenuOptionInfo(String text, Integer iconResId, View.OnClickListener callback, MenuOptionType type){
         mDescriptionText = text;

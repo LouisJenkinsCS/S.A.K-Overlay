@@ -29,16 +29,6 @@ public class MenuOptionsAdapter extends BaseAdapter {
     }
 
     @Override
-    public int getViewTypeCount() {
-        return 2;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        return mMenuOptions.get(position).getType() == MenuOptionInfo.MenuOptionType.MENU_OPTION ? 2 : 1;
-    }
-
-    @Override
     public int getCount() {
         return mMenuOptions.size();
     }
@@ -58,11 +48,11 @@ public class MenuOptionsAdapter extends BaseAdapter {
         MenuOptionsHolder holder;
         if(convertView == null){
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            switch(getItemViewType(position)){
-                case TYPE_OPTION:
+            switch(mMenuOptions.get(position).getType()){
+                case MENU_OPTION:
                     convertView = inflater.inflate(R.layout.menu_child_item, null);
                     break;
-                case TYPE_SEPARATOR:
+                case SEPARATOR:
                     convertView = inflater.inflate(R.layout.menu_option_separator, null);
                     break;
             }
@@ -81,7 +71,7 @@ public class MenuOptionsAdapter extends BaseAdapter {
 
         public MenuOptionsHolder(View view, MenuOptionInfo info){
             if(info.getType() == MenuOptionInfo.MenuOptionType.MENU_OPTION){
-                mDescriptionIcon = (ImageView) view.findViewById(R.id.menu_child_item_icon);
+                mDescriptionIcon = (ImageView) view.findViewById(R.id.menu_option_icon);
             }
             mDescriptionText = (TextView) view.findViewById(R.id.menu_option_description);
         }
@@ -90,6 +80,9 @@ public class MenuOptionsAdapter extends BaseAdapter {
             if(info.getType() == MenuOptionInfo.MenuOptionType.MENU_OPTION){
                 v.findViewById(R.id.menu_child_item_clickable).setOnClickListener(info.getCallback());
                 if(info.getIconResourceId() != null){
+                    if(mDescriptionIcon == null){
+                        mDescriptionIcon = (ImageView) v.findViewById(R.id.menu_option_icon);
+                    }
                     mDescriptionIcon.setImageResource(info.getIconResourceId());
                 } else {
                     mDescriptionIcon.setVisibility(View.GONE);

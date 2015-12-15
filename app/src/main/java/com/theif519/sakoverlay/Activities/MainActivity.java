@@ -26,7 +26,6 @@ import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.sakoverlay.Sessions.SessionManager;
-import com.theif519.sakoverlay.Views.DropdownMenu;
 import com.theif519.utils.Misc.ServiceTools;
 
 import rx.android.schedulers.AndroidSchedulers;
@@ -143,16 +142,14 @@ public class MainActivity extends Activity {
 
     private void setupPopupWindow() {
         RxBus.publish("Inflating Menu options...");
-        DropdownMenu menu = new MenuBuilder() // IO -> MenuBuilder; UI -> DropdownMenu
+        mMenuPopup = new MenuBuilder() // IO -> MenuBuilder; UI -> DropdownMenu
                 .addSeperator("Applications", null)
                 .addOption("Web Browser", R.drawable.browser, v -> addFragment(new WebBrowserFragment(), true))
                 .addOption("Google Maps", R.drawable.maps, v -> addFragment(new GoogleMapsFragment(), true))
                 .addOption("Sticky Note", R.drawable.sticky_note, v -> addFragment(new StickyNoteFragment(), true))
                 .addOption("Screen Recorder", R.drawable.screen_recorder, v -> addFragment(new ScreenRecorderFragment(), true))
-                .setOnClickCallback(mMenuPopup::dismiss)
                 .create(this);
-        makeImmersive(menu);
-        mMenuPopup = new PopupWindow(menu);
+        makeImmersive(mMenuPopup.getContentView());
         mMenuPopup.setFocusable(true);
         mMenuPopup.setBackgroundDrawable(new BitmapDrawable());
         mMenuPopup.setOutsideTouchable(true);

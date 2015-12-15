@@ -1,12 +1,15 @@
 package com.theif519.sakoverlay.Builders;
 
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.PopupWindow;
 
-import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Adapters.MenuOptionsAdapter;
 import com.theif519.sakoverlay.POJO.MenuOptionInfo;
-import com.theif519.sakoverlay.Views.DropdownMenu;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +20,6 @@ import java.util.List;
 public class MenuBuilder {
 
     private List<MenuOptionInfo> mMenuOptions;
-    private Runnable mOnEachClickCallback;
 
     public MenuBuilder() {
         mMenuOptions = new ArrayList<>();
@@ -33,31 +35,20 @@ public class MenuBuilder {
         return this;
     }
 
-    /**
-     * If this is called, the callback will be called after each onClick listener by wrapping the old onClickListener
-     * with this callback. Useful for dimissing PopupWindows after selecting.
-     *
-     * @param callback Called after View.OnClickListener
-     * @return This instance, used for chaining together multiple operations.
-     */
-    public MenuBuilder setOnClickCallback(Runnable callback) {
-        mOnEachClickCallback = callback;
-        return this;
-    }
-
-    public DropdownMenu create(Context context) {
-        if (mOnEachClickCallback != null) {
-            Stream
-                    .of(mMenuOptions)
-                    .filter(option -> option.getType() == MenuOptionInfo.MenuOptionType.MENU_OPTION && option.getCallback() != null)
-                    .forEach(option -> option.setCallback(
-                            v -> {
-                                option.getCallback().onClick(v);
-                                mOnEachClickCallback.run();
-                            }
-                    ));
-        }
-        return new DropdownMenu(context)
-                .setMenuOptionsAdapter(new MenuOptionsAdapter(mMenuOptions, context));
+    public PopupWindow create(Context context) {
+        ListView listView = new ListView(context);
+        PopupWindow window = new PopupWindow(listView);
+        ((ListView)window.getContentView()).setAdapter(new MenuOptionsAdapter(mMenuOptions, context));
+        window.setFocusable(true);
+        window.setBackgroundDrawable(new BitmapDrawable());
+        window.setOutsideTouchable(true);
+        window.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        window.setTouchInterceptor((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP){
+                window.dismiss();
+            }
+            return false;
+        });
+        return window;
     }
 }
