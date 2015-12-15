@@ -15,6 +15,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.theif519.sakoverlay.Builders.MenuBuilder;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.GoogleMapsFragment;
 import com.theif519.sakoverlay.Fragments.Floating.ScreenRecorderFragment;
@@ -25,6 +26,7 @@ import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.sakoverlay.Sessions.SessionManager;
+import com.theif519.sakoverlay.Views.DropdownMenu;
 import com.theif519.utils.Misc.ServiceTools;
 
 import rx.android.schedulers.AndroidSchedulers;
@@ -141,26 +143,16 @@ public class MainActivity extends Activity {
 
     private void setupPopupWindow() {
         RxBus.publish("Inflating Menu options...");
-        View view = getLayoutInflater().inflate(R.layout.menu_icon_dropdown, null);
-        // As stated above, when focus changes, including from a PopupWindow, it loses Immersive Mode, hence we reset here.
-        makeImmersive(view);
-        mMenuPopup = new PopupWindow(view);
-        mMenuPopup.getContentView().findViewById(R.id.menu_bar_browser_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(new WebBrowserFragment(), true);
-            mMenuPopup.dismiss();
-        });
-        mMenuPopup.getContentView().findViewById(R.id.menu_bar_maps_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(new GoogleMapsFragment(), true);
-            mMenuPopup.dismiss();
-        });
-        mMenuPopup.getContentView().findViewById(R.id.menu_bar_recorder_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(new ScreenRecorderFragment(), true);
-            mMenuPopup.dismiss();
-        });
-        mMenuPopup.getContentView().findViewById(R.id.menu_bar_sticky_option).findViewById(R.id.menu_child_item_clickable).setOnClickListener(v -> {
-            addFragment(new StickyNoteFragment(), true);
-            mMenuPopup.dismiss();
-        });
+        DropdownMenu menu = new MenuBuilder() // IO -> MenuBuilder; UI -> DropdownMenu
+                .addSeperator("Applications", null)
+                .addOption("Web Browser", R.drawable.browser, v -> addFragment(new WebBrowserFragment(), true))
+                .addOption("Google Maps", R.drawable.maps, v -> addFragment(new GoogleMapsFragment(), true))
+                .addOption("Sticky Note", R.drawable.sticky_note, v -> addFragment(new StickyNoteFragment(), true))
+                .addOption("Screen Recorder", R.drawable.screen_recorder, v -> addFragment(new ScreenRecorderFragment(), true))
+                .setOnClickCallback(mMenuPopup::dismiss)
+                .create(this);
+        makeImmersive(menu);
+        mMenuPopup = new PopupWindow(menu);
         mMenuPopup.setFocusable(true);
         mMenuPopup.setBackgroundDrawable(new BitmapDrawable());
         mMenuPopup.setOutsideTouchable(true);

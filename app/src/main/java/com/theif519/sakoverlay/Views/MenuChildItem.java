@@ -20,38 +20,38 @@ import com.theif519.utils.Misc.AttributeRetriever;
  */
 public class MenuChildItem extends RelativeLayout {
 
-    private ImageView mIcon;
-    private TextView mDescription;
+    private ImageView mDescriptionIcon;
+    private TextView mDescriptionText;
 
     public MenuChildItem(Context context) {
-        this(context, null);
+        super(context);
     }
 
     public MenuChildItem(Context context, AttributeSet attrs) {
         super(context, attrs);
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.menu_child_item, this);
-        mIcon = (ImageView) findViewById(R.id.menu_child_item_icon);
-        mDescription = (TextView) findViewById(R.id.menu_child_item_description);
+        mDescriptionIcon = (ImageView) findViewById(R.id.menu_child_item_icon);
+        mDescriptionText = (TextView) findViewById(R.id.menu_option_description);
         AttributeRetriever.fillAttributes(getClass(), this, context, attrs);
     }
 
     public Bitmap getIcon() {
-        return ((BitmapDrawable) mIcon.getDrawable()).getBitmap();
+        return ((BitmapDrawable) mDescriptionIcon.getDrawable()).getBitmap();
     }
 
     @AttributeRetriever.AttributeHelper(source = "mciIcon")
     public void setIcon(Bitmap icon) {
-        mIcon.setImageBitmap(icon);
+        mDescriptionIcon.setImageBitmap(icon);
     }
 
     public String getDescription() {
-        return mDescription.getText().toString();
+        return mDescriptionText.getText().toString();
     }
 
     @AttributeRetriever.AttributeHelper(source = "mciDescription")
     public void setDescription(String descr) {
-        mDescription.setText(descr);
+        mDescriptionText.setText(descr);
     }
 
 }
