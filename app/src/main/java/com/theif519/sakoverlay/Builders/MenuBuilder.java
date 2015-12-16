@@ -2,9 +2,7 @@ package com.theif519.sakoverlay.Builders;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
@@ -36,19 +34,14 @@ public class MenuBuilder {
     }
 
     public PopupWindow create(Context context) {
-        ListView listView = new ListView(context);
-        PopupWindow window = new PopupWindow(listView);
-        ((ListView)window.getContentView()).setAdapter(new MenuOptionsAdapter(mMenuOptions, context));
-        window.setFocusable(true);
+        PopupWindow window = new PopupWindow(new ListView(context), 300, 500, true);
+        ((ListView) window.getContentView()).setAdapter(new MenuOptionsAdapter(mMenuOptions, context));
+        ((ListView) window.getContentView()).setOnItemClickListener(((parent, view, position, id) -> {
+            mMenuOptions.get(position).getCallback().onClick(null);
+            window.dismiss();
+        }));
         window.setBackgroundDrawable(new BitmapDrawable());
         window.setOutsideTouchable(true);
-        window.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        window.setTouchInterceptor((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP){
-                window.dismiss();
-            }
-            return false;
-        });
         return window;
     }
 }

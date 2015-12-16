@@ -20,7 +20,6 @@ public class DropdownMenu extends LinearLayout {
         super(context);
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.dropdown_menu, this);
-        mListView = (ListView) findViewById(R.id.menu_list);
     }
 
     public DropdownMenu setMenuOptionsAdapter(MenuOptionsAdapter adapter){

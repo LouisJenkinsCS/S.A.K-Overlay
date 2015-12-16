@@ -58,4 +58,14 @@ public class MenuOptionInfo {
         this.mType = mType;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "MenuOptionInfo{" +
+                "mDescriptionText='" + mDescriptionText + '\'' +
+                ", mIconResourceId=" + mIconResourceId +
+                ", mType=" + mType +
+                ", mCallback=" + mCallback +
+                '}';
+    }
 }

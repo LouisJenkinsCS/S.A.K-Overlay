@@ -11,7 +11,6 @@ import android.widget.TextView;
 import com.theif519.sakoverlay.POJO.VideoInfo;
 import com.theif519.sakoverlay.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,7 +23,7 @@ import java.util.List;
 public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
 
     private static final int RESOURCE_ID = R.layout.list_view_video_info;
-    private List<VideoInfo> mVideoInfo = new ArrayList<>();
+    private List<VideoInfo> mVideoInfo;
 
     public VideoInfoAdapter(Context context, List<VideoInfo> objects) {
         super(context, RESOURCE_ID, objects);

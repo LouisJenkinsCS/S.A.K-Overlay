@@ -7,6 +7,7 @@ import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
 import com.theif519.sakoverlay.Rx.RxBus;
+import com.theif519.sakoverlay.Rx.Transformers;
 
 import org.json.JSONObject;
 
@@ -14,8 +15,6 @@ import java.util.List;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
 /**
@@ -56,22 +55,19 @@ public class SessionManager {
                         subscriber.onCompleted();
                     }
                 })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+                .compose(Transformers.asyncResult());
     }
 
     private void setup(Context context) {
         mDatabase = new SessionDatabase(context);
         mPublishUpdate
                 .asObservable()
-                .observeOn(Schedulers.io())
-                .subscribeOn(Schedulers.io())
+                .compose(Transformers.backgroundIO())
                 .map(WidgetSessionData::new)
                 .subscribe(mDatabase::update);
         mPublishDelete
                 .asObservable()
-                .observeOn(Schedulers.io())
-                .subscribeOn(Schedulers.io())
+                .compose(Transformers.backgroundIO())
                 .map(FloatingFragment::getUniqueId)
                 .subscribe(mDatabase::delete);
         Log.i(getClass().getName(), "Created Database and setup publish subscription!");
@@ -98,8 +94,7 @@ public class SessionManager {
                         subscriber.onCompleted();
                     }
                 })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+                .compose(Transformers.asyncResult());
     }
 
     public void updateSession(FloatingFragment fragment) {

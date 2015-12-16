@@ -3,13 +3,11 @@ package com.theif519.sakoverlay.Activities;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.res.Configuration;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.PopupWindow;
 import android.widget.TextView;
@@ -149,11 +147,7 @@ public class MainActivity extends Activity {
                 .addOption("Sticky Note", R.drawable.sticky_note, v -> addFragment(new StickyNoteFragment(), true))
                 .addOption("Screen Recorder", R.drawable.screen_recorder, v -> addFragment(new ScreenRecorderFragment(), true))
                 .create(this);
-        makeImmersive(mMenuPopup.getContentView());
-        mMenuPopup.setFocusable(true);
-        mMenuPopup.setBackgroundDrawable(new BitmapDrawable());
-        mMenuPopup.setOutsideTouchable(true);
-        mMenuPopup.setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        //makeImmersive(mMenuPopup.getContentView());
     }
 
     /**
