@@ -17,21 +17,29 @@
         android:scaleType="fitCenter"
         android:src="@drawable/sak_overlay_icon_greyscale" />
 
+    <ImageButton
+        android:id="@+id/menu_bar_options"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/menu_bar_icon"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter" />
+
     <HorizontalScrollView
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
-        android:layout_toEndOf="@id/menu_bar_icon"
+        android:layout_toEndOf="@id/menu_bar_options"
         android:layout_toStartOf="@+id/menu_bar_clock">
 
         <TextView
+            android:id="@+id/menu_bar_info"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
-            android:gravity="center"
             android:layout_gravity="center"
-            android:textSize="20sp"
             android:ellipsize="end"
-            android:id="@+id/menu_bar_info"
-            android:text="Information Bar"/>
+            android:gravity="center"
+            android:text="Information Bar"
+            android:textSize="20sp" />
 
     </HorizontalScrollView>
 

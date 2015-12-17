@@ -9,6 +9,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,12 +21,15 @@ import com.theif519.sakoverlay.Fragments.Floating.ScreenRecorderFragment;
 import com.theif519.sakoverlay.Fragments.Floating.StickyNoteFragment;
 import com.theif519.sakoverlay.Fragments.Floating.WebBrowserFragment;
 import com.theif519.sakoverlay.Misc.Globals;
+import com.theif519.sakoverlay.POJO.MenuOptions;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.sakoverlay.Sessions.SessionManager;
+import com.theif519.utils.Misc.MutableObject;
 import com.theif519.utils.Misc.ServiceTools;
 
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 
 
@@ -99,6 +103,32 @@ public class MainActivity extends Activity {
                         runOnUiThread(() -> info.setText(msg));
                     } else info.setText(msg);
                 });
+        final ImageView optionIcon = (ImageView) actionbar.getCustomView().findViewById(R.id.menu_bar_options);
+        MutableObject<Subscription> subscription = new MutableObject<>(null);
+        RxBus.subscribe(MenuOptions.class)
+                .subscribe(option -> {
+                            if (subscription.get() != null) {
+                                subscription.get().unsubscribe();
+                            }
+                            optionIcon.setVisibility(View.VISIBLE);
+                            optionIcon.setImageResource(option.getIconResId());
+                            optionIcon.setOnClickListener(v -> option.getMenu().showAtLocation(
+                                            findViewById(R.id.main_layout),
+                                            Gravity.NO_GRAVITY,
+                                            (int) optionIcon.getX(),
+                                            getActionBar().getHeight()
+                                    )
+                            );
+                            subscription.set(option
+                                            .onOwnerDead()
+                                            .subscribe(ignored -> {
+                                                subscription.get().unsubscribe();
+                                                subscription.set(null);
+                                                optionIcon.setVisibility(View.GONE);
+                                            })
+                            );
+                        }
+                );
     }
 
     @Override
@@ -141,11 +171,11 @@ public class MainActivity extends Activity {
     private void setupPopupWindow() {
         RxBus.publish("Inflating Menu options...");
         mMenuPopup = new MenuBuilder() // IO -> MenuBuilder; UI -> DropdownMenu
-                .addSeperator("Applications")
-                .addOption("Web Browser", R.drawable.browser, v -> addFragment(new WebBrowserFragment(), true))
-                .addOption("Google Maps", R.drawable.maps, v -> addFragment(new GoogleMapsFragment(), true))
-                .addOption("Sticky Note", R.drawable.sticky_note, v -> addFragment(new StickyNoteFragment(), true))
-                .addOption("Screen Recorder", R.drawable.screen_recorder, v -> addFragment(new ScreenRecorderFragment(), true))
+                .addSeparator("Applications")
+                .addOption("Web Browser", R.drawable.browser, () -> addFragment(new WebBrowserFragment(), true))
+                .addOption("Google Maps", R.drawable.maps, () -> addFragment(new GoogleMapsFragment(), true))
+                .addOption("Sticky Note", R.drawable.sticky_note, () -> addFragment(new StickyNoteFragment(), true))
+                .addOption("Screen Recorder", R.drawable.screen_recorder, () -> addFragment(new ScreenRecorderFragment(), true))
                 .create(this);
         makeImmersive(mMenuPopup.getContentView());
     }

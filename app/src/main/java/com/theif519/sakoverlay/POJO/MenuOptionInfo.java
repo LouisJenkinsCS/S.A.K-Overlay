@@ -1,7 +1,5 @@
 package com.theif519.sakoverlay.POJO;
 
-import android.view.View;
-
 /**
  * Created by theif519 on 12/15/2015.
  */
@@ -9,14 +7,14 @@ public class MenuOptionInfo {
     private String mDescriptionText;
     private Integer mIconResourceId;
     private MenuOptionType mType;
-    private View.OnClickListener mCallback;
+    private Runnable mCallback;
 
     public enum MenuOptionType {
         SEPARATOR,
         MENU_OPTION
     }
 
-    public MenuOptionInfo(String text, Integer iconResId, View.OnClickListener callback, MenuOptionType type){
+    public MenuOptionInfo(String text, Integer iconResId, Runnable callback, MenuOptionType type){
         mDescriptionText = text;
         mIconResourceId = iconResId;
         mCallback = callback;
@@ -41,11 +39,11 @@ public class MenuOptionInfo {
         return this;
     }
 
-    public View.OnClickListener getCallback() {
+    public Runnable getCallback() {
         return mCallback;
     }
 
-    public MenuOptionInfo setCallback(View.OnClickListener mCallback) {
+    public MenuOptionInfo setCallback(Runnable mCallback) {
         this.mCallback = mCallback;
         return this;
     }

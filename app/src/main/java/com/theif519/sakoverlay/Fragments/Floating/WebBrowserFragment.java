@@ -10,6 +10,7 @@ import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.theif519.sakoverlay.Builders.MenuBuilder;
 import com.theif519.sakoverlay.R;
 
 /**
@@ -107,9 +108,18 @@ public class WebBrowserFragment extends FloatingFragment {
             }
             return true;
         });
-        mBrowser.loadUrl(DEFAULT_HOMEPAGE);
+        goHome();
         ((EditText) getContentView().findViewById(R.id.browser_action_text)).setText(DEFAULT_HOMEPAGE);
     }
 
+    private void goHome(){
+        mBrowser.loadUrl(DEFAULT_HOMEPAGE);
+    }
 
+    @Override
+    protected MenuBuilder buildOptions() {
+        return super.buildOptions()
+                .addSeparator("Browser Options")
+                .addOption("Home", R.drawable.home, this::goHome);
+    }
 }

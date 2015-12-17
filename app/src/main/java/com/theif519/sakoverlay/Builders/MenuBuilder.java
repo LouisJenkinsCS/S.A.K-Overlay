@@ -2,7 +2,6 @@ package com.theif519.sakoverlay.Builders;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
-import android.view.View;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
@@ -23,12 +22,12 @@ public class MenuBuilder {
         mMenuOptions = new ArrayList<>();
     }
 
-    public MenuBuilder addOption(String descriptionText, Integer iconResourceId, View.OnClickListener onClick) {
-        mMenuOptions.add(new MenuOptionInfo(descriptionText, iconResourceId, onClick, MenuOptionInfo.MenuOptionType.MENU_OPTION));
+    public MenuBuilder addOption(String descriptionText, Integer iconResourceId, Runnable callback) {
+        mMenuOptions.add(new MenuOptionInfo(descriptionText, iconResourceId, callback, MenuOptionInfo.MenuOptionType.MENU_OPTION));
         return this;
     }
 
-    public MenuBuilder addSeperator(String descriptionText) {
+    public MenuBuilder addSeparator(String descriptionText) {
         mMenuOptions.add(new MenuOptionInfo(descriptionText, null, null, MenuOptionInfo.MenuOptionType.SEPARATOR));
         return this;
     }
@@ -40,7 +39,7 @@ public class MenuBuilder {
         ((ListView) window.getContentView()).setOnItemClickListener(((parent, view, position, id) -> {
             MenuOptionInfo info = adapter.getItem(position);
             if (info.getCallback() != null) {
-                info.getCallback().onClick(null);
+                info.getCallback().run();
             }
             if (info.getType() == MenuOptionInfo.MenuOptionType.MENU_OPTION) {
                 window.dismiss();

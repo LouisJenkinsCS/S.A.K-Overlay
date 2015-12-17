@@ -26,6 +26,7 @@ import com.theif519.utils.Misc.AttributeRetriever;
 public class TouchInterceptorLayout extends LinearLayout {
 
     private String mIdentifier;
+    private Runnable mCallback;
 
     public TouchInterceptorLayout(Context context) {
         super(context);
@@ -40,8 +41,13 @@ public class TouchInterceptorLayout extends LinearLayout {
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             if (mIdentifier != null) RxBus.publish(mIdentifier);
+            if (mCallback != null) mCallback.run();
         }
         return false;
+    }
+
+    public void setCallback(Runnable callback){
+        mCallback = callback;
     }
 
     public String getIdentifier() {

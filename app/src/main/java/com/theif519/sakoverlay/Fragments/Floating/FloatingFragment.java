@@ -14,8 +14,10 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+import com.theif519.sakoverlay.Builders.MenuBuilder;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
+import com.theif519.sakoverlay.POJO.MenuOptions;
 import com.theif519.sakoverlay.POJO.ViewState;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
@@ -35,11 +37,12 @@ public class FloatingFragment extends Fragment {
     protected long id = -1;
     private TouchInterceptorLayout mContentView;
     private ImageButton mTaskBarButton;
-
+    private MenuOptions mOptionsMenu;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = (TouchInterceptorLayout) inflater.inflate(mLayoutId, container, false);
         setupTaskItem();
+        createOptions();
         // Ensures that the following methods are called after the view is fully drawn and setup.
         mContentView.post(() -> {
             setupListeners();
@@ -69,10 +72,7 @@ public class FloatingFragment extends Fragment {
      * Where we initialize all of our listeners.
      */
     private void setupListeners() {
-        mContentView.findViewById(R.id.title_bar_close).setOnClickListener(v -> {
-            SessionManager.getInstance().deleteSession(FloatingFragment.this);
-            getActivity().getFragmentManager().beginTransaction().remove(FloatingFragment.this).commit();
-        });
+        mContentView.findViewById(R.id.title_bar_close).setOnClickListener(v -> close());
         mContentView.findViewById(R.id.title_bar_minimize).setOnClickListener(v -> minimize());
         mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(v -> {
             if (mViewState.isMaximized()) {
@@ -85,6 +85,7 @@ public class FloatingFragment extends Fragment {
             }
             SessionManager.getInstance().updateSession(this);
         });
+        mContentView.setCallback(() -> RxBus.publish(mOptionsMenu));
         mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
             int prevX, prevY, touchXOffset, touchYOffset;
 
@@ -161,6 +162,12 @@ public class FloatingFragment extends Fragment {
                         maximize();
                     }
                 });
+    }
+
+    private void close(){
+        SessionManager.getInstance().deleteSession(FloatingFragment.this);
+        getActivity().getFragmentManager().beginTransaction().remove(FloatingFragment.this).commit();
+        if(mOptionsMenu != null) mOptionsMenu.notifyObservers();
     }
 
     private void setSize(int width, int height) {
@@ -392,6 +399,17 @@ public class FloatingFragment extends Fragment {
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).removeView(mTaskBarButton);
     }
 
+    protected MenuBuilder buildOptions(){
+        return new MenuBuilder()
+                .addSeparator(LAYOUT_TAG)
+                .addOption("Check Bounds", null, this::boundsCheck);
+    }
+
+    private void createOptions(){
+        MenuBuilder builder = buildOptions();
+        mOptionsMenu = new MenuOptions(builder.create(getActivity()), mIconId);
+    }
+
     /**
      * Maximizes the view. Note that it does not alter the view's X and Y coordinate through the ViewState
      * instance, as we do not really want it to be saved. This allows for the view to go back to it's
@@ -437,10 +455,6 @@ public class FloatingFragment extends Fragment {
      */
     protected View getContentView() {
         return mContentView;
-    }
-
-    public ViewState getViewProperties() {
-        return mViewState;
     }
 
     public String getLayoutTag() {
