@@ -62,11 +62,6 @@ public class VideoInfoAdapter extends ArrayAdapter<VideoInfo> {
             mThumbnail = (ImageView) view.findViewById(R.id.list_view_video_info_thumbnail);
         }
 
-        public VideoInfoHolder(View view, VideoInfo info) {
-            this(view);
-            setup(info);
-        }
-
         public void setup(final VideoInfo info) {
             mDescription.setText(info.getDescription());
             mDuration.setText(info.getDuration());

@@ -28,17 +28,23 @@ public class MenuBuilder {
         return this;
     }
 
-    public MenuBuilder addSeperator(String descriptionText, Integer iconResourceId) {
-        mMenuOptions.add(new MenuOptionInfo(descriptionText, iconResourceId, null, MenuOptionInfo.MenuOptionType.SEPARATOR));
+    public MenuBuilder addSeperator(String descriptionText) {
+        mMenuOptions.add(new MenuOptionInfo(descriptionText, null, null, MenuOptionInfo.MenuOptionType.SEPARATOR));
         return this;
     }
 
     public PopupWindow create(Context context) {
         PopupWindow window = new PopupWindow(new ListView(context), 300, 500, true);
-        ((ListView) window.getContentView()).setAdapter(new MenuOptionsAdapter(mMenuOptions, context));
+        MenuOptionsAdapter adapter = new MenuOptionsAdapter(mMenuOptions, context);
+        ((ListView) window.getContentView()).setAdapter(adapter);
         ((ListView) window.getContentView()).setOnItemClickListener(((parent, view, position, id) -> {
-            mMenuOptions.get(position).getCallback().onClick(null);
-            window.dismiss();
+            MenuOptionInfo info = adapter.getItem(position);
+            if (info.getCallback() != null) {
+                info.getCallback().onClick(null);
+            }
+            if (info.getType() == MenuOptionInfo.MenuOptionType.MENU_OPTION) {
+                window.dismiss();
+            }
         }));
         window.setBackgroundDrawable(new BitmapDrawable());
         window.setOutsideTouchable(true);

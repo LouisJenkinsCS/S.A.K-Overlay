@@ -19,14 +19,6 @@
         android:layout_below="@id/menu_option_top_separator"
         android:id="@+id/menu_option_left_separator" />
 
-    <ImageView
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        android:layout_marginStart="5dp"
-        android:layout_below="@id/menu_option_top_separator"
-        android:layout_above="@+id/menu_option_bottom_separator"
-        android:id="@+id/menu_option_icon" />
-
     <TextView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -38,8 +30,6 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
         android:textStyle="bold"
-        android:layout_below="@id/menu_option_top_separator"
-        android:layout_above="@+id/menu_option_bottom_separator"
         android:id="@+id/menu_option_description"/>
 
     <View

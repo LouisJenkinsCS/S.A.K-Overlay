@@ -131,6 +131,17 @@ public class ViewState {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "ViewState{" +
+                "x=" + x +
+                ", y=" + y +
+                ", width=" + width +
+                ", height=" + height +
+                ", mask=" + mask +
+                '}';
+    }
+
     public boolean isSnapped() {
         return isStateSet(RIGHT | LEFT | BOTTOM | UPPER);
     }

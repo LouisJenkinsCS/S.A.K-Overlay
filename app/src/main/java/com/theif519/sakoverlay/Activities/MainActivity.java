@@ -141,13 +141,13 @@ public class MainActivity extends Activity {
     private void setupPopupWindow() {
         RxBus.publish("Inflating Menu options...");
         mMenuPopup = new MenuBuilder() // IO -> MenuBuilder; UI -> DropdownMenu
-                .addSeperator("Applications", null)
+                .addSeperator("Applications")
                 .addOption("Web Browser", R.drawable.browser, v -> addFragment(new WebBrowserFragment(), true))
                 .addOption("Google Maps", R.drawable.maps, v -> addFragment(new GoogleMapsFragment(), true))
                 .addOption("Sticky Note", R.drawable.sticky_note, v -> addFragment(new StickyNoteFragment(), true))
                 .addOption("Screen Recorder", R.drawable.screen_recorder, v -> addFragment(new ScreenRecorderFragment(), true))
                 .create(this);
-        //makeImmersive(mMenuPopup.getContentView());
+        makeImmersive(mMenuPopup.getContentView());
     }
 
     /**

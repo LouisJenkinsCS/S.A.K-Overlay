@@ -14,9 +14,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
-import com.theif519.sakoverlay.POJO.ViewState;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
+import com.theif519.sakoverlay.POJO.ViewState;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Sessions.SessionManager;
@@ -77,7 +77,7 @@ public class FloatingFragment extends Fragment {
         mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(v -> {
             if (mViewState.isMaximized()) {
                 mViewState.setMaximized(false);
-                if(mViewState.isSnapped()){
+                if (mViewState.isSnapped()) {
                     snap();
                 } else restoreState();
             } else {
@@ -173,7 +173,7 @@ public class FloatingFragment extends Fragment {
         mContentView.setLayoutParams(params);
     }
 
-    private void setCoordinates(int x, int y){
+    private void setCoordinates(int x, int y) {
         mViewState
                 .setX(x)
                 .setY(y);
@@ -181,31 +181,31 @@ public class FloatingFragment extends Fragment {
         mContentView.setY(y);
     }
 
-    private void setX(int x){
+    private void setX(int x) {
         mViewState
                 .setX(x);
         mContentView.setX(x);
     }
 
-    private void setY(int y){
+    private void setY(int y) {
         mViewState
                 .setY(y);
         mContentView.setY(y);
     }
 
-    private void setWidth(int width){
+    private void setWidth(int width) {
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
         params.width = width;
         mContentView.setLayoutParams(params);
     }
 
-    private void setHeight(int height){
+    private void setHeight(int height) {
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
         params.height = height;
         mContentView.setLayoutParams(params);
     }
 
-    private void restoreState(){
+    private void restoreState() {
         mContentView.setX(mViewState.getX());
         mContentView.setY(mViewState.getY());
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
@@ -216,17 +216,17 @@ public class FloatingFragment extends Fragment {
 
     /**
      * Used to snap views to a side of the window if the bitmask is set.
-     * <p/>
+     * <p>
      * By utilizing a bitmask, it allows me to dynamically snap to not just sides, but also corners as well. It uses bitwise AND'ing
      * to retrieve set bits/attributes. Unlike other operations, such as move() and resize(), changes to the mContentView's
      * size and coordinates are not saved, to easily allow the view to go back to it's original size easily.
      */
     private void snap() {
-        if(!mViewState.isSnapped()) return;
+        if (!mViewState.isSnapped()) return;
         int maxWidth = Globals.MAX_X.get();
         int maxHeight = Globals.MAX_Y.get();
         int width = 0, height = 0, x = 0, y = 0;
-        if (mViewState.isStateSet(ViewState.RIGHT )) {
+        if (mViewState.isStateSet(ViewState.RIGHT)) {
             width = maxWidth / 2;
             height = maxHeight;
             x = maxWidth / 2;
@@ -293,35 +293,44 @@ public class FloatingFragment extends Fragment {
      * whether or not my views remain in bounds, and other times it is impossible to maintain otherwise,
      * like if the user changes orientation. I consider these my FloatingFragment's training wheels,
      * as this gets called whenever a view's state or visibility changes (Meaning on every move, unfortunately).
-     * <p/>
+     * <p>
      * A lot of this code is honestly brute forced. I go with what I feel would be right, then modify it like
      * 100x until it is working.
      */
     private void boundsCheck() {
+        // Checks if the scaled width is less than minimum width
+        if (MeasureTools.scaleWidth(mContentView) < mMinWidth) {
+            setWidth(mMinWidth);
+        }
+        // Checks if the scaled height is less than minimum height
+        if (MeasureTools.scaleHeight(mContentView) < mMinHeight) {
+            setHeight(mMinHeight);
+        }
+        // Checks if the overall width is greater than maximum available width
+        if(MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()){
+            setWidth(MeasureTools.scaleInverse(Globals.MAX_X.get()));
+        }
+        // Checks if the overall height is greater than the maximum available height
+        if(MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()){
+            setHeight(MeasureTools.scaleInverse(Globals.MAX_Y.get()));
+        }
         Point p = MeasureTools.getScaledCoordinates(mContentView);
-        if (p.x < 0) {
-            setX(-MeasureTools.scaleDeltaWidth(mContentView));
-        }
-        if (p.y < 0) {
-            setY(-MeasureTools.scaleDeltaHeight(mContentView));
-        }
+        // Checks right side of screen relative to X coordinate
         if (p.x + MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
             setX(Globals.MAX_X.get() - MeasureTools.scaleDeltaWidth(mContentView) - MeasureTools.scaleWidth(mContentView));
         }
+        // Checks top side of screen relative to Y coordinate
         if (p.y + MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
             setY(Globals.MAX_Y.get() - MeasureTools.scaleDeltaHeight(mContentView) - MeasureTools.scaleHeight(mContentView));
         }
-        if (MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
-            setWidth(MeasureTools.scaleInverse(Globals.MAX_X.get()));
+        p = MeasureTools.getScaledCoordinates(mContentView);
+        // Checks left side of screen
+        if (p.x < 0) {
+            setX(-MeasureTools.scaleDeltaWidth(mContentView));
         }
-        if (MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
-            setHeight(MeasureTools.scaleInverse(Globals.MAX_Y.get()));
-        }
-        if(MeasureTools.scaleWidth(mContentView) < mMinWidth){
-            setWidth(mMinWidth);
-        }
-        if(MeasureTools.scaleHeight(mContentView) < mMinHeight){
-            setHeight(mMinHeight);
+        // Checks top side of screen
+        if (p.y < 0) {
+            setY(-MeasureTools.scaleDeltaHeight(mContentView));
         }
     }
 
@@ -330,7 +339,7 @@ public class FloatingFragment extends Fragment {
      * necessary to setup.
      */
     protected void setup() {
-        if(mViewState == null){
+        if (mViewState == null) {
             mViewState = new ViewState();
         }
         restoreState();
@@ -341,7 +350,7 @@ public class FloatingFragment extends Fragment {
         if (mViewState.isMaximized()) {
             maximize();
         }
-        if(mViewState.isMinimized()){
+        if (mViewState.isMinimized()) {
             minimize();
         }
         SessionManager.getInstance().finishedSetup();
@@ -350,29 +359,29 @@ public class FloatingFragment extends Fragment {
     protected JSONObject pack() {
         try {
             return mViewState.deserialize();
-        } catch (JSONException e){
+        } catch (JSONException e) {
             Log.w(getClass().getName(), e.getMessage());
             return null;
         }
     }
 
-    protected void unpack(JSONObject obj){
+    protected void unpack(JSONObject obj) {
         try {
             mViewState = new ViewState(obj);
-        } catch(JSONException e){
+        } catch (JSONException e) {
             Log.w(getClass().getName(), e.getMessage());
         }
     }
 
-    public void deserialize(byte[] data){
+    public void deserialize(byte[] data) {
         try {
             unpack(new JSONObject(new String(data)));
-        } catch(JSONException e){
+        } catch (JSONException e) {
             Log.w(getClass().getName(), e.getMessage());
         }
     }
 
-    public byte[] serialize(){
+    public byte[] serialize() {
         return pack().toString().getBytes();
     }
 
@@ -430,7 +439,7 @@ public class FloatingFragment extends Fragment {
         return mContentView;
     }
 
-    public ViewState getViewProperties(){
+    public ViewState getViewProperties() {
         return mViewState;
     }
 
@@ -438,11 +447,11 @@ public class FloatingFragment extends Fragment {
         return LAYOUT_TAG;
     }
 
-    public long getUniqueId(){
+    public long getUniqueId() {
         return id;
     }
 
-    public void setUniqueId(long id){
+    public void setUniqueId(long id) {
         this.id = id;
     }
 
