@@ -3,6 +3,7 @@ package com.theif519.sakoverlay.Fragments.Floating;
 import android.graphics.Bitmap;
 import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -87,10 +88,15 @@ public class WebBrowserFragment extends FloatingFragment {
                 ((EditText) getContentView().findViewById(R.id.browser_action_text)).setText(url);
             }
         });
-        mBrowser.setWebChromeClient(new WebChromeClient());
+        mBrowser.setWebChromeClient(new WebChromeClient(){
+            @Override
+            public void getVisitedHistory(ValueCallback<String[]> callback) {
+                super.getVisitedHistory(callback);
+            }
+        });
         mBrowser.setInitialScale(1);
-        getContentView().findViewById(R.id.browser_action_back).setOnClickListener(v -> mBrowser.goBack());
-        getContentView().findViewById(R.id.browser_action_forward).setOnClickListener(v -> mBrowser.goForward());
+        getContentView().findViewById(R.id.browser_action_back).setOnClickListener(v -> goBack());
+        getContentView().findViewById(R.id.browser_action_forward).setOnClickListener(v -> goForward());
         /*
             Here we allow hitting enter/return on the edit text to submit and send HTTP requests. We also
             check to see if the URL begins with the necessary prefix, "http" or "https", appending our own if
@@ -112,7 +118,18 @@ public class WebBrowserFragment extends FloatingFragment {
         ((EditText) getContentView().findViewById(R.id.browser_action_text)).setText(DEFAULT_HOMEPAGE);
     }
 
+    private void goBack(){
+        mBrowser.stopLoading();
+        mBrowser.goBack();
+    }
+
+    private void goForward(){
+        mBrowser.stopLoading();
+        mBrowser.goForward();
+    }
+
     private void goHome(){
+        mBrowser.stopLoading();
         mBrowser.loadUrl(DEFAULT_HOMEPAGE);
     }
 

@@ -93,6 +93,7 @@ public class MainActivity extends Activity {
         actionbar.setDisplayShowCustomEnabled(true);
         actionbar.setHomeButtonEnabled(false);
         actionbar.setCustomView(R.layout.menu_bar);
+        makeImmersive(actionbar.getCustomView());
         final ImageView optionIcon = (ImageView) actionbar.getCustomView().findViewById(R.id.menu_bar_options);
         final View icon = actionbar.getCustomView().findViewById(R.id.menu_bar_icon);
         final TextView info = (TextView) findViewById(R.id.menu_bar_info);
