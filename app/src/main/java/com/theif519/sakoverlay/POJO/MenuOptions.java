@@ -11,12 +11,14 @@ import rx.subjects.PublishSubject;
 public class MenuOptions {
     private PopupWindow mMenu;
     private int mIconResId;
+    private String mIdentifier;
     private PublishSubject<Void> mOwnerDead;
 
-    public MenuOptions(PopupWindow mMenu, int resId){
+    public MenuOptions(PopupWindow mMenu, int resId, String mIdentifier){
         this.mMenu = mMenu;
         this.mIconResId = resId;
         this.mOwnerDead = PublishSubject.create();
+        this.mIdentifier = mIdentifier;
     }
 
     public PopupWindow getMenu() {
@@ -33,6 +35,14 @@ public class MenuOptions {
 
     public void setIconResId(int resId) {
         this.mIconResId = resId;
+    }
+
+    public String getIdentifier(){
+        return mIdentifier;
+    }
+
+    public void setIdentifier(String identifier){
+        this.mIdentifier = identifier;
     }
 
     public Observable<Void> onOwnerDead() {

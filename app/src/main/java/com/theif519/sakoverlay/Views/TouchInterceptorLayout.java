@@ -5,7 +5,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.LinearLayout;
 
-import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.utils.Misc.AttributeRetriever;
 
 /**
@@ -40,8 +39,8 @@ public class TouchInterceptorLayout extends LinearLayout {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-            if (mIdentifier != null) RxBus.publish(mIdentifier);
             if (mCallback != null) mCallback.run();
+            bringToFront();
         }
         return false;
     }

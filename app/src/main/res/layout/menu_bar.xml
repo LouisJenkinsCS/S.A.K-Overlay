@@ -12,36 +12,45 @@
     <ImageButton
         android:id="@+id/menu_bar_icon"
         android:layout_width="40dp"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:background="@android:color/transparent"
         android:scaleType="fitCenter"
         android:src="@drawable/sak_overlay_icon_greyscale" />
 
-    <ImageButton
-        android:id="@+id/menu_bar_options"
-        android:layout_width="40dp"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/menu_bar_icon"
-        android:background="@android:color/transparent"
-        android:scaleType="fitCenter" />
-
-    <HorizontalScrollView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_toEndOf="@id/menu_bar_options"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_toEndOf="@id/menu_bar_icon"
         android:layout_toStartOf="@+id/menu_bar_clock">
 
-        <TextView
-            android:id="@+id/menu_bar_info"
+        <ImageButton
+            android:id="@+id/menu_bar_options"
+            android:layout_width="40dp"
+            android:layout_height="fill_parent"
+            android:background="@android:color/transparent"
+            android:scaleType="fitCenter"
+            android:visibility="gone"/>
+
+        <HorizontalScrollView
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
-            android:layout_gravity="center"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:text="Information Bar"
-            android:textSize="20sp" />
+            android:layout_marginStart="10dp"
+            android:layout_gravity="center">
 
-    </HorizontalScrollView>
+            <TextView
+                android:id="@+id/menu_bar_info"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:gravity="center"
+                android:text="Information Bar"
+                android:textSize="20sp" />
+
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
 
     <TextClock
         android:id="@+id/menu_bar_clock"

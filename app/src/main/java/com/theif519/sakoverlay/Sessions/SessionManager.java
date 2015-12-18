@@ -6,7 +6,6 @@ import android.util.Log;
 import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
 import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
-import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Rx.Transformers;
 
 import org.json.JSONObject;
@@ -27,8 +26,6 @@ public class SessionManager {
     private SessionDatabase mDatabase;
     private static final PublishSubject<FloatingFragment> mPublishUpdate = PublishSubject.create();
     private static final PublishSubject<FloatingFragment> mPublishDelete = PublishSubject.create();
-
-    private static int mWidgetSetupNum = 0;
 
     public static SessionManager getInstance() {
         return INSTANCE;
@@ -83,14 +80,12 @@ public class SessionManager {
                     public void call(Subscriber<? super FloatingFragment> subscriber) {
                         List<WidgetSessionData> dataList = mDatabase.readAll();
                         if (dataList != null) {
-                            mWidgetSetupNum = dataList.size();
                             Stream
                                     .of(dataList)
                                     .map(FloatingFragmentFactory::getFragment)
                                     .filter(f -> f != null)
                                     .forEach(subscriber::onNext);
-                            RxBus.publish("Restoring session...");
-                        } else RxBus.publish("Created new session!");
+                        }
                         subscriber.onCompleted();
                     }
                 })
@@ -105,12 +100,6 @@ public class SessionManager {
     public void deleteSession(FloatingFragment fragment) {
         Log.i(getClass().getName(), "Deleting fragment!");
         mPublishDelete.onNext(fragment);
-    }
-
-    public void finishedSetup(){
-        if(--mWidgetSetupNum == 0){
-            RxBus.publish("Restored Session!");
-        }
     }
 
 }

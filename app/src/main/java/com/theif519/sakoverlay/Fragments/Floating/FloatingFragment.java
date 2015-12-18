@@ -47,6 +47,7 @@ public class FloatingFragment extends Fragment {
         mContentView.post(() -> {
             setupListeners();
             setup();
+            RxBus.publish(mOptionsMenu);
         });
         return mContentView;
     }
@@ -93,7 +94,6 @@ public class FloatingFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        mContentView.bringToFront();
                         if (mViewState.isMaximized() || mViewState.isSnapped()) {
                             mViewState.resetState();
                             restoreState();
@@ -133,7 +133,6 @@ public class FloatingFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        mContentView.bringToFront();
                         Point p = MeasureTools.getScaledCoordinates(mContentView);
                         tmpX = p.x;
                         tmpY = p.y;
@@ -360,7 +359,6 @@ public class FloatingFragment extends Fragment {
         if (mViewState.isMinimized()) {
             minimize();
         }
-        SessionManager.getInstance().finishedSetup();
     }
 
     protected JSONObject pack() {
@@ -407,7 +405,7 @@ public class FloatingFragment extends Fragment {
 
     private void createOptions(){
         MenuBuilder builder = buildOptions();
-        mOptionsMenu = new MenuOptions(builder.create(getActivity()), mIconId);
+        mOptionsMenu = new MenuOptions(builder.create(getActivity()), mIconId, LAYOUT_TAG);
     }
 
     /**

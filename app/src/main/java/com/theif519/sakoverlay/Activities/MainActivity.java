@@ -4,7 +4,6 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -94,16 +93,9 @@ public class MainActivity extends Activity {
         actionbar.setDisplayShowCustomEnabled(true);
         actionbar.setHomeButtonEnabled(false);
         actionbar.setCustomView(R.layout.menu_bar);
-        final View icon = actionbar.getCustomView().findViewById(R.id.menu_bar_icon);
-        icon.setOnClickListener(v -> mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight()));
-        final TextView info = (TextView) actionbar.getCustomView().findViewById(R.id.menu_bar_info);
-        RxBus.subscribe(String.class)
-                .subscribe(msg -> {
-                    if (Looper.getMainLooper() != Looper.myLooper()) {
-                        runOnUiThread(() -> info.setText(msg));
-                    } else info.setText(msg);
-                });
         final ImageView optionIcon = (ImageView) actionbar.getCustomView().findViewById(R.id.menu_bar_options);
+        final View icon = actionbar.getCustomView().findViewById(R.id.menu_bar_icon);
+        final TextView info = (TextView) findViewById(R.id.menu_bar_info);
         MutableObject<Subscription> subscription = new MutableObject<>(null);
         RxBus.subscribe(MenuOptions.class)
                 .subscribe(option -> {
@@ -112,6 +104,8 @@ public class MainActivity extends Activity {
                             }
                             optionIcon.setVisibility(View.VISIBLE);
                             optionIcon.setImageResource(option.getIconResId());
+                            info.setVisibility(View.VISIBLE);
+                            info.setText(option.getIdentifier());
                             optionIcon.setOnClickListener(v -> option.getMenu().showAtLocation(
                                             findViewById(R.id.main_layout),
                                             Gravity.NO_GRAVITY,
@@ -125,10 +119,19 @@ public class MainActivity extends Activity {
                                                 subscription.get().unsubscribe();
                                                 subscription.set(null);
                                                 optionIcon.setVisibility(View.GONE);
+                                                info.setVisibility(View.GONE);
                                             })
                             );
                         }
                 );
+        icon.setOnClickListener(v -> mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight()));
+        RxBus.subscribe(String.class)
+                .subscribe(msg -> {
+                    runOnUiThread(() -> {
+                        info.setText(msg);
+                        optionIcon.setVisibility(View.GONE);
+                    });
+                });
     }
 
     @Override
