@@ -14,11 +14,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.theif519.sakoverlay.Builders.MenuBuilder;
-import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
-import com.theif519.sakoverlay.Fragments.Floating.GoogleMapsFragment;
-import com.theif519.sakoverlay.Fragments.Floating.ScreenRecorderFragment;
-import com.theif519.sakoverlay.Fragments.Floating.StickyNoteFragment;
-import com.theif519.sakoverlay.Fragments.Floating.WebBrowserFragment;
+import com.theif519.sakoverlay.Fragments.Widgets.BaseWidget;
+import com.theif519.sakoverlay.Fragments.Widgets.GoogleMapsWidget;
+import com.theif519.sakoverlay.Fragments.Widgets.ScreenRecorderWidget;
+import com.theif519.sakoverlay.Fragments.Widgets.NotePadWidget;
+import com.theif519.sakoverlay.Fragments.Widgets.WebBrowserWidget;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.POJO.MenuOptions;
 import com.theif519.sakoverlay.R;
@@ -71,15 +71,16 @@ public class MainActivity extends Activity {
         findViewById(R.id.main_layout).post(() -> {
             updateMaxCoordinates();
             // The floating fragments are assured to be called after MainActivity has finished inflating it's view.
-            SessionManager.getInstance().restoreSession(this)
-                    .subscribe(
-                            fragment -> addFragment(fragment, false)
-                    );
+            SessionManager
+                    .getInstance()
+                    .restoreSession(this)
+                    .defaultIfEmpty(BaseWidget.INVALID_WIDGET)
+                    .subscribe(this::createWidget);
         });
         // We also setup the floating fragment scale in onCreate as it should never change.
         Globals.SCALE.set(getDimension(R.dimen.floating_fragment_scale));
         // Any time there is a configuration change, we update the bounds of the screen here.
-        RxBus.subscribe(Configuration.class)
+        RxBus.observe(Configuration.class)
                 .subscribe(C -> updateMaxCoordinates());
     }
 
@@ -98,7 +99,7 @@ public class MainActivity extends Activity {
         final View icon = actionbar.getCustomView().findViewById(R.id.menu_bar_icon);
         final TextView info = (TextView) findViewById(R.id.menu_bar_info);
         MutableObject<Subscription> subscription = new MutableObject<>(null);
-        RxBus.subscribe(MenuOptions.class)
+        RxBus.observe(MenuOptions.class)
                 .subscribe(option -> {
                             if (subscription.get() != null) {
                                 subscription.get().unsubscribe();
@@ -126,7 +127,7 @@ public class MainActivity extends Activity {
                         }
                 );
         icon.setOnClickListener(v -> mMenuPopup.showAtLocation(findViewById(R.id.main_layout), Gravity.NO_GRAVITY, 0, getActionBar().getHeight()));
-        RxBus.subscribe(String.class)
+        RxBus.observe(String.class)
                 .subscribe(msg -> {
                     runOnUiThread(() -> {
                         info.setText(msg);
@@ -143,24 +144,29 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Convenience method to quickly add a new FloatingFragment to the list and to the FragmentManager.
+     * Convenience method to quickly add a new BaseWidget to the list and to the FragmentManager.
      *
-     * @param fragment Fragment to add.
+     * @param widget Fragment to add.
      */
-    private void addFragment(FloatingFragment fragment, boolean insert) {
-        if (fragment == null) {
+    private void createWidget(BaseWidget widget) {
+        if (widget == null) {
             Toast.makeText(MainActivity.this, "There can only be one instance of this widget!", Toast.LENGTH_LONG).show();
             return;
         }
-        if (insert) SessionManager
-                .getInstance()
-                .appendSession(fragment)
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(fragment::setUniqueId)
-                .subscribe(id -> getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit());
-        else {
-            getFragmentManager().beginTransaction().add(R.id.main_layout, fragment).commit();
+        if(widget == BaseWidget.INVALID_WIDGET){
+            RxBus.publish("Created new session!");
+            return;
         }
+        getFragmentManager().beginTransaction().add(R.id.main_layout, widget).commit();
+    }
+
+    private void createWidgetSession(BaseWidget widget){
+        SessionManager
+                .getInstance()
+                .appendSession(widget)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(widget::setUniqueId)
+                .subscribe(ignored -> createWidget(widget));
     }
 
     /**
@@ -174,12 +180,12 @@ public class MainActivity extends Activity {
 
     private void setupPopupWindow() {
         RxBus.publish("Inflating Menu options...");
-        mMenuPopup = new MenuBuilder() // IO -> MenuBuilder; UI -> DropdownMenu
+        mMenuPopup = new MenuBuilder()
                 .addSeparator("Applications")
-                .addOption("Web Browser", R.drawable.browser, () -> addFragment(new WebBrowserFragment(), true))
-                .addOption("Google Maps", R.drawable.maps, () -> addFragment(new GoogleMapsFragment(), true))
-                .addOption("Sticky Note", R.drawable.sticky_note, () -> addFragment(new StickyNoteFragment(), true))
-                .addOption("Screen Recorder", R.drawable.screen_recorder, () -> addFragment(new ScreenRecorderFragment(), true))
+                .addOption("Web Browser", R.drawable.browser, () -> createWidgetSession(new WebBrowserWidget()))
+                .addOption("Google Maps", R.drawable.maps, () -> createWidgetSession(new GoogleMapsWidget()))
+                .addOption("Sticky Note", R.drawable.sticky_note, () -> createWidgetSession(new NotePadWidget()))
+                .addOption("Screen Recorder", R.drawable.screen_recorder, () -> createWidgetSession(new ScreenRecorderWidget()))
                 .create(this);
         makeImmersive(mMenuPopup.getContentView());
     }

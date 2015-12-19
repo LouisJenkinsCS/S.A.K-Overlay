@@ -4,8 +4,8 @@ import android.content.Context;
 import android.util.Log;
 
 import com.annimon.stream.Stream;
-import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
-import com.theif519.sakoverlay.Fragments.Floating.FloatingFragmentFactory;
+import com.theif519.sakoverlay.Fragments.Widgets.BaseWidget;
+import com.theif519.sakoverlay.Fragments.Widgets.WidgetFactory;
 import com.theif519.sakoverlay.Rx.Transformers;
 
 import org.json.JSONObject;
@@ -24,8 +24,8 @@ public class SessionManager {
     private static final SessionManager INSTANCE = new SessionManager();
 
     private SessionDatabase mDatabase;
-    private static final PublishSubject<FloatingFragment> mPublishUpdate = PublishSubject.create();
-    private static final PublishSubject<FloatingFragment> mPublishDelete = PublishSubject.create();
+    private static final PublishSubject<BaseWidget> mPublishUpdate = PublishSubject.create();
+    private static final PublishSubject<BaseWidget> mPublishDelete = PublishSubject.create();
 
     public static SessionManager getInstance() {
         return INSTANCE;
@@ -39,16 +39,16 @@ public class SessionManager {
      * Appends the widget to the database, which asynchronously returns the ID associated with it
      * in an observable.
      *
-     * @param fragment Widget to append
+     * @param widget Widget to append
      * @return Observable which emits the unique id for it.
      */
-    public Observable<Long> appendSession(FloatingFragment fragment) {
-        Log.i(getClass().getName(), "Appending a new fragment to session data!");
+    public Observable<Long> appendSession(BaseWidget widget) {
+        Log.i(getClass().getName(), "Appending a new widget to session data!");
         return Observable
                 .create(new Observable.OnSubscribe<Long>() {
                     @Override
                     public void call(Subscriber<? super Long> subscriber) {
-                        subscriber.onNext(mDatabase.insert(new WidgetSessionData(-1, fragment.getLayoutTag(), JSONObject.quote("{}").getBytes())));
+                        subscriber.onNext(mDatabase.insert(new WidgetSessionData(-1, widget.getLayoutTag(), JSONObject.quote("{}").getBytes())));
                         subscriber.onCompleted();
                     }
                 })
@@ -65,25 +65,25 @@ public class SessionManager {
         mPublishDelete
                 .asObservable()
                 .compose(Transformers.backgroundIO())
-                .map(FloatingFragment::getUniqueId)
+                .map(BaseWidget::getUniqueId)
                 .subscribe(mDatabase::delete);
         Log.i(getClass().getName(), "Created Database and setup publish subscription!");
     }
 
-    public Observable<FloatingFragment> restoreSession(Context context) {
+    public Observable<BaseWidget> restoreSession(Context context) {
         if (mDatabase == null) {
             setup(context);
         }
         return Observable
-                .create(new Observable.OnSubscribe<FloatingFragment>() {
+                .create(new Observable.OnSubscribe<BaseWidget>() {
                     @Override
-                    public void call(Subscriber<? super FloatingFragment> subscriber) {
+                    public void call(Subscriber<? super BaseWidget> subscriber) {
                         List<WidgetSessionData> dataList = mDatabase.readAll();
                         if (dataList != null) {
                             Stream
                                     .of(dataList)
-                                    .map(FloatingFragmentFactory::getFragment)
-                                    .filter(f -> f != null)
+                                    .map(WidgetFactory::getWidget)
+                                    .filter(widget -> widget != null)
                                     .forEach(subscriber::onNext);
                         }
                         subscriber.onCompleted();
@@ -92,14 +92,14 @@ public class SessionManager {
                 .compose(Transformers.asyncResult());
     }
 
-    public void updateSession(FloatingFragment fragment) {
-        Log.i(getClass().getName(), "Updating fragment!");
-        mPublishUpdate.onNext(fragment);
+    public void updateSession(BaseWidget widget) {
+        Log.i(getClass().getName(), "Updating widget!");
+        mPublishUpdate.onNext(widget);
     }
 
-    public void deleteSession(FloatingFragment fragment) {
-        Log.i(getClass().getName(), "Deleting fragment!");
-        mPublishDelete.onNext(fragment);
+    public void deleteSession(BaseWidget widget) {
+        Log.i(getClass().getName(), "Deleting widget!");
+        mPublishDelete.onNext(widget);
     }
 
 }

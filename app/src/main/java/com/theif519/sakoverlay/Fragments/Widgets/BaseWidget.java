@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.Fragments.Floating;
+package com.theif519.sakoverlay.Fragments.Widgets;
 
 
 import android.app.Fragment;
@@ -30,7 +30,10 @@ import org.json.JSONObject;
 /**
  * Created by theif519 on 10/29/2015.
  */
-public class FloatingFragment extends Fragment {
+public class BaseWidget extends Fragment {
+
+    public static final BaseWidget INVALID_WIDGET = new BaseWidget();
+
     protected ViewState mViewState;
     protected String LAYOUT_TAG;
     protected int mLayoutId, mIconId, mMinWidth = MeasureTools.scaleInverse(250), mMinHeight = MeasureTools.scaleInverse(250);
@@ -38,6 +41,7 @@ public class FloatingFragment extends Fragment {
     private TouchInterceptorLayout mContentView;
     private ImageButton mTaskBarButton;
     private MenuOptions mOptionsMenu;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = (TouchInterceptorLayout) inflater.inflate(mLayoutId, container, false);
@@ -53,10 +57,11 @@ public class FloatingFragment extends Fragment {
     }
 
     /**
-     * This is where we setup the bottom task bar's button for this FloatingFragment. Very bare-bones right now.
+     * This is where we setup the bottom task bar's button for this BaseWidget. Very bare-bones right now.
      */
     private void setupTaskItem() {
         mTaskBarButton = new ImageButton(getActivity());
+        mTaskBarButton.setBackgroundColor(getResources().getColor(android.R.color.transparent));
         mTaskBarButton.setImageResource(mIconId);
         mTaskBarButton.setOnClickListener(v -> {
             if (mContentView.getVisibility() == View.INVISIBLE) {
@@ -84,76 +89,85 @@ public class FloatingFragment extends Fragment {
             } else {
                 maximize();
             }
-            SessionManager.getInstance().updateSession(this);
+            SessionManager
+                    .getInstance()
+                    .updateSession(this);
         });
         mContentView.setCallback(() -> RxBus.publish(mOptionsMenu));
-        mContentView.findViewById(R.id.title_bar_move).setOnTouchListener(new View.OnTouchListener() {
-            int prevX, prevY, touchXOffset, touchYOffset;
+        mContentView.findViewById(R.id.title_bar_move)
+                .setOnTouchListener(new View.OnTouchListener() {
+                    int prevX, prevY, touchXOffset, touchYOffset;
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        if (mViewState.isMaximized() || mViewState.isSnapped()) {
-                            mViewState.resetState();
-                            restoreState();
-                            setCoordinates(
-                                    (int) event.getRawX() - MeasureTools.scaleDeltaWidth(mContentView),
-                                    (int) event.getRawY() - MeasureTools.scaleDeltaHeight(mContentView)
-                            );
-                            Point p = MeasureTools.getScaledCoordinates(mContentView);
-                            prevX = touchXOffset = p.x - mViewState.getX();
-                            prevY = touchYOffset = p.y - mViewState.getY();
-                        } else {
-                            prevX = touchXOffset = (int) event.getRawX() - mViewState.getX();
-                            prevY = touchYOffset = (int) event.getRawY() - mViewState.getY();
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        switch (event.getAction()) {
+                            case MotionEvent.ACTION_DOWN:
+                                if (mViewState.isMaximized() || mViewState.isSnapped()) {
+                                    mViewState.resetState();
+                                    restoreState();
+                                    setCoordinates(
+                                            (int) event.getRawX() - MeasureTools.scaleDeltaWidth(mContentView),
+                                            (int) event.getRawY() - MeasureTools.scaleDeltaHeight(mContentView)
+                                    );
+                                    Point p = MeasureTools.getScaledCoordinates(mContentView);
+                                    prevX = touchXOffset = p.x - mViewState.getX();
+                                    prevY = touchYOffset = p.y - mViewState.getY();
+                                } else {
+                                    prevX = touchXOffset = (int) event.getRawX() - mViewState.getX();
+                                    prevY = touchYOffset = (int) event.getRawY() - mViewState.getY();
+                                }
+                                return false;
+                            case MotionEvent.ACTION_MOVE:
+                                int tmpX, tmpY;
+                                updateSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
+                                prevX = tmpX;
+                                prevY = tmpY;
+                                setCoordinates(tmpX - touchXOffset, tmpY - touchYOffset);
+                                return false;
+                            case MotionEvent.ACTION_UP:
+                                boundsCheck();
+                                snap();
+                                SessionManager
+                                        .getInstance()
+                                        .updateSession(BaseWidget.this);
+                                return true;
+                            default:
+                                return false;
                         }
-                        return false;
-                    case MotionEvent.ACTION_MOVE:
-                        int tmpX, tmpY;
-                        updateSnapMask(prevX, prevY, (tmpX = (int) event.getRawX()), (tmpY = (int) event.getRawY()));
-                        prevX = tmpX;
-                        prevY = tmpY;
-                        setCoordinates(tmpX - touchXOffset, tmpY - touchYOffset);
-                        return false;
-                    case MotionEvent.ACTION_UP:
-                        boundsCheck();
-                        snap();
-                        SessionManager.getInstance().updateSession(FloatingFragment.this);
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-        });
-        mContentView.findViewById(R.id.resize_button).setOnTouchListener(new View.OnTouchListener() {
-            int tmpX, tmpY;
+                    }
+                });
+        mContentView.findViewById(R.id.resize_button)
+                .setOnTouchListener(new View.OnTouchListener() {
+                    int tmpX, tmpY;
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        Point p = MeasureTools.getScaledCoordinates(mContentView);
-                        tmpX = p.x;
-                        tmpY = p.y;
-                        return false;
-                    case MotionEvent.ACTION_MOVE:
-                        mViewState.resetState();
-                        setSize(
-                                Math.abs(MeasureTools.scaleInverse((int) event.getRawX() - tmpX)),
-                                Math.abs(MeasureTools.scaleInverse((int) event.getRawY() - tmpY))
-                        );
-                        return false;
-                    case MotionEvent.ACTION_UP:
-                        boundsCheck();
-                        SessionManager.getInstance().updateSession(FloatingFragment.this);
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-        });
-        RxBus.subscribe(Configuration.class)
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        switch (event.getAction()) {
+                            case MotionEvent.ACTION_DOWN:
+                                Point p = MeasureTools.getScaledCoordinates(mContentView);
+                                tmpX = p.x;
+                                tmpY = p.y;
+                                return false;
+                            case MotionEvent.ACTION_MOVE:
+                                mViewState.resetState();
+                                setSize(
+                                        Math.abs(MeasureTools.scaleInverse((int) event.getRawX() - tmpX)),
+                                        Math.abs(MeasureTools.scaleInverse((int) event.getRawY() - tmpY))
+                                );
+                                return false;
+                            case MotionEvent.ACTION_UP:
+                                boundsCheck();
+                                SessionManager
+                                        .getInstance()
+                                        .updateSession(BaseWidget.this);
+                                return true;
+                            default:
+                                return false;
+                        }
+                    }
+                });
+        RxBus
+                .observe(Configuration.class)
                 .subscribe(configuration -> {
                     boundsCheck();
                     snap();
@@ -163,10 +177,18 @@ public class FloatingFragment extends Fragment {
                 });
     }
 
-    private void close(){
-        SessionManager.getInstance().deleteSession(FloatingFragment.this);
-        getActivity().getFragmentManager().beginTransaction().remove(FloatingFragment.this).commit();
-        if(mOptionsMenu != null) mOptionsMenu.notifyObservers();
+    private void close() {
+        SessionManager
+                .getInstance()
+                .deleteSession(BaseWidget.this);
+        getActivity()
+                .getFragmentManager()
+                .beginTransaction()
+                .remove(BaseWidget.this)
+                .commit();
+        if (mOptionsMenu != null) {
+            mOptionsMenu.notifyObservers();
+        }
     }
 
     private void setSize(int width, int height) {
@@ -188,24 +210,24 @@ public class FloatingFragment extends Fragment {
     }
 
     private void setX(int x) {
-        mViewState
-                .setX(x);
+        mViewState.setX(x);
         mContentView.setX(x);
     }
 
     private void setY(int y) {
-        mViewState
-                .setY(y);
+        mViewState.setY(y);
         mContentView.setY(y);
     }
 
     private void setWidth(int width) {
+        mViewState.setWidth(width);
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
         params.width = width;
         mContentView.setLayoutParams(params);
     }
 
     private void setHeight(int height) {
+        mViewState.setHeight(height);
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
         params.height = height;
         mContentView.setLayoutParams(params);
@@ -297,7 +319,7 @@ public class FloatingFragment extends Fragment {
     /**
      * Used to check the bounds of the view. Sometimes I don't do a good enough job of checking for
      * whether or not my views remain in bounds, and other times it is impossible to maintain otherwise,
-     * like if the user changes orientation. I consider these my FloatingFragment's training wheels,
+     * like if the user changes orientation. I consider these my BaseWidget's training wheels,
      * as this gets called whenever a view's state or visibility changes (Meaning on every move, unfortunately).
      * <p>
      * A lot of this code is honestly brute forced. I go with what I feel would be right, then modify it like
@@ -313,11 +335,11 @@ public class FloatingFragment extends Fragment {
             setHeight(mMinHeight);
         }
         // Checks if the overall width is greater than maximum available width
-        if(MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()){
+        if (MeasureTools.scaleWidth(mContentView) > Globals.MAX_X.get()) {
             setWidth(MeasureTools.scaleInverse(Globals.MAX_X.get()));
         }
         // Checks if the overall height is greater than the maximum available height
-        if(MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()){
+        if (MeasureTools.scaleHeight(mContentView) > Globals.MAX_Y.get()) {
             setHeight(MeasureTools.scaleInverse(Globals.MAX_Y.get()));
         }
         Point p = MeasureTools.getScaledCoordinates(mContentView);
@@ -387,23 +409,27 @@ public class FloatingFragment extends Fragment {
     }
 
     public byte[] serialize() {
-        return pack().toString().getBytes();
+        return pack()
+                .toString()
+                .getBytes();
     }
 
     /**
      * For any subclasses that need to clean up extra resources, they may do so here.
      */
     protected void cleanUp() {
-        ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).removeView(mTaskBarButton);
+        ((LinearLayout) getActivity()
+                .findViewById(R.id.main_task_bar))
+                .removeView(mTaskBarButton);
     }
 
-    protected MenuBuilder buildOptions(){
+    protected MenuBuilder buildOptions() {
         return new MenuBuilder()
                 .addSeparator(LAYOUT_TAG)
                 .addOption("Check Bounds", null, this::boundsCheck);
     }
 
-    private void createOptions(){
+    private void createOptions() {
         MenuBuilder builder = buildOptions();
         mOptionsMenu = new MenuOptions(builder.create(getActivity()), mIconId, LAYOUT_TAG);
     }
@@ -433,7 +459,9 @@ public class FloatingFragment extends Fragment {
     private void minimize() {
         mContentView.setVisibility(View.INVISIBLE);
         mViewState.setMinimized(true);
-        SessionManager.getInstance().updateSession(this);
+        SessionManager
+                .getInstance()
+                .updateSession(this);
     }
 
     /**

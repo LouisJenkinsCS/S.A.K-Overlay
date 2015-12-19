@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.Fragments.Floating;
+package com.theif519.sakoverlay.Fragments.Widgets;
 
 import android.graphics.Bitmap;
 import android.view.KeyEvent;
@@ -35,9 +35,9 @@ import com.theif519.sakoverlay.R;
  * 4) Be able to determine if a link should be opened in another app. I.E, google playstore link should open
  * in Google Playstore, etc.
  */
-public class WebBrowserFragment extends FloatingFragment {
+public class WebBrowserWidget extends BaseWidget {
 
-    public WebBrowserFragment() {
+    public WebBrowserWidget() {
         mLayoutId = R.layout.web_browser;
         mIconId = R.drawable.browser;
         LAYOUT_TAG = IDENTIFIER;

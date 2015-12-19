@@ -12,7 +12,7 @@ import com.theif519.utils.Misc.AttributeRetriever;
  * <p/>
  * This is the proof-of-concept for the upcoming Mac OS X style menus. Right now, whenever a ACTION_DOWN
  * event occurs in any of this layout's children, it will broadcast the name of layout, which in this case,
- * is the name of the FloatingFragment.
+ * is the name of the BaseWidget.
  * <p/>
  * So imagine instead of a string, instead it sends it's own custom Menu hierarchy. This would allow me to
  * just broadcast it (Imagine how impossible this would be with a normal BroadcastReceiver, or how rather how tightly

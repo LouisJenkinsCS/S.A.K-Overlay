@@ -1,6 +1,6 @@
 package com.theif519.sakoverlay.Sessions;
 
-import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
+import com.theif519.sakoverlay.Fragments.Widgets.BaseWidget;
 
 /**
  * Created by theif519 on 12/10/2015.
@@ -18,7 +18,7 @@ public class WidgetSessionData {
         this.data = data;
     }
 
-    public WidgetSessionData(FloatingFragment fragment){
+    public WidgetSessionData(BaseWidget fragment){
         this.id = fragment.getUniqueId();
         this.tag = fragment.getLayoutTag();
         this.data = fragment.serialize();

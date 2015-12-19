@@ -1,18 +1,18 @@
 package com.theif519.sakoverlay.Rx.Events;
 
-import com.theif519.sakoverlay.Fragments.Floating.FloatingFragment;
+import com.theif519.sakoverlay.Fragments.Widgets.BaseWidget;
 
 /**
  * Created by theif519 on 12/10/2015.
  */
 public class WidgetFinishedDeserializing {
-    public FloatingFragment fragment;
+    public BaseWidget fragment;
 
-    public WidgetFinishedDeserializing(FloatingFragment fragment) {
+    public WidgetFinishedDeserializing(BaseWidget fragment) {
         this.fragment = fragment;
     }
 
-    public FloatingFragment getFragment() {
+    public BaseWidget getFragment() {
         return fragment;
     }
 }

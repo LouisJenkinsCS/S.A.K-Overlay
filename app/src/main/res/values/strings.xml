@@ -21,7 +21,7 @@
     <string name="overlay_notification_text">Launch Overlay</string>
     <string name="title_activity_maps">Map</string>
 
-    <!-- For ScreenRecorderFragment -->
+    <!-- For ScreenRecorderWidget -->
     <string name="screen_recorder_state_dead">Dead</string>
     <string name="screen_recorder_state_initialized">Initialized</string>
     <string name="screen_recorder_state_stopped">Stopped</string>

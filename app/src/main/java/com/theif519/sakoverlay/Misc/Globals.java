@@ -8,7 +8,7 @@ import com.theif519.utils.Misc.MutableObject;
  * This file, inspired by that guy who went last on Thursday of the first week (forgot his name, but not his work), is used
  * to keep track of all global constants which are generic enough for other classes to reuse. It is used
  * to keep an organized track of all variables which are considered global, and/or reusable enough that
- * other classes may also utilize them. Not all constants go here, certain ones (I.E FloatingFragment and it's
+ * other classes may also utilize them. Not all constants go here, certain ones (I.E BaseWidget and it's
  * subclasses IDENTIFIER variable) would create conflicts if they were all accessed here.
  * <p/>
  * Globals are organized, insofar, by Keys (for key-value pairs) and miscallaneous others. Keys, as of yet,

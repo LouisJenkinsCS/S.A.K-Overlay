@@ -21,7 +21,7 @@ import rx.subjects.Subject;
  * This little event bus allows you to send whatever you want, wherever you want, to whomever you want without
  * knowing who (or even where) it's sent to. Also, it allows you to send an object directly, without needing
  * to marshall it into an Intent or even a Message. It is as simple as publishing the object. Also, the user
- * can subscribe/register for certain events, which returns a Observable which can be subscribed to. It works
+ * can observe/register for certain events, which returns a Observable which can be subscribed to. It works
  * by simply filtering out events which are not of the specified type.
  * <p/>
  * For example usage, see this extremely simple way of sending a String as an event, without the complexity
@@ -80,7 +80,7 @@ public class RxBus {
      * @param <T>       Type of event. I.E, Event
      * @return Filtered observable.
      */
-    public static <T> Observable<T> subscribe(final Class<T> eventType) {
-        return INSTANCE.filter(eventType::isInstance).cast(eventType);
+    public static <T> Observable<T> observe(final Class<T> eventType) {
+        return INSTANCE.ofType(eventType);
     }
 }

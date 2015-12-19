@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.Fragments.Floating;
+package com.theif519.sakoverlay.Fragments.Widgets;
 
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -6,10 +6,15 @@ import android.util.Log;
 import android.widget.EditText;
 
 import com.theif519.sakoverlay.R;
+import com.theif519.sakoverlay.Rx.Transformers;
 import com.theif519.sakoverlay.Sessions.SessionManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.concurrent.TimeUnit;
+
+import rx.subjects.PublishSubject;
 
 /**
  * Created by theif519 on 10/31/2015.
@@ -17,7 +22,7 @@ import org.json.JSONObject;
  * Right now Sticky Note is more of a filler. It serializes/saves the user's content, but unless you create
  * more than one of them, they will not be saved, nor can they be saved meaningfully, and since there is a
  * bug right now, the persistence of such notes are volatile. However, as stated before, it is very
- * proof of concept. It is the only FloatingFragment subclass thus far to serialize it's own data, and it
+ * proof of concept. It is the only BaseWidget subclass thus far to serialize it's own data, and it
  * also looks pretty. What can I say? It's a demo.
  * <p>
  * In the future, Sticky Note will become NotePad, a personalized note-tasking assistant. It will be
@@ -33,9 +38,9 @@ import org.json.JSONObject;
  * 3) Tabs. The ability to have more than one at any given time, separated in a tab view, or whatever it is called.
  * This is actually very easily doable. I just do not have the time. Finals and all that.
  */
-public class StickyNoteFragment extends FloatingFragment {
+public class NotePadWidget extends BaseWidget {
 
-    public StickyNoteFragment() {
+    public NotePadWidget() {
         mLayoutId = R.layout.sticky_note;
         mIconId = R.drawable.sticky_note;
         LAYOUT_TAG = IDENTIFIER;
@@ -45,6 +50,7 @@ public class StickyNoteFragment extends FloatingFragment {
     protected static final String IDENTIFIER = "Sticky Note";
 
     private String mContents;
+    private PublishSubject<String> mTextChangeEvent = PublishSubject.create();
 
     @Override
     protected JSONObject pack() {
@@ -83,9 +89,7 @@ public class StickyNoteFragment extends FloatingFragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                mContents = s.toString();
-                getContentView().removeCallbacks(runnable);
-                getContentView().postDelayed(runnable, 5000);
+                mTextChangeEvent.onNext(s.toString());
             }
 
             @Override
@@ -93,5 +97,15 @@ public class StickyNoteFragment extends FloatingFragment {
 
             }
         });
+        mTextChangeEvent
+                .asObservable()
+                .throttleWithTimeout(1, TimeUnit.SECONDS)
+                .compose(Transformers.backgroundIO())
+                .subscribe(str -> {
+                    mContents = str;
+                    SessionManager
+                            .getInstance()
+                            .updateSession(this);
+                });
     }
 }

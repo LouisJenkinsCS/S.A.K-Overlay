@@ -57,7 +57,7 @@ public class RecorderService extends Service {
     private VirtualDisplay mDisplay;
     private MediaRecorder mRecorder;
     /*
-        Is used to publish/subscribe any state changes to the recorder.
+        Is used to publish/observe any state changes to the recorder.
      */
     private PublishSubject<RecorderState> mStateChangeObserver;
     private RecorderInfo mLastRecorderInfo;
@@ -97,7 +97,7 @@ public class RecorderService extends Service {
         /*
             Whenever we receive a permission response, if the MediaProjection instance is null, we initialize it here.
          */
-        RxBus.subscribe(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
+        RxBus.observe(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
             @Override
             public void call(PermissionInfo permissionInfo) {
                 if (mProjection == null) {
@@ -194,7 +194,7 @@ public class RecorderService extends Service {
     /**
      * We add the view controller to the WindowManager, allowing us to draw over other applications.
      * The controller can control the state of the recorder, but also is controlled by the state changes
-     * as well. I.E, while in STOPPED, it can call START, but if say the ScreenRecorderFragment makes a state change,
+     * as well. I.E, while in STOPPED, it can call START, but if say the ScreenRecorderWidget makes a state change,
      * then the controller's next option will be STOP as the recording will have already been STARTED.
      * <p/>
      * Pretty much what I am getting at is that while the observable acts in an asynchronous manner, the controller
