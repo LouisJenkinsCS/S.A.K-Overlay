@@ -65,10 +65,9 @@ public class BaseWidget extends Fragment {
         mTaskBarButton.setImageResource(mIconId);
         mTaskBarButton.setOnClickListener(v -> {
             if (mContentView.getVisibility() == View.INVISIBLE) {
-                mContentView.setVisibility(View.VISIBLE);
-                mContentView.bringToFront();
+                restoreMinimize();
             } else {
-                mContentView.setVisibility(View.INVISIBLE);
+                minimize();
             }
         });
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).addView(mTaskBarButton);
@@ -476,12 +475,59 @@ public class BaseWidget extends Fragment {
                 .updateSession(this);
     }
 
+    private int oldX, oldY;
+
     private void minimize() {
-        mContentView.setVisibility(View.INVISIBLE);
+        mContentView.animate().cancel();
+        oldX = (int) mContentView.getX();
+        oldY = (int) mContentView.getY();
+        mContentView
+                .animate()
+                .translationX(mTaskBarButton.getX())
+                .translationY(Globals.MAX_Y.get())
+                .scaleX(0)
+                .scaleY(0)
+                .setDuration(500)
+                .withEndAction(() -> {
+                    mContentView.setVisibility(View.INVISIBLE);
+                    Log.i(getClass().getName(), "(" + mContentView.getX() + ", " + mContentView.getY() + ")\n<" + mContentView.getWidth() + "x" + mContentView.getHeight() + ">");
+                })
+                .start();
+        //mContentView.setVisibility(View.INVISIBLE);
         mViewState.setMinimized(true);
         SessionManager
                 .getInstance()
                 .updateSession(this);
+    }
+
+    private void restoreMinimize() {
+        mContentView.animate().cancel();
+        mContentView
+                .animate()
+                .withStartAction(() -> {
+                    mContentView.setVisibility(View.VISIBLE);
+                    mContentView.bringToFront();
+                })
+                .translationX(oldX)
+                .translationY(oldY)
+                .scaleX(Globals.SCALE.get())
+                .scaleY(Globals.SCALE.get())
+                .setDuration(500)
+                .withEndAction(() -> {
+                    boundsCheck();
+                    if (mViewState.isSnapped()) {
+                        snap();
+                    }
+                    if (mViewState.isMaximized()) {
+                        maximize();
+                    }
+                    mViewState.setMinimized(false);
+                    SessionManager
+                            .getInstance()
+                            .updateSession(this);
+                })
+                .start();
+
     }
 
     /**
