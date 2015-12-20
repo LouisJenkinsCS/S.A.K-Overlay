@@ -2,7 +2,10 @@ package com.theif519.sakoverlay.Activities;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.Configuration;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -27,6 +30,7 @@ import com.theif519.sakoverlay.Services.NotificationService;
 import com.theif519.sakoverlay.Sessions.SessionManager;
 import com.theif519.utils.Misc.MutableObject;
 import com.theif519.utils.Misc.ServiceTools;
+import com.theif519.utils.Misc.ShakeDetector;
 
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -54,6 +58,8 @@ public class MainActivity extends Activity {
         And of course it is faster this way.
      */
     private PopupWindow mMenuPopup;
+    private SensorManager mSensorManager;
+    private ShakeDetector mShakeDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +88,9 @@ public class MainActivity extends Activity {
         // Any time there is a configuration change, we update the bounds of the screen here.
         RxBus.observe(Configuration.class)
                 .subscribe(C -> updateMaxCoordinates());
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mShakeDetector = new ShakeDetector();
+        mShakeDetector.setOnShakeListener(count -> RxBus.publish(Integer.valueOf(count)));
     }
 
     /**
@@ -99,9 +108,12 @@ public class MainActivity extends Activity {
         final View icon = actionbar.getCustomView().findViewById(R.id.menu_bar_icon);
         final TextView info = (TextView) findViewById(R.id.menu_bar_info);
         MutableObject<Subscription> subscription = new MutableObject<>(null);
+        MutableObject<MenuOptions> previousOptions = new MutableObject<>(null);
         RxBus.observe(MenuOptions.class)
                 .subscribe(option -> {
+                            // If we have a previous subscription, we need to unsubscribe and also alert that it isn't showing.
                             if (subscription.get() != null) {
+                                previousOptions.get().setIsShowing(false);
                                 subscription.get().unsubscribe();
                             }
                             optionIcon.setVisibility(View.VISIBLE);
@@ -115,11 +127,17 @@ public class MainActivity extends Activity {
                                             getActionBar().getHeight()
                                     )
                             );
+                            // Now we can update the previousOptions to this.
+                            previousOptions.set(option);
+                            // And alert that it is showing so it knows whether or not it has user focus.
+                            option.setIsShowing(true);
+                            // When the menu options owner gets destroyed, we unsubscribe and set everything to blank.
                             subscription.set(option
                                             .onOwnerDead()
                                             .subscribe(ignored -> {
                                                 subscription.get().unsubscribe();
                                                 subscription.set(null);
+                                                previousOptions.set(null);
                                                 optionIcon.setVisibility(View.GONE);
                                                 info.setVisibility(View.GONE);
                                             })
@@ -243,6 +261,20 @@ public class MainActivity extends Activity {
             }
         });
         super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mSensorManager.registerListener(mShakeDetector, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
+    }
+
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mSensorManager.unregisterListener(mShakeDetector);
     }
 
     /**

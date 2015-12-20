@@ -93,6 +93,11 @@ public class BaseWidget extends Fragment {
                     .getInstance()
                     .updateSession(this);
         });
+        RxBus
+                .observe(Integer.class)
+                .filter(count -> count != null && count % 5 == 0 && !mOptionsMenu.isShowing())
+                .subscribe(count -> toggleMinimize());
+
         mContentView.setCallback(() -> RxBus.publish(mOptionsMenu));
         mContentView.findViewById(R.id.title_bar_move)
                 .setOnTouchListener(new View.OnTouchListener() {
@@ -178,6 +183,7 @@ public class BaseWidget extends Fragment {
     }
 
     private void close() {
+        cleanUp();
         SessionManager
                 .getInstance()
                 .deleteSession(BaseWidget.this);
@@ -456,21 +462,26 @@ public class BaseWidget extends Fragment {
     /**
      * Used to minimize the view. It doesn't do much right now, but it works.
      */
+    private void toggleMinimize() {
+        if (mContentView.getVisibility() == View.INVISIBLE) {
+            mContentView.setVisibility(View.VISIBLE);
+            mContentView.bringToFront();
+            mViewState.setMinimized(false);
+        } else {
+            mContentView.setVisibility(View.INVISIBLE);
+            mViewState.setMinimized(true);
+        }
+        SessionManager
+                .getInstance()
+                .updateSession(this);
+    }
+
     private void minimize() {
         mContentView.setVisibility(View.INVISIBLE);
         mViewState.setMinimized(true);
         SessionManager
                 .getInstance()
                 .updateSession(this);
-    }
-
-    /**
-     * Kind of redundant to have CleanUp() here, but I'll refactor it out later.
-     */
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        cleanUp();
     }
 
     /**

@@ -13,6 +13,7 @@ public class MenuOptions {
     private int mIconResId;
     private String mIdentifier;
     private PublishSubject<Void> mOwnerDead;
+    private boolean mIsShowing;
 
     public MenuOptions(PopupWindow mMenu, int resId, String mIdentifier){
         this.mMenu = mMenu;
@@ -53,4 +54,11 @@ public class MenuOptions {
         mOwnerDead.onNext(null);
     }
 
+    public boolean isShowing() {
+        return mIsShowing;
+    }
+
+    public void setIsShowing(boolean mIsShowing) {
+        this.mIsShowing = mIsShowing;
+    }
 }
