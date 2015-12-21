@@ -15,7 +15,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.theif519.sakoverlay.Animations.ResizingAnimation;
+import com.theif519.sakoverlay.Animations.MoveAndResizeAnimation;
 import com.theif519.sakoverlay.Builders.MenuBuilder;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
@@ -191,10 +191,9 @@ public class BaseWidget extends Fragment {
         mViewState
                 .setWidth(width)
                 .setHeight(height);
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-        params.width = width;
-        params.height = height;
-        mContentView.setLayoutParams(params);
+        mContentView.getLayoutParams().width = width;
+        mContentView.getLayoutParams().height = height;
+        mContentView.requestLayout();
     }
 
     private void setCoordinates(int x, int y) {
@@ -217,16 +216,14 @@ public class BaseWidget extends Fragment {
 
     private void setWidth(int width) {
         mViewState.setWidth(width);
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-        params.width = width;
-        mContentView.setLayoutParams(params);
+        mContentView.getLayoutParams().width = width;
+        mContentView.requestLayout();
     }
 
     private void setHeight(int height) {
         mViewState.setHeight(height);
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-        params.height = height;
-        mContentView.setLayoutParams(params);
+        mContentView.getLayoutParams().height = height;
+        mContentView.requestLayout();
     }
 
     private void restoreState() {
@@ -274,20 +271,16 @@ public class BaseWidget extends Fragment {
         }
         width = MeasureTools.scaleInverse(width);
         height = MeasureTools.scaleInverse(height);
-        if (v == mContentView) {
-            mSnapShadow.setVisibility(View.INVISIBLE);
-            ResizingAnimation anim = new ResizingAnimation(v, width, height);
-            anim.setDuration(500);
-            v.startAnimation(anim);
-        } else {
-            v.getLayoutParams().height = height;
-            v.getLayoutParams().width = width;
-            v.requestLayout();
-        }
         x -= MeasureTools.scaleDelta(width);
         y -= MeasureTools.scaleDelta(height);
-        v.setX(x);
-        v.setY(y);
+        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(v, x, y, width, height);
+        if (v == mContentView) {
+            mSnapShadow.setVisibility(View.INVISIBLE);
+            anim.setDuration(500);
+        } else {
+            anim.setDuration(250);
+        }
+        v.startAnimation(anim);
     }
 
     /**
@@ -448,11 +441,10 @@ public class BaseWidget extends Fragment {
      * to go back to their previous size EVEN if they already exited the program fully.
      */
     private void maximize() {
-        int maxX = MeasureTools.scaleInverse(Globals.MAX_X.get()), maxY = MeasureTools.scaleInverse(Globals.MAX_Y.get());
+        int width = MeasureTools.scaleInverse(Globals.MAX_X.get()), height = MeasureTools.scaleInverse(Globals.MAX_Y.get()),
+                x =  -MeasureTools.scaleDelta(width), y = -MeasureTools.scaleDelta(height);
         mContentView.bringToFront();
-        mContentView.setX(-MeasureTools.scaleDelta(maxX));
-        mContentView.setY(-MeasureTools.scaleDelta(maxY));
-        ResizingAnimation anim = new ResizingAnimation(mContentView, maxX, maxY);
+        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, x, y, width, height);
         anim.setDuration(500);
         mContentView.startAnimation(anim);
         mViewState.setMaximized(true);
@@ -467,9 +459,7 @@ public class BaseWidget extends Fragment {
             return;
         }
         mContentView.bringToFront();
-        mContentView.setX(mViewState.getX());
-        mContentView.setY(mViewState.getY());
-        ResizingAnimation anim = new ResizingAnimation(mContentView, mViewState.getWidth(), mViewState.getHeight());
+        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, mViewState.getX(), mViewState.getY(), mViewState.getWidth(), mViewState.getHeight());
         anim.setDuration(500);
         mContentView.startAnimation(anim);
         mViewState.setMaximized(false);
