@@ -80,7 +80,6 @@ public class NotePadWidget extends BaseWidget {
         if (mContents != null) {
             editText.setText(mContents);
         }
-        final Runnable runnable = () -> SessionManager.getInstance().updateSession(this);
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {

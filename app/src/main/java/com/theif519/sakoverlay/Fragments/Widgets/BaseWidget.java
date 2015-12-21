@@ -12,8 +12,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.theif519.sakoverlay.Animations.ResizingAnimation;
 import com.theif519.sakoverlay.Builders.MenuBuilder;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
@@ -40,12 +42,20 @@ public class BaseWidget extends Fragment {
     protected long id = -1;
     private TouchInterceptorLayout mContentView;
     private ImageButton mTaskBarButton;
+    private View mSnapShadow;
     private MenuOptions mOptionsMenu;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = (TouchInterceptorLayout) inflater.inflate(mLayoutId, container, false);
+        mContentView.setVisibility(View.INVISIBLE);
         setupTaskItem();
+        mSnapShadow = new ImageView(getActivity());
+        mSnapShadow.setScaleX(Globals.SCALE.get());
+        mSnapShadow.setScaleY(Globals.SCALE.get());
+        mSnapShadow.setBackground(getResources().getDrawable(R.drawable.snap_shadow));
+        mSnapShadow.setVisibility(View.INVISIBLE);
+        ((ViewGroup) getActivity().findViewById(R.id.main_layout)).addView(mSnapShadow);
         createOptions();
         // Ensures that the following methods are called after the view is fully drawn and setup.
         mContentView.post(() -> {
@@ -63,13 +73,7 @@ public class BaseWidget extends Fragment {
         mTaskBarButton = new ImageButton(getActivity());
         mTaskBarButton.setBackgroundColor(getResources().getColor(android.R.color.transparent));
         mTaskBarButton.setImageResource(mIconId);
-        mTaskBarButton.setOnClickListener(v -> {
-            if (mContentView.getVisibility() == View.INVISIBLE) {
-                restoreMinimize();
-            } else {
-                minimize();
-            }
-        });
+        mTaskBarButton.setOnClickListener(v -> toggleMinimize());
         ((LinearLayout) getActivity().findViewById(R.id.main_task_bar)).addView(mTaskBarButton);
     }
 
@@ -79,24 +83,11 @@ public class BaseWidget extends Fragment {
     private void setupListeners() {
         mContentView.findViewById(R.id.title_bar_close).setOnClickListener(v -> close());
         mContentView.findViewById(R.id.title_bar_minimize).setOnClickListener(v -> minimize());
-        mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(v -> {
-            if (mViewState.isMaximized()) {
-                mViewState.setMaximized(false);
-                if (mViewState.isSnapped()) {
-                    snap();
-                } else restoreState();
-            } else {
-                maximize();
-            }
-            SessionManager
-                    .getInstance()
-                    .updateSession(this);
-        });
+        mContentView.findViewById(R.id.title_bar_maximize).setOnClickListener(v -> toggleMaximize());
         RxBus
                 .observe(Integer.class)
                 .filter(count -> count != null && count % 5 == 0 && !mOptionsMenu.isShowing())
                 .subscribe(count -> toggleMinimize());
-
         mContentView.setCallback(() -> RxBus.publish(mOptionsMenu));
         mContentView.findViewById(R.id.title_bar_move)
                 .setOnTouchListener(new View.OnTouchListener() {
@@ -130,7 +121,7 @@ public class BaseWidget extends Fragment {
                                 return false;
                             case MotionEvent.ACTION_UP:
                                 boundsCheck();
-                                snap();
+                                snap(mContentView);
                                 SessionManager
                                         .getInstance()
                                         .updateSession(BaseWidget.this);
@@ -174,7 +165,7 @@ public class BaseWidget extends Fragment {
                 .observe(Configuration.class)
                 .subscribe(configuration -> {
                     boundsCheck();
-                    snap();
+                    snap(mContentView);
                     if (mViewState.isMaximized()) {
                         maximize();
                     }
@@ -254,7 +245,7 @@ public class BaseWidget extends Fragment {
      * to retrieve set bits/attributes. Unlike other operations, such as move() and resize(), changes to the mContentView's
      * size and coordinates are not saved, to easily allow the view to go back to it's original size easily.
      */
-    private void snap() {
+    private void snap(View v) {
         if (!mViewState.isSnapped()) return;
         int maxWidth = Globals.MAX_X.get();
         int maxHeight = Globals.MAX_Y.get();
@@ -283,14 +274,20 @@ public class BaseWidget extends Fragment {
         }
         width = MeasureTools.scaleInverse(width);
         height = MeasureTools.scaleInverse(height);
+        if (v == mContentView) {
+            mSnapShadow.setVisibility(View.INVISIBLE);
+            ResizingAnimation anim = new ResizingAnimation(v, width, height);
+            anim.setDuration(500);
+            v.startAnimation(anim);
+        } else {
+            v.getLayoutParams().height = height;
+            v.getLayoutParams().width = width;
+            v.requestLayout();
+        }
         x -= MeasureTools.scaleDelta(width);
         y -= MeasureTools.scaleDelta(height);
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-        params.width = width;
-        params.height = height;
-        mContentView.setX(x);
-        mContentView.setY(y);
-        mContentView.setLayoutParams(params);
+        v.setX(x);
+        v.setY(y);
     }
 
     /**
@@ -319,6 +316,10 @@ public class BaseWidget extends Fragment {
         if (transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()) {
             mViewState.addState(ViewState.BOTTOM);
         }
+        if (mViewState.isSnapped()) {
+            mSnapShadow.setVisibility(View.VISIBLE);
+            snap(mSnapShadow);
+        } else mSnapShadow.setVisibility(View.INVISIBLE);
     }
 
     /**
@@ -379,13 +380,13 @@ public class BaseWidget extends Fragment {
         if (mViewState.getWidth() == 0 || mViewState.getHeight() == 0) {
             setSize(mMinWidth, mMinHeight);
         }
-        snap();
+        snap(mContentView);
         if (mViewState.isMaximized()) {
             maximize();
         }
         if (mViewState.isMinimized()) {
             minimize();
-        }
+        } else mContentView.setVisibility(View.VISIBLE);
     }
 
     protected JSONObject pack() {
@@ -448,14 +449,39 @@ public class BaseWidget extends Fragment {
      */
     private void maximize() {
         int maxX = MeasureTools.scaleInverse(Globals.MAX_X.get()), maxY = MeasureTools.scaleInverse(Globals.MAX_Y.get());
+        mContentView.bringToFront();
         mContentView.setX(-MeasureTools.scaleDelta(maxX));
         mContentView.setY(-MeasureTools.scaleDelta(maxY));
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-        params.width = maxX;
-        params.height = maxY;
-        mContentView.setLayoutParams(params);
-        mContentView.bringToFront();
+        ResizingAnimation anim = new ResizingAnimation(mContentView, maxX, maxY);
+        anim.setDuration(500);
+        mContentView.startAnimation(anim);
         mViewState.setMaximized(true);
+        SessionManager.getInstance().updateSession(this);
+    }
+
+    private void restoreMaximize() {
+        if (mViewState.isSnapped()) {
+            snap(mContentView);
+            mViewState.setMaximized(false);
+            SessionManager.getInstance().updateSession(this);
+            return;
+        }
+        mContentView.bringToFront();
+        mContentView.setX(mViewState.getX());
+        mContentView.setY(mViewState.getY());
+        ResizingAnimation anim = new ResizingAnimation(mContentView, mViewState.getWidth(), mViewState.getHeight());
+        anim.setDuration(500);
+        mContentView.startAnimation(anim);
+        mViewState.setMaximized(false);
+        SessionManager.getInstance().updateSession(this);
+    }
+
+    private void toggleMaximize() {
+        if (mViewState.isMaximized()) {
+            restoreMaximize();
+        } else {
+            maximize();
+        }
     }
 
     /**
@@ -463,12 +489,9 @@ public class BaseWidget extends Fragment {
      */
     private void toggleMinimize() {
         if (mContentView.getVisibility() == View.INVISIBLE) {
-            mContentView.setVisibility(View.VISIBLE);
-            mContentView.bringToFront();
-            mViewState.setMinimized(false);
+            restoreMinimize();
         } else {
-            mContentView.setVisibility(View.INVISIBLE);
-            mViewState.setMinimized(true);
+            minimize();
         }
         SessionManager
                 .getInstance()
@@ -478,7 +501,6 @@ public class BaseWidget extends Fragment {
     private int oldX, oldY;
 
     private void minimize() {
-        mContentView.animate().cancel();
         oldX = (int) mContentView.getX();
         oldY = (int) mContentView.getY();
         mContentView
@@ -493,7 +515,6 @@ public class BaseWidget extends Fragment {
                     Log.i(getClass().getName(), "(" + mContentView.getX() + ", " + mContentView.getY() + ")\n<" + mContentView.getWidth() + "x" + mContentView.getHeight() + ">");
                 })
                 .start();
-        //mContentView.setVisibility(View.INVISIBLE);
         mViewState.setMinimized(true);
         SessionManager
                 .getInstance()
@@ -501,7 +522,6 @@ public class BaseWidget extends Fragment {
     }
 
     private void restoreMinimize() {
-        mContentView.animate().cancel();
         mContentView
                 .animate()
                 .withStartAction(() -> {
@@ -515,19 +535,17 @@ public class BaseWidget extends Fragment {
                 .setDuration(500)
                 .withEndAction(() -> {
                     boundsCheck();
-                    if (mViewState.isSnapped()) {
-                        snap();
-                    }
                     if (mViewState.isMaximized()) {
                         maximize();
+                    } else if (mViewState.isSnapped()) {
+                        snap(mContentView);
                     }
-                    mViewState.setMinimized(false);
                     SessionManager
                             .getInstance()
                             .updateSession(this);
                 })
                 .start();
-
+        mViewState.setMinimized(false);
     }
 
     /**
