@@ -133,10 +133,15 @@ public class WebBrowserWidget extends BaseWidget {
         mBrowser.loadUrl(DEFAULT_HOMEPAGE);
     }
 
+    private void refresh(){
+        mBrowser.reload();
+    }
+
     @Override
     protected MenuBuilder buildOptions() {
         return super.buildOptions()
                 .addSeparator("Browser Options")
-                .addOption("Home", R.drawable.home, this::goHome);
+                .addOption("Home", R.drawable.home, this::goHome)
+                .addOption("Refresh", R.drawable.refresh, this::refresh);
     }
 }

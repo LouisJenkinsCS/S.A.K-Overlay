@@ -98,8 +98,8 @@ public class NotePadWidget extends BaseWidget {
         });
         mTextChangeEvent
                 .asObservable()
-                .throttleWithTimeout(1, TimeUnit.SECONDS)
                 .compose(Transformers.backgroundIO())
+                .throttleWithTimeout(1, TimeUnit.SECONDS)
                 .subscribe(str -> {
                     mContents = str;
                     SessionManager

@@ -10,13 +10,14 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.theif519.sakoverlay.Animations.MoveAndResizeAnimation;
 import com.theif519.sakoverlay.Builders.MenuBuilder;
+import com.theif519.sakoverlay.Listeners.OnAnimationEndListener;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.Misc.MeasureTools;
 import com.theif519.sakoverlay.POJO.MenuOptions;
@@ -42,7 +43,6 @@ public class BaseWidget extends Fragment {
     protected long id = -1;
     private TouchInterceptorLayout mContentView;
     private ImageButton mTaskBarButton;
-    private View mSnapShadow;
     private MenuOptions mOptionsMenu;
 
     @Override
@@ -50,12 +50,6 @@ public class BaseWidget extends Fragment {
         mContentView = (TouchInterceptorLayout) inflater.inflate(mLayoutId, container, false);
         mContentView.setVisibility(View.INVISIBLE);
         setupTaskItem();
-        mSnapShadow = new ImageView(getActivity());
-        mSnapShadow.setScaleX(Globals.SCALE.get());
-        mSnapShadow.setScaleY(Globals.SCALE.get());
-        mSnapShadow.setBackground(getResources().getDrawable(R.drawable.snap_shadow));
-        mSnapShadow.setVisibility(View.INVISIBLE);
-        ((ViewGroup) getActivity().findViewById(R.id.main_layout)).addView(mSnapShadow);
         createOptions();
         // Ensures that the following methods are called after the view is fully drawn and setup.
         mContentView.post(() -> {
@@ -121,7 +115,7 @@ public class BaseWidget extends Fragment {
                                 return false;
                             case MotionEvent.ACTION_UP:
                                 boundsCheck();
-                                snap(mContentView);
+                                snap();
                                 SessionManager
                                         .getInstance()
                                         .updateSession(BaseWidget.this);
@@ -165,154 +159,11 @@ public class BaseWidget extends Fragment {
                 .observe(Configuration.class)
                 .subscribe(configuration -> {
                     boundsCheck();
-                    snap(mContentView);
+                    snap();
                     if (mViewState.isMaximized()) {
                         maximize();
                     }
                 });
-    }
-
-    private void close() {
-        cleanUp();
-        SessionManager
-                .getInstance()
-                .deleteSession(BaseWidget.this);
-        getActivity()
-                .getFragmentManager()
-                .beginTransaction()
-                .remove(BaseWidget.this)
-                .commit();
-        if (mOptionsMenu != null) {
-            mOptionsMenu.notifyObservers();
-        }
-    }
-
-    private void setSize(int width, int height) {
-        mViewState
-                .setWidth(width)
-                .setHeight(height);
-        mContentView.getLayoutParams().width = width;
-        mContentView.getLayoutParams().height = height;
-        mContentView.requestLayout();
-    }
-
-    private void setCoordinates(int x, int y) {
-        mViewState
-                .setX(x)
-                .setY(y);
-        mContentView.setX(x);
-        mContentView.setY(y);
-    }
-
-    private void setX(int x) {
-        mViewState.setX(x);
-        mContentView.setX(x);
-    }
-
-    private void setY(int y) {
-        mViewState.setY(y);
-        mContentView.setY(y);
-    }
-
-    private void setWidth(int width) {
-        mViewState.setWidth(width);
-        mContentView.getLayoutParams().width = width;
-        mContentView.requestLayout();
-    }
-
-    private void setHeight(int height) {
-        mViewState.setHeight(height);
-        mContentView.getLayoutParams().height = height;
-        mContentView.requestLayout();
-    }
-
-    private void restoreState() {
-        mContentView.setX(mViewState.getX());
-        mContentView.setY(mViewState.getY());
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
-        params.width = mViewState.getWidth();
-        params.height = mViewState.getHeight();
-        mContentView.setLayoutParams(params);
-    }
-
-    /**
-     * Used to snap views to a side of the window if the bitmask is set.
-     * <p>
-     * By utilizing a bitmask, it allows me to dynamically snap to not just sides, but also corners as well. It uses bitwise AND'ing
-     * to retrieve set bits/attributes. Unlike other operations, such as move() and resize(), changes to the mContentView's
-     * size and coordinates are not saved, to easily allow the view to go back to it's original size easily.
-     */
-    private void snap(View v) {
-        if (!mViewState.isSnapped()) return;
-        int maxWidth = Globals.MAX_X.get();
-        int maxHeight = Globals.MAX_Y.get();
-        int width = 0, height = 0, x = 0, y = 0;
-        if (mViewState.isStateSet(ViewState.RIGHT)) {
-            width = maxWidth / 2;
-            height = maxHeight;
-            x = maxWidth / 2;
-        }
-        if (mViewState.isStateSet(ViewState.LEFT)) {
-            width = maxWidth / 2;
-            height = maxHeight;
-        }
-        if (mViewState.isStateSet(ViewState.UPPER)) {
-            if (width == 0) {
-                width = maxWidth;
-            }
-            height = maxHeight / 2;
-        }
-        if (mViewState.isStateSet(ViewState.BOTTOM)) {
-            if (width == 0) {
-                width = maxWidth;
-            }
-            height = maxHeight / 2;
-            y = maxHeight / 2;
-        }
-        width = MeasureTools.scaleInverse(width);
-        height = MeasureTools.scaleInverse(height);
-        x -= MeasureTools.scaleDelta(width);
-        y -= MeasureTools.scaleDelta(height);
-        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(v, x, y, width, height);
-        if (v == mContentView) {
-            mSnapShadow.setVisibility(View.INVISIBLE);
-            anim.setDuration(500);
-        } else {
-            anim.setDuration(250);
-        }
-        v.startAnimation(anim);
-    }
-
-    /**
-     * Updates the bitmask used to maintain the current snap direction of the current view.
-     *
-     * @param oldX The old x-coordinate. This is used to determine the horizontal direction the user is going.
-     * @param oldY The old y-coordinate. This is used to determine the vertical direction the user is going.
-     * @param newX The new x-coordinate. By finding the difference between new and old we can determine which horizontal direction the user is going.
-     * @param newY The new y-coordinate. By finding the difference between new and old, we can determine which vertical direction the user is going.
-     */
-    private void updateSnapMask(int oldX, int oldY, int newX, int newY) {
-        mViewState.resetSnap();
-        int transitionX = newX - oldX;
-        int transitionY = newY - oldY;
-        int snapOffsetX = Globals.MAX_X.get() / 10;
-        int snapOffsetY = Globals.MAX_Y.get() / 10;
-        if (transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()) {
-            mViewState.addState(ViewState.RIGHT);
-        }
-        if (transitionX < 0 && newX <= snapOffsetX) {
-            mViewState.addState(ViewState.LEFT);
-        }
-        if (transitionY < 0 && newY <= snapOffsetY) {
-            mViewState.addState(ViewState.UPPER);
-        }
-        if (transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()) {
-            mViewState.addState(ViewState.BOTTOM);
-        }
-        if (mViewState.isSnapped()) {
-            mSnapShadow.setVisibility(View.VISIBLE);
-            snap(mSnapShadow);
-        } else mSnapShadow.setVisibility(View.INVISIBLE);
     }
 
     /**
@@ -361,6 +212,212 @@ public class BaseWidget extends Fragment {
         }
     }
 
+    private void restoreState() {
+        mContentView.setX(mViewState.getX());
+        mContentView.setY(mViewState.getY());
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mContentView.getLayoutParams();
+        params.width = mViewState.getWidth();
+        params.height = mViewState.getHeight();
+        mContentView.setLayoutParams(params);
+    }
+
+    /**
+     * Updates the bitmask used to maintain the current snap direction of the current view.
+     *
+     * @param oldX The old x-coordinate. This is used to determine the horizontal direction the user is going.
+     * @param oldY The old y-coordinate. This is used to determine the vertical direction the user is going.
+     * @param newX The new x-coordinate. By finding the difference between new and old we can determine which horizontal direction the user is going.
+     * @param newY The new y-coordinate. By finding the difference between new and old, we can determine which vertical direction the user is going.
+     */
+    private void updateSnapMask(int oldX, int oldY, int newX, int newY) {
+        mViewState.resetSnap();
+        int transitionX = newX - oldX;
+        int transitionY = newY - oldY;
+        int snapOffsetX = Globals.MAX_X.get() / 10;
+        int snapOffsetY = Globals.MAX_Y.get() / 10;
+        if (transitionX > 0 && newX + snapOffsetX >= Globals.MAX_X.get()) {
+            mViewState.addState(ViewState.RIGHT);
+        }
+        if (transitionX < 0 && newX <= snapOffsetX) {
+            mViewState.addState(ViewState.LEFT);
+        }
+        if (transitionY < 0 && newY <= snapOffsetY) {
+            mViewState.addState(ViewState.UPPER);
+        }
+        if (transitionY > 0 && newY + snapOffsetY >= Globals.MAX_Y.get()) {
+            mViewState.addState(ViewState.BOTTOM);
+        }
+    }
+
+    private int[] getSnapViewProperties() {
+        int maxWidth = Globals.MAX_X.get();
+        int maxHeight = Globals.MAX_Y.get();
+        int width = 0, height = 0, x = 0, y = 0;
+        if (mViewState.isStateSet(ViewState.RIGHT)) {
+            width = maxWidth / 2;
+            height = maxHeight;
+            x = maxWidth / 2;
+        }
+        if (mViewState.isStateSet(ViewState.LEFT)) {
+            width = maxWidth / 2;
+            height = maxHeight;
+        }
+        if (mViewState.isStateSet(ViewState.UPPER)) {
+            if (width == 0) {
+                width = maxWidth;
+            }
+            height = maxHeight / 2;
+        }
+        if (mViewState.isStateSet(ViewState.BOTTOM)) {
+            if (width == 0) {
+                width = maxWidth;
+            }
+            height = maxHeight / 2;
+            y = maxHeight / 2;
+        }
+        width = MeasureTools.scaleInverse(width);
+        height = MeasureTools.scaleInverse(height);
+        x -= MeasureTools.scaleDelta(width);
+        y -= MeasureTools.scaleDelta(height);
+        return new int[]{x, y, width, height};
+    }
+
+    /**
+     * Used to snap views to a side of the window if the bitmask is set.
+     * <p>
+     * By utilizing a bitmask, it allows me to dynamically snap to not just sides, but also corners as well. It uses bitwise AND'ing
+     * to retrieve set bits/attributes. Unlike other operations, such as move() and resize(), changes to the mContentView's
+     * size and coordinates are not saved, to easily allow the view to go back to it's original size easily.
+     */
+    private void snap() {
+        if (!mViewState.isSnapped()) return;
+        int[] p = getSnapViewProperties();
+        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, p[0], p[1], p[2], p[3]);
+        anim.setDuration(500);
+        mContentView.startAnimation(anim);
+    }
+
+    private int[] restoredViewProperties(){
+        return mViewState.isMaximized() ? getMaximizeViewProperties() :
+                mViewState.isSnapped() ? getSnapViewProperties() :
+                        mViewState.getViewProperties();
+    }
+
+    /**
+     * Maximizes the view. Note that it does not alter the view's X and Y coordinate through the ViewState
+     * instance, as we do not really want it to be saved. This allows for the view to go back to it's
+     * previous size and coordinates easily, as the previous are remembered. In fact,  what's really cool about
+     * it is that because it is not set, but the state of whether or not it is maximized is, it will allow the user
+     * to go back to their previous size EVEN if they already exited the program fully.
+     */
+    private void maximize() {
+        mContentView.bringToFront();
+        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, getMaximizeViewProperties());
+        anim.setDuration(500);
+        mContentView.startAnimation(anim);
+        mViewState.setMaximized(true);
+        SessionManager.getInstance().updateSession(this);
+    }
+
+    private int[] getMaximizeViewProperties() {
+        int width = MeasureTools.scaleInverse(Globals.MAX_X.get()), height = MeasureTools.scaleInverse(Globals.MAX_Y.get()),
+                x = -MeasureTools.scaleDelta(width), y = -MeasureTools.scaleDelta(height);
+        return new int[]{x, y, width, height};
+    }
+
+    private void restoreMaximize() {
+        mViewState.setMaximized(false);
+        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, restoredViewProperties());
+        anim.setDuration(500);
+        anim.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                mContentView.bringToFront();
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                SessionManager
+                        .getInstance()
+                        .updateSession(BaseWidget.this);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        mContentView.startAnimation(anim);
+    }
+
+    private void toggleMaximize() {
+        if (mViewState.isMaximized()) {
+            restoreMaximize();
+        } else {
+            maximize();
+        }
+    }
+
+    /**
+     * Used to minimize the view. It doesn't do much right now, but it works.
+     */
+    private void toggleMinimize() {
+        if (mContentView.getVisibility() == View.INVISIBLE) {
+            restoreMinimize();
+        } else {
+            minimize();
+        }
+        SessionManager
+                .getInstance()
+                .updateSession(this);
+    }
+
+
+    private void minimize() {
+        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, mTaskBarButton.getX(), Globals.MAX_Y.get(), 0, 0);
+        anim.setDuration(500);
+        anim.setAnimationListener(new OnAnimationEndListener() {
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mContentView.setVisibility(View.INVISIBLE);
+                mViewState.setMinimized(true);
+                SessionManager
+                        .getInstance()
+                        .updateSession(BaseWidget.this);
+                Log.i(getClass().getName(), "(" + mContentView.getX() + ", " + mContentView.getY() + ")\n<" + mContentView.getWidth() + "x" + mContentView.getHeight() + ">");
+            }
+        });
+        mContentView.startAnimation(anim);
+    }
+
+    private void restoreMinimize() {
+        mViewState.setMinimized(false);
+        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, restoredViewProperties());
+        anim.setDuration(500);
+        anim.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                mContentView.setVisibility(View.VISIBLE);
+                mContentView.bringToFront();
+                RxBus.publish(mOptionsMenu);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                boundsCheck();
+                SessionManager
+                        .getInstance()
+                        .updateSession(BaseWidget.this);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        mContentView.startAnimation(anim);
+    }
+
     /**
      * For subclasses to override to setup their own additional needed information. Not abstract as it is not
      * necessary to setup.
@@ -373,7 +430,7 @@ public class BaseWidget extends Fragment {
         if (mViewState.getWidth() == 0 || mViewState.getHeight() == 0) {
             setSize(mMinWidth, mMinHeight);
         }
-        snap(mContentView);
+        snap();
         if (mViewState.isMaximized()) {
             maximize();
         }
@@ -413,15 +470,6 @@ public class BaseWidget extends Fragment {
                 .getBytes();
     }
 
-    /**
-     * For any subclasses that need to clean up extra resources, they may do so here.
-     */
-    protected void cleanUp() {
-        ((LinearLayout) getActivity()
-                .findViewById(R.id.main_task_bar))
-                .removeView(mTaskBarButton);
-    }
-
     protected MenuBuilder buildOptions() {
         return new MenuBuilder()
                 .addSeparator(LAYOUT_TAG)
@@ -434,108 +482,66 @@ public class BaseWidget extends Fragment {
     }
 
     /**
-     * Maximizes the view. Note that it does not alter the view's X and Y coordinate through the ViewState
-     * instance, as we do not really want it to be saved. This allows for the view to go back to it's
-     * previous size and coordinates easily, as the previous are remembered. In fact,  what's really cool about
-     * it is that because it is not set, but the state of whether or not it is maximized is, it will allow the user
-     * to go back to their previous size EVEN if they already exited the program fully.
+     * For any subclasses that need to clean up extra resources, they may do so here.
      */
-    private void maximize() {
-        int width = MeasureTools.scaleInverse(Globals.MAX_X.get()), height = MeasureTools.scaleInverse(Globals.MAX_Y.get()),
-                x =  -MeasureTools.scaleDelta(width), y = -MeasureTools.scaleDelta(height);
-        mContentView.bringToFront();
-        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, x, y, width, height);
-        anim.setDuration(500);
-        mContentView.startAnimation(anim);
-        mViewState.setMaximized(true);
-        SessionManager.getInstance().updateSession(this);
+    protected void cleanUp() {
+        ((LinearLayout) getActivity()
+                .findViewById(R.id.main_task_bar))
+                .removeView(mTaskBarButton);
     }
 
-    private void restoreMaximize() {
-        if (mViewState.isSnapped()) {
-            snap(mContentView);
-            mViewState.setMaximized(false);
-            SessionManager.getInstance().updateSession(this);
-            return;
-        }
-        mContentView.bringToFront();
-        MoveAndResizeAnimation anim = new MoveAndResizeAnimation(mContentView, mViewState.getX(), mViewState.getY(), mViewState.getWidth(), mViewState.getHeight());
-        anim.setDuration(500);
-        mContentView.startAnimation(anim);
-        mViewState.setMaximized(false);
-        SessionManager.getInstance().updateSession(this);
-    }
-
-    private void toggleMaximize() {
-        if (mViewState.isMaximized()) {
-            restoreMaximize();
-        } else {
-            maximize();
-        }
-    }
-
-    /**
-     * Used to minimize the view. It doesn't do much right now, but it works.
-     */
-    private void toggleMinimize() {
-        if (mContentView.getVisibility() == View.INVISIBLE) {
-            restoreMinimize();
-        } else {
-            minimize();
-        }
+    private void close() {
+        cleanUp();
         SessionManager
                 .getInstance()
-                .updateSession(this);
+                .deleteSession(this);
+        getActivity()
+                .getFragmentManager()
+                .beginTransaction()
+                .remove(this)
+                .commit();
+        if (mOptionsMenu != null) {
+            mOptionsMenu.notifyObservers();
+        }
     }
 
-    private int oldX, oldY;
-
-    private void minimize() {
-        oldX = (int) mContentView.getX();
-        oldY = (int) mContentView.getY();
-        mContentView
-                .animate()
-                .translationX(mTaskBarButton.getX())
-                .translationY(Globals.MAX_Y.get())
-                .scaleX(0)
-                .scaleY(0)
-                .setDuration(500)
-                .withEndAction(() -> {
-                    mContentView.setVisibility(View.INVISIBLE);
-                    Log.i(getClass().getName(), "(" + mContentView.getX() + ", " + mContentView.getY() + ")\n<" + mContentView.getWidth() + "x" + mContentView.getHeight() + ">");
-                })
-                .start();
-        mViewState.setMinimized(true);
-        SessionManager
-                .getInstance()
-                .updateSession(this);
+    private void setSize(int width, int height) {
+        mViewState
+                .setWidth(width)
+                .setHeight(height);
+        mContentView.getLayoutParams().width = width;
+        mContentView.getLayoutParams().height = height;
+        mContentView.requestLayout();
     }
 
-    private void restoreMinimize() {
-        mContentView
-                .animate()
-                .withStartAction(() -> {
-                    mContentView.setVisibility(View.VISIBLE);
-                    mContentView.bringToFront();
-                })
-                .translationX(oldX)
-                .translationY(oldY)
-                .scaleX(Globals.SCALE.get())
-                .scaleY(Globals.SCALE.get())
-                .setDuration(500)
-                .withEndAction(() -> {
-                    boundsCheck();
-                    if (mViewState.isMaximized()) {
-                        maximize();
-                    } else if (mViewState.isSnapped()) {
-                        snap(mContentView);
-                    }
-                    SessionManager
-                            .getInstance()
-                            .updateSession(this);
-                })
-                .start();
-        mViewState.setMinimized(false);
+    private void setCoordinates(int x, int y) {
+        mViewState
+                .setX(x)
+                .setY(y);
+        mContentView.setX(x);
+        mContentView.setY(y);
+    }
+
+    private void setX(int x) {
+        mViewState.setX(x);
+        mContentView.setX(x);
+    }
+
+    private void setY(int y) {
+        mViewState.setY(y);
+        mContentView.setY(y);
+    }
+
+    private void setWidth(int width) {
+        mViewState.setWidth(width);
+        mContentView.getLayoutParams().width = width;
+        mContentView.requestLayout();
+    }
+
+    private void setHeight(int height) {
+        mViewState.setHeight(height);
+        mContentView.getLayoutParams().height = height;
+        mContentView.requestLayout();
     }
 
     /**

@@ -16,10 +16,22 @@ public class MoveAndResizeAnimation extends Animation {
 
     public MoveAndResizeAnimation(View view, float x, float y, int width, int height) {
         mView = view;
-        mWidth = width;
-        mHeight = height;
         mX = x;
         mY = y;
+        mWidth = width;
+        mHeight = height;
+        mStartX = view.getX();
+        mStartY = view.getY();
+        mStartWidth = view.getWidth();
+        mStartHeight = view.getHeight();
+    }
+
+    public MoveAndResizeAnimation(View view, int[] properties){
+        mView = view;
+        mX = properties[0];
+        mY = properties[1];
+        mWidth = properties[2];
+        mHeight = properties[3];
         mStartX = view.getX();
         mStartY = view.getY();
         mStartWidth = view.getWidth();

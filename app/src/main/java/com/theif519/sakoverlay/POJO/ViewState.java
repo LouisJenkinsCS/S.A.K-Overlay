@@ -142,6 +142,10 @@ public class ViewState {
                 '}';
     }
 
+    public int[] getViewProperties(){
+        return new int[] {x, y, width, height };
+    }
+
     public boolean isSnapped() {
         return isStateSet(RIGHT | LEFT | BOTTOM | UPPER);
     }
