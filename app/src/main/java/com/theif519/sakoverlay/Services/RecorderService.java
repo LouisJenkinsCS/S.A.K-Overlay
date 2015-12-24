@@ -30,14 +30,14 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Activities.PermissionActivity;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.POJO.PermissionInfo;
-import com.theif519.sakoverlay.POJO.RecorderInfo;
+import com.theif519.sakoverlay.Sessions.RecorderInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
+import com.theif519.sakoverlay.Sessions.RecordingSession;
 
 import java.io.IOException;
 
 import rx.Observable;
-import rx.functions.Action1;
 import rx.subjects.PublishSubject;
 
 /**
@@ -49,47 +49,22 @@ import rx.subjects.PublishSubject;
  */
 public class RecorderService extends Service {
 
-    /*
-        Current state of recorder.
-     */
-    private RecorderState mState = RecorderState.DEAD;
+    private static final String EXTRA_RESULT_CODE = "Result Code";
+    private static final String EXTRA_DATA = "Data";
+
+    public static Intent createIntent(Context context, int resultCode, Intent data){
+        Intent intent = new Intent(context, RecorderService.class);
+        intent.putExtra(EXTRA_RESULT_CODE, resultCode);
+        intent.putExtra(EXTRA_DATA, data);
+        return intent;
+    }
+
+    private RecordingSession mSession;
     private MediaProjection mProjection;
     private VirtualDisplay mDisplay;
     private MediaRecorder mRecorder;
-    /*
-        Is used to publish/observe any state changes to the recorder.
-     */
-    private PublishSubject<RecorderState> mStateChangeObserver;
+    private PublishSubject<RecordingSession.RecorderState> mStateChangeObserver;
     private RecorderInfo mLastRecorderInfo;
-
-    /**
-     * Initializes the MediaRecorder with the user's requested data if it gets through the checks
-     * in start().
-     *
-     * @param width        Width of the display
-     * @param height       Height of the display
-     * @param audioEnabled Whether or not audio was selected
-     * @param fileName     Name of file to create.
-     */
-    private boolean initialize(int width, int height, boolean audioEnabled, String fileName) {
-        Log.i(getClass().getName(), "Initializing Screen Recorder...");
-        try {
-            mRecorder = new MediaRecorder();
-            if (audioEnabled) mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
-            mRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            if (audioEnabled) mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            mRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-            mRecorder.setVideoEncodingBitRate(512 * 1000);
-            mRecorder.setVideoFrameRate(30);
-            mRecorder.setVideoSize(width, height);
-            mRecorder.setOutputFile(Globals.RECORDER_FILE_SAVE_PATH + fileName);
-            return true;
-        } catch (RuntimeException ex) {
-            logErrorAndChangeState(ex);
-            return false;
-        }
-    }
 
     @Override
     public void onCreate() {
@@ -97,19 +72,14 @@ public class RecorderService extends Service {
         /*
             Whenever we receive a permission response, if the MediaProjection instance is null, we initialize it here.
          */
-        RxBus.observe(PermissionInfo.class).subscribe(new Action1<PermissionInfo>() {
-            @Override
-            public void call(PermissionInfo permissionInfo) {
-                if (mProjection == null) {
-                    mProjection = ((MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE))
-                            .getMediaProjection(permissionInfo.getResultCode(), permissionInfo.getIntent());
-                }
+        RxBus.observe(PermissionInfo.class).subscribe(permissionInfo -> {
+            if (mProjection == null) {
+                mProjection = ((MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE))
+                        .getMediaProjection(permissionInfo.getResultCode(), permissionInfo.getIntent());
             }
         });
         mStateChangeObserver = PublishSubject.create();
-        setupForegroundNotification();
         setupFloatingView();
-        changeState(RecorderState.STOPPED);
     }
 
     @Nullable
@@ -120,75 +90,14 @@ public class RecorderService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        int resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0);
+        Intent data = intent.getParcelableExtra(EXTRA_DATA);
+        if (resultCode == 0 || data == null) {
+            throw new IllegalStateException("Result code or data missing.");
+        }
+        PermissionInfo info = new PermissionInfo(data, resultCode);
+        mSession = new RecordingSession(this, info);
         return START_NOT_STICKY;
-    }
-
-    /**
-     * Convenience method to create a virtual display.
-     *
-     * @param width  Width of display.
-     * @param height Heigth of virtual display.
-     * @return Initialized virtual display.
-     */
-    private VirtualDisplay createVirtualDisplay(int width, int height) {
-        Log.i(getClass().getName(), "Creating Virtual Display...");
-        DisplayMetrics metrics = new DisplayMetrics();
-        ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(metrics);
-        return mProjection.createVirtualDisplay(getClass().getName(), width, height,
-                metrics.densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, mRecorder.getSurface(), null, null);
-    }
-
-    public RecorderState getState() {
-        return mState;
-    }
-
-    /**
-     * Used to log any errors and handle it by changing and broadcasting it's state too, although not sure
-     * if it would cause a crash or not.
-     *
-     * @param ex Exception.
-     */
-    private void logErrorAndChangeState(Throwable ex) {
-        String msg = ex.getMessage() == null ? "" : ex.getMessage();
-        Log.wtf(getClass().getName(), "An Error of type: \"" + ex.getClass().getName() + "\" was thrown, during" +
-                "the recorded state: \"" + mState.toString() + "\", with the message: \"" + msg + "\"!", ex);
-        Toast.makeText(RecorderService.this, "Error->\"" + ex.getMessage() + "\"", Toast.LENGTH_LONG).show();
-        die();
-    }
-
-    /**
-     * Change the state and broadcast it to any listeners.
-     *
-     * @param state The state of the recorder.
-     */
-    private void changeState(RecorderState state) {
-        mState = state;
-        mStateChangeObserver.onNext(state);
-        Log.i(getClass().getName(), "Published to Subscribers that the State is " + mState.toString());
-    }
-
-    /**
-     * As it is possible for S.A.K-Overlay to be killed in the background while recording, adding a Foreground
-     * notification reduces the chances of it happening drastically. As the service run locally in the same process,
-     * S.A.K-Overlay will not be killed off unless the service is as well.
-     * <p/>
-     * Consequently, as the overlay can be quite heavy on RAM, making it a juicier target for the OOM killer, this service,
-     * if the system is down to critically low memory, is also more likely to be killed as well. I will hopefully remedy this
-     * by creating a separate process for this to run in, but that by itself comes with a lot of complication as well.
-     */
-    private void setupForegroundNotification() {
-        Intent endIntent = new Intent(Globals.Keys.RECORDER_COMMAND_REQUEST);
-        endIntent.putExtra(Globals.Keys.RECORDER_COMMAND, RecorderCommand.DIE);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, endIntent, 0);
-        Notification notification = new Notification.Builder(getApplicationContext())
-                .setContentTitle(getString(R.string.app_name))
-                .setContentText("Generic Foreground Notification")
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.sak_overlay_icon))
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .build();
-        startForeground(Globals.RECORDER_NOTIFICATION_ID, notification);
     }
 
     /**
@@ -215,21 +124,18 @@ public class RecorderService extends Service {
         final ImageButton controller = (ImageButton) layout.findViewById(R.id.screen_recorder_controller_button);
         final TextView stateText = (TextView) layout.findViewById(R.id.screen_recorder_controller_state);
         mStateChangeObserver // Luckily, Rx Observables can also be observed from the same thread, easily.
-                .subscribe(new Action1<RecorderState>() { // Here we handle any state changes below.
-                    @Override
-                    public void call(RecorderState recorderState) {
-                        stateText.setText(recorderState.toString());
-                        switch (recorderState) {
-                            case DEAD:
-                                manager.removeView(layout);
-                                break;
-                            case STARTED:
-                                controller.setImageResource(R.drawable.stop);
-                                break;
-                            case STOPPED:
-                                controller.setImageResource(R.drawable.play);
-                                break;
-                        }
+                .subscribe(recorderState -> {
+                    stateText.setText(recorderState.toString());
+                    switch (recorderState) {
+                        case DEAD:
+                            manager.removeView(layout);
+                            break;
+                        case STARTED:
+                            controller.setImageResource(R.drawable.stop);
+                            break;
+                        case STOPPED:
+                            controller.setImageResource(R.drawable.play);
+                            break;
                     }
                 });
         /*
@@ -306,21 +212,7 @@ public class RecorderService extends Service {
      * @return True if possible, false is bad state.
      */
     public boolean stop() {
-        if (!RecorderCommand.STOP.isPossible(mState)) return false;
-        try {
-            Log.i(getClass().getName(), "Stopping recorder...");
-            mRecorder.stop();
-            Log.i(getClass().getName(), "Resetting Screen Recorder...");
-            mRecorder.reset();
-            Log.i(getClass().getName(), "Releasing VirtualDisplay...");
-            mDisplay.release();
-            mDisplay = null;
-            changeState(RecorderState.STOPPED);
-            return true;
-        } catch (IllegalStateException e) {
-            logErrorAndChangeState(e);
-            return false;
-        }
+        return mSession.stop();
     }
 
     /**
@@ -331,40 +223,8 @@ public class RecorderService extends Service {
      * @param info Information for recording.
      * @return True if possible, false is bad state or an error/bad input.
      */
-    public boolean start(RecorderInfo info) {
-        mLastRecorderInfo = info;
-        int width = info.getWidth(), height = info.getHeight();
-        boolean audioEnabled = info.isAudioEnabled();
-        String fileName = info.getFileName();
-        if (!RecorderCommand.START.isPossible(mState)) return false;
-        Log.i(getClass().getName(), "Checking for permissions...");
-        if (mProjection == null) {
-            Log.i(getClass().getName(), "Starting activity for permission...");
-            Intent intent = new Intent(this, PermissionActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            return false;
-        }
-        String errMsg;
-        if (!(errMsg = checkStartParameters(width, height, fileName)).isEmpty()) {
-            Toast.makeText(RecorderService.this, errMsg, Toast.LENGTH_LONG).show();
-            return false;
-        }
-        if (!initialize(width, height, audioEnabled, fileName)) {
-            return false;
-        }
-        try {
-            Log.i(getClass().getName(), "Preparing Recorder...");
-            mRecorder.prepare();
-            mDisplay = createVirtualDisplay(width, height);
-            Log.i(getClass().getName(), "Started!");
-            mRecorder.start();
-            changeState(RecorderState.STARTED);
-        } catch (IOException | IllegalStateException e) {
-            logErrorAndChangeState(e);
-            return false;
-        }
-        return true;
+    public boolean start() {
+        return mSession.start();
     }
 
     /**
@@ -393,115 +253,6 @@ public class RecorderService extends Service {
         return errMsg.toString();
     }
 
-    /**
-     * Enumerations used to describe the current state of the object, even
-     * having a direct string representation. It uses a bitmask to allow
-     * more than one state to be compared, specifically for RecorderCommand.
-     */
-    public enum RecorderState {
-        DEAD(1),
-        STARTED(1 << 1),
-        PAUSED(1 << 2),
-        STOPPED(1 << 3);
-
-        private int mMask;
-
-        RecorderState(int bitmask) {
-            mMask = bitmask;
-        }
-
-        /**
-         * Very convenient method to get all masks at once, which allows getting all but one or two
-         * super easy to do. It loops through each state then bitwise OR's them into one.
-         *
-         * @return All bitmasks together.
-         */
-        public static int getAllMask() {
-            int totalMask = 0;
-            for (RecorderState state : values()) {
-                totalMask |= state.getMask();
-            }
-            return totalMask;
-        }
-
-        public int getMask() {
-            return mMask;
-        }
-
-        @Override
-        public String toString() {
-            switch (this) {
-                case DEAD:
-                    return "Dead";
-                case STARTED:
-                    return "Recording";
-                case PAUSED:
-                    return "Paused";
-                case STOPPED:
-                    return "Stopped";
-                default:
-                    return null;
-            }
-        }
-    }
-
-    /**
-     * This enumeration is used to encapsulate a given command from a bound activity/fragment, and
-     * is used as a helper to determine whether or not given command is possible given the current state.
-     * <p/>
-     * | = Bitwise OR
-     * <p/>
-     * & = Bitwise AND
-     * <p/>
-     * &~ = Bitwise NAND
-     */
-    public enum RecorderCommand {
-        START(
-                RecorderState.getAllMask() & ~RecorderState.STARTED.getMask()
-        ),
-        PAUSE(
-                RecorderState.STARTED.getMask()
-        ),
-        STOP(
-                RecorderState.STARTED.getMask() | RecorderState.PAUSED.getMask()
-        ),
-        DIE(
-                RecorderState.getAllMask() & ~RecorderState.DEAD.getMask()
-        );
-
-        private int mPossibleStatesMask;
-
-        RecorderCommand(int possibleStates) {
-            mPossibleStatesMask = possibleStates;
-        }
-
-        /**
-         * Determines whether or not the command is possible by checking if the bit for the possible state
-         * is set.
-         *
-         * @param state State to check.
-         * @return True if it is a possible command for the given state.
-         */
-        public boolean isPossible(RecorderState state) {
-            return (mPossibleStatesMask & state.getMask()) != 0;
-        }
-
-        @Override
-        public String toString() {
-            switch (this) {
-                case START:
-                    return "Start";
-                case PAUSE:
-                    return "Pause";
-                case STOP:
-                    return "Stop";
-                case DIE:
-                    return "Die";
-                default:
-                    return null;
-            }
-        }
-    }
 
     /**
      * The IBinder returned when we are bound to an activity/fragment. It allows who we are bound to

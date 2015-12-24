@@ -19,19 +19,19 @@ import rx.subjects.PublishSubject;
 /**
  * Created by theif519 on 12/10/2015.
  */
-public class SessionManager {
+public class WidgetSessionManager {
 
-    private static final SessionManager INSTANCE = new SessionManager();
+    private static final WidgetSessionManager INSTANCE = new WidgetSessionManager();
 
     private SessionDatabase mDatabase;
     private static final PublishSubject<BaseWidget> mPublishUpdate = PublishSubject.create();
     private static final PublishSubject<BaseWidget> mPublishDelete = PublishSubject.create();
 
-    public static SessionManager getInstance() {
+    public static WidgetSessionManager getInstance() {
         return INSTANCE;
     }
 
-    private SessionManager() {
+    private WidgetSessionManager() {
 
     }
 

@@ -7,7 +7,7 @@ import android.widget.EditText;
 
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.Transformers;
-import com.theif519.sakoverlay.Sessions.SessionManager;
+import com.theif519.sakoverlay.Sessions.WidgetSessionManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -102,7 +102,7 @@ public class NotePadWidget extends BaseWidget {
                 .throttleWithTimeout(1, TimeUnit.SECONDS)
                 .subscribe(str -> {
                     mContents = str;
-                    SessionManager
+                    WidgetSessionManager
                             .getInstance()
                             .updateSession(this);
                 });

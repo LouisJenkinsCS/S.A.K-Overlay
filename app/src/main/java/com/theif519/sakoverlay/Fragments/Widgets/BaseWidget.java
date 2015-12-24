@@ -24,7 +24,7 @@ import com.theif519.sakoverlay.POJO.MenuOptions;
 import com.theif519.sakoverlay.POJO.ViewState;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
-import com.theif519.sakoverlay.Sessions.SessionManager;
+import com.theif519.sakoverlay.Sessions.WidgetSessionManager;
 import com.theif519.sakoverlay.Views.TouchInterceptorLayout;
 
 import org.json.JSONException;
@@ -116,7 +116,7 @@ public class BaseWidget extends Fragment {
                             case MotionEvent.ACTION_UP:
                                 boundsCheck();
                                 snap();
-                                SessionManager
+                                WidgetSessionManager
                                         .getInstance()
                                         .updateSession(BaseWidget.this);
                                 return true;
@@ -146,7 +146,7 @@ public class BaseWidget extends Fragment {
                                 return false;
                             case MotionEvent.ACTION_UP:
                                 boundsCheck();
-                                SessionManager
+                                WidgetSessionManager
                                         .getInstance()
                                         .updateSession(BaseWidget.this);
                                 return true;
@@ -316,7 +316,7 @@ public class BaseWidget extends Fragment {
         anim.setDuration(500);
         mContentView.startAnimation(anim);
         mViewState.setMaximized(true);
-        SessionManager.getInstance().updateSession(this);
+        WidgetSessionManager.getInstance().updateSession(this);
     }
 
     private int[] getMaximizeViewProperties() {
@@ -337,7 +337,7 @@ public class BaseWidget extends Fragment {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                SessionManager
+                WidgetSessionManager
                         .getInstance()
                         .updateSession(BaseWidget.this);
             }
@@ -367,7 +367,7 @@ public class BaseWidget extends Fragment {
         } else {
             minimize();
         }
-        SessionManager
+        WidgetSessionManager
                 .getInstance()
                 .updateSession(this);
     }
@@ -381,7 +381,7 @@ public class BaseWidget extends Fragment {
             public void onAnimationEnd(Animation animation) {
                 mContentView.setVisibility(View.INVISIBLE);
                 mViewState.setMinimized(true);
-                SessionManager
+                WidgetSessionManager
                         .getInstance()
                         .updateSession(BaseWidget.this);
                 Log.i(getClass().getName(), "(" + mContentView.getX() + ", " + mContentView.getY() + ")\n<" + mContentView.getWidth() + "x" + mContentView.getHeight() + ">");
@@ -405,7 +405,7 @@ public class BaseWidget extends Fragment {
             @Override
             public void onAnimationEnd(Animation animation) {
                 boundsCheck();
-                SessionManager
+                WidgetSessionManager
                         .getInstance()
                         .updateSession(BaseWidget.this);
             }
@@ -492,7 +492,7 @@ public class BaseWidget extends Fragment {
 
     private void close() {
         cleanUp();
-        SessionManager
+        WidgetSessionManager
                 .getInstance()
                 .deleteSession(this);
         getActivity()

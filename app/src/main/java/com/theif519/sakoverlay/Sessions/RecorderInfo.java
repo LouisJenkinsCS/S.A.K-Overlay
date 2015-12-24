@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.POJO;
+package com.theif519.sakoverlay.Sessions;
 
 /**
  * Created by theif519 on 12/1/2015.
@@ -15,6 +15,22 @@ public class RecorderInfo {
         mHeight = height;
         mAudioEnabled = audioEnabled;
         mFileName = fileName;
+    }
+
+    public boolean isValid(StringBuilder errMsg){
+        if (mWidth == 0) {
+            errMsg.append("Width must be larger than or equal to 0!\n");
+        }
+        if (mHeight == 0) {
+            errMsg.append("Height must be large than or equal to 0!\n");
+        }
+        if (mFileName == null) {
+            errMsg.append("Filename cannot be left null!");
+        }
+        if (mFileName != null && mFileName.isEmpty()) {
+            errMsg.append("Filename cannot be left empty!");
+        }
+        return errMsg.toString().isEmpty();
     }
 
     public int getWidth() {

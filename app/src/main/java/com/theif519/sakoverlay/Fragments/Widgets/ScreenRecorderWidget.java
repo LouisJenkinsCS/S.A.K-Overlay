@@ -18,7 +18,7 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Adapters.VideoInfoAdapter;
 import com.theif519.sakoverlay.Async.MediaThumbnailGenerator;
 import com.theif519.sakoverlay.Misc.Globals;
-import com.theif519.sakoverlay.POJO.RecorderInfo;
+import com.theif519.sakoverlay.Sessions.RecorderInfo;
 import com.theif519.sakoverlay.POJO.VideoInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;

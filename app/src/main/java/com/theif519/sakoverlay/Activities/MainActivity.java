@@ -27,7 +27,7 @@ import com.theif519.sakoverlay.POJO.MenuOptions;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Services.NotificationService;
-import com.theif519.sakoverlay.Sessions.SessionManager;
+import com.theif519.sakoverlay.Sessions.WidgetSessionManager;
 import com.theif519.utils.Misc.MutableObject;
 import com.theif519.utils.Misc.ServiceTools;
 import com.theif519.utils.Misc.ShakeDetector;
@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.main_layout).post(() -> {
             updateMaxCoordinates();
             // The floating fragments are assured to be called after MainActivity has finished inflating it's view.
-            SessionManager
+            WidgetSessionManager
                     .getInstance()
                     .restoreSession(this)
                     .defaultIfEmpty(BaseWidget.INVALID_WIDGET)
@@ -179,7 +179,7 @@ public class MainActivity extends Activity {
     }
 
     private void createWidgetSession(BaseWidget widget){
-        SessionManager
+        WidgetSessionManager
                 .getInstance()
                 .appendSession(widget)
                 .observeOn(AndroidSchedulers.mainThread())
