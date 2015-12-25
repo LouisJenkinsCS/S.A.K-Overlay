@@ -18,6 +18,7 @@ public class RecorderInfo {
     }
 
     public boolean isValid(StringBuilder errMsg){
+        errMsg.delete(0, errMsg.length());
         if (mWidth == 0) {
             errMsg.append("Width must be larger than or equal to 0!\n");
         }

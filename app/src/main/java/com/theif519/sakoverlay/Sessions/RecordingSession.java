@@ -16,6 +16,7 @@ import com.theif519.sakoverlay.POJO.PermissionInfo;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
+import rx.Observable;
 import rx.subjects.BehaviorSubject;
 
 /**
@@ -30,9 +31,10 @@ public class RecordingSession {
      */
     public enum RecorderState {
         DEAD(1),
-        STARTED(1 << 1),
-        PAUSED(1 << 2),
-        STOPPED(1 << 3);
+        PREPARED(1 << 1),
+        STARTED(1 << 2),
+        PAUSED(1 << 3),
+        STOPPED(1 << 4);
 
         private int mMask;
 
@@ -63,6 +65,8 @@ public class RecordingSession {
             switch (this) {
                 case DEAD:
                     return "Dead";
+                case PREPARED:
+                    return "Prepared";
                 case STARTED:
                     return "Recording";
                 case PAUSED:
@@ -86,8 +90,11 @@ public class RecordingSession {
      * &~ = Bitwise NAND
      */
     public enum RecorderCommand {
+        PREPARE(
+                RecorderState.DEAD.getMask() | RecorderState.STOPPED.getMask()
+        ),
         START(
-                RecorderState.getAllMask() & ~RecorderState.STARTED.getMask()
+                RecorderState.PREPARED.getMask()
         ),
         PAUSE(
                 RecorderState.STARTED.getMask()
@@ -119,6 +126,8 @@ public class RecordingSession {
         @Override
         public String toString() {
             switch (this) {
+                case PREPARE:
+                    return "Prepare";
                 case START:
                     return "Start";
                 case PAUSE:
@@ -148,11 +157,11 @@ public class RecordingSession {
         mRecorder = new MediaRecorder();
         mProjection = ((MediaProjectionManager) context.getSystemService(Context.MEDIA_PROJECTION_SERVICE))
                 .getMediaProjection(permissionInfo.getResultCode(), permissionInfo.getIntent());
-        if (mProjection != null) {
+        if (mProjection == null) {
             throw new IllegalStateException("MediaProjectionManager returned null for the passed permissionInfo");
         }
         mStateChanges = BehaviorSubject.create();
-        mState = RecorderState.STOPPED;
+        mState = RecorderState.DEAD;
         mStateChanges.onNext(mState);
         mErrorMessage = new StringBuilder();
     }
@@ -175,6 +184,13 @@ public class RecordingSession {
     }
 
     public boolean prepare(RecorderInfo info) {
+        if(!isPossible(RecorderCommand.PREPARE)){
+            invalidCommand(RecorderCommand.PREPARE);
+            return false;
+        }
+        if(!info.isValid(mErrorMessage)){
+            return false;
+        }
         reset();
         try {
             mRecorder = new MediaRecorder();
@@ -195,10 +211,15 @@ public class RecordingSession {
             logErrorAndChangeState(ex);
             return false;
         }
+        changeState(RecorderState.PREPARED);
         return true;
     }
 
     public boolean start() {
+        if(!isPossible(RecorderCommand.START)){
+            invalidCommand(RecorderCommand.START);
+            return false;
+        }
         try {
             Log.i(getClass().getName(), "Started!");
             mRecorder.start();
@@ -211,6 +232,10 @@ public class RecordingSession {
     }
 
     public boolean stop() {
+        if(!isPossible(RecorderCommand.STOP)){
+            invalidCommand(RecorderCommand.STOP);
+            return false;
+        }
         try {
             Log.i(TAG, "Stopping Projection...");
             mProjection.stop();
@@ -242,6 +267,7 @@ public class RecordingSession {
             mDisplay.release();
             mDisplay = null;
         }
+        changeState(RecorderState.STOPPED);
     }
 
     public void release(){
@@ -272,5 +298,22 @@ public class RecordingSession {
         Log.wtf(getClass().getName(), "An Error of type: \"" + ex.getClass().getName() + "\" was thrown, during" +
                 "the recorded state: \"" + mState.toString() + "\", with the message: \"" + msg + "\"!", ex);
         release();
+    }
+
+    public Observable<RecorderState> observeStateChanges(){
+        return mStateChanges.asObservable();
+    }
+
+    public boolean isPossible(RecorderCommand command){
+        return command.isPossible(mState);
+    }
+
+    private void invalidCommand(RecorderCommand command){
+        mErrorMessage.delete(0, mErrorMessage.length());
+        mErrorMessage.append("Invalid { Command -> \"");
+        mErrorMessage.append(command);
+        mErrorMessage.append("\" : State -> \"");
+        mErrorMessage.append(mState);
+        mErrorMessage.append("\" }");
     }
 }

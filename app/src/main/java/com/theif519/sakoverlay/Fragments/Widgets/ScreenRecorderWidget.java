@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Point;
+import android.media.projection.MediaProjectionManager;
 import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.widget.CheckBox;
@@ -18,10 +19,11 @@ import android.widget.Toast;
 import com.theif519.sakoverlay.Adapters.VideoInfoAdapter;
 import com.theif519.sakoverlay.Async.MediaThumbnailGenerator;
 import com.theif519.sakoverlay.Misc.Globals;
-import com.theif519.sakoverlay.Sessions.RecorderInfo;
+import com.theif519.sakoverlay.POJO.PermissionInfo;
 import com.theif519.sakoverlay.POJO.VideoInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;
+import com.theif519.sakoverlay.Sessions.RecorderInfo;
 import com.theif519.utils.Misc.FileRetriever;
 
 import java.io.File;
@@ -69,6 +71,13 @@ public class ScreenRecorderWidget extends BaseWidget {
             if (mIsRunning) {
                 mServiceHandle.stop();
             } else {
+                if (mServiceConnectionHandler == null) {
+                    startActivityForResult(
+                            ((MediaProjectionManager) getActivity().getSystemService(Context.MEDIA_PROJECTION_SERVICE))
+                                    .createScreenCaptureIntent(), Globals.RECORDER_PERMISSION_RETVAL
+                    );
+                    return;
+                }
                 createDialog();
             }
         });
@@ -84,7 +93,12 @@ public class ScreenRecorderWidget extends BaseWidget {
                 listView.setAdapter(new VideoInfoAdapter(activity, videoInfos));
             }
         }.execute(files.toArray(new File[files.size()]));
-        getActivity().bindService(new Intent(getActivity(), RecorderService.class), mServiceConnectionHandler = new ServiceConnection() {
+    }
+
+    private void launchService(PermissionInfo info) {
+        Intent intent = RecorderService.createIntent(getActivity(), info.getResultCode(), info.getIntent());
+        getActivity().startService(intent);
+        getActivity().bindService(intent, mServiceConnectionHandler = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 // In our IBinder, we declared a method to retrieve a handle to the service.
@@ -106,7 +120,6 @@ public class ScreenRecorderWidget extends BaseWidget {
                                     ((TextView) getContentView().findViewById(R.id.screen_recorder_record_button)).setText("Start");
                             }
                         });
-                mStateText.setText(mServiceHandle.getState().toString());
             }
 
             @Override
@@ -115,7 +128,6 @@ public class ScreenRecorderWidget extends BaseWidget {
                 mStateChangeHandler.unsubscribe();
             }
         }, Context.BIND_AUTO_CREATE);
-        getActivity().startService(new Intent(getActivity(), RecorderService.class));
     }
 
     /**
@@ -141,16 +153,6 @@ public class ScreenRecorderWidget extends BaseWidget {
         ((EditText) dialog.findViewById(R.id.dialog_recorder_resolution_height)).setText(Integer.toString(size.y));
     }
 
-    /**
-     * As we unregister in onPause, we may need to get any missed states. We do so here.
-     */
-    @Override
-    public void onStart() {
-        super.onStart();
-        // Note: onCreate() -> onStart() -> onCreateView() -> Setup(). Hence state text may not have been initialized so we check.
-        if (mStateText != null) mStateText.setText(mServiceHandle.getState().toString());
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -159,5 +161,12 @@ public class ScreenRecorderWidget extends BaseWidget {
             mServiceHandle.die();
         }
         INSTANCE_EXISTS = false;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, final int resultCode, final Intent data) {
+        if (requestCode == Globals.RECORDER_PERMISSION_RETVAL && resultCode == Activity.RESULT_OK) {
+            launchService(new PermissionInfo(data, resultCode));
+        }
     }
 }

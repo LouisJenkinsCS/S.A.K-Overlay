@@ -1,22 +1,12 @@
 package com.theif519.sakoverlay.Services;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
-import android.hardware.display.DisplayManager;
-import android.hardware.display.VirtualDisplay;
-import android.media.MediaRecorder;
-import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -27,22 +17,16 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.theif519.sakoverlay.Activities.PermissionActivity;
-import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.POJO.PermissionInfo;
-import com.theif519.sakoverlay.Sessions.RecorderInfo;
 import com.theif519.sakoverlay.R;
-import com.theif519.sakoverlay.Rx.RxBus;
+import com.theif519.sakoverlay.Sessions.RecorderInfo;
 import com.theif519.sakoverlay.Sessions.RecordingSession;
 
-import java.io.IOException;
-
 import rx.Observable;
-import rx.subjects.PublishSubject;
 
 /**
  * Created by theif519 on 11/12/2015.
- * <p/>
+ * <p>
  * RecorderService is a service made explicitly for capturing and maintaining a video stream
  * while in the application is in the background. It uses the API level 21 MediaProjection API
  * to accomplish this, and maintains the state of the current recording.
@@ -52,7 +36,7 @@ public class RecorderService extends Service {
     private static final String EXTRA_RESULT_CODE = "Result Code";
     private static final String EXTRA_DATA = "Data";
 
-    public static Intent createIntent(Context context, int resultCode, Intent data){
+    public static Intent createIntent(Context context, int resultCode, Intent data) {
         Intent intent = new Intent(context, RecorderService.class);
         intent.putExtra(EXTRA_RESULT_CODE, resultCode);
         intent.putExtra(EXTRA_DATA, data);
@@ -60,27 +44,8 @@ public class RecorderService extends Service {
     }
 
     private RecordingSession mSession;
-    private MediaProjection mProjection;
-    private VirtualDisplay mDisplay;
-    private MediaRecorder mRecorder;
-    private PublishSubject<RecordingSession.RecorderState> mStateChangeObserver;
+    private RecordingSession.RecorderState mState;
     private RecorderInfo mLastRecorderInfo;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        /*
-            Whenever we receive a permission response, if the MediaProjection instance is null, we initialize it here.
-         */
-        RxBus.observe(PermissionInfo.class).subscribe(permissionInfo -> {
-            if (mProjection == null) {
-                mProjection = ((MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE))
-                        .getMediaProjection(permissionInfo.getResultCode(), permissionInfo.getIntent());
-            }
-        });
-        mStateChangeObserver = PublishSubject.create();
-        setupFloatingView();
-    }
 
     @Nullable
     @Override
@@ -97,6 +62,10 @@ public class RecorderService extends Service {
         }
         PermissionInfo info = new PermissionInfo(data, resultCode);
         mSession = new RecordingSession(this, info);
+        mSession
+                .observeStateChanges()
+                .subscribe(state -> mState = state);
+        //setupFloatingView();
         return START_NOT_STICKY;
     }
 
@@ -105,7 +74,7 @@ public class RecorderService extends Service {
      * The controller can control the state of the recorder, but also is controlled by the state changes
      * as well. I.E, while in STOPPED, it can call START, but if say the ScreenRecorderWidget makes a state change,
      * then the controller's next option will be STOP as the recording will have already been STARTED.
-     * <p/>
+     * <p>
      * Pretty much what I am getting at is that while the observable acts in an asynchronous manner, the controller
      * acts in a synchronized way with the recorder's state.
      */
@@ -123,7 +92,8 @@ public class RecorderService extends Service {
         final ViewGroup layout = (ViewGroup) ((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(R.layout.screen_recorder_controller_view, null);
         final ImageButton controller = (ImageButton) layout.findViewById(R.id.screen_recorder_controller_button);
         final TextView stateText = (TextView) layout.findViewById(R.id.screen_recorder_controller_state);
-        mStateChangeObserver // Luckily, Rx Observables can also be observed from the same thread, easily.
+        mSession
+                .observeStateChanges() // Luckily, Rx Observables can also be observed from the same thread, easily.
                 .subscribe(recorderState -> {
                     stateText.setText(recorderState.toString());
                     switch (recorderState) {
@@ -185,87 +155,47 @@ public class RecorderService extends Service {
         manager.addView(layout, params);
     }
 
-    /**
-     * Sends the command to die, which will release any and all resources if they are currently being
-     * held, changes its state to DEAD, stops the foreground notification, and then stops itself.
-     */
     public void die() {
-        if (!RecorderCommand.DIE.isPossible(mState)) return;
-        if (mRecorder != null) { // Note that if we call release() without reset(), it may throw an IllegalStateException
-            mRecorder.reset();
-            mRecorder.release();
-        }
-        if (mDisplay != null) {
-            mDisplay.release();
-        }
-        if (mProjection != null) {
-            mProjection.stop();
-        }
-        changeState(RecorderState.DEAD);
+        mSession.release();
         stopForeground(true);
         stopSelf();
     }
 
-    /**
-     * Stops the recording if it's already started.
-     *
-     * @return True if possible, false is bad state.
-     */
     public boolean stop() {
-        return mSession.stop();
+        if (mSession.stop()) {
+            return true;
+        } else {
+            Toast.makeText(this, "Error: " + mSession.getLastErrorMessage(), Toast.LENGTH_LONG).show();
+            return false;
+        }
     }
 
-    /**
-     * Start the recorder, if possible, with the passed information. As can be seen above, the last passed
-     * information is kept in memory, so we can easily reuse it from the Controller. There are also simple
-     * checks in place to ensure that everything is as it should be.
-     *
-     * @param info Information for recording.
-     * @return True if possible, false is bad state or an error/bad input.
-     */
-    public boolean start() {
-        return mSession.start();
-    }
-
-    /**
-     * Helper function since the checking of input is making the start() function get too long.
-     * It checks to see if they are valid, and if not appends an error message.
-     *
-     * @param width    Width. Cannot be 0.
-     * @param height   Height. Cannot be 0.
-     * @param fileName Filename. Cannot be null.
-     * @return null if good, a string describing the error if bad.
-     */
-    private String checkStartParameters(int width, int height, String fileName) {
+    public boolean start(RecorderInfo info) {
         StringBuilder errMsg = new StringBuilder();
-        if (width == 0) {
-            errMsg.append("Width must be larger than or equal to 0!\n");
+        if(!info.isValid(errMsg)){
+            Toast.makeText(this, "Error: " + errMsg, Toast.LENGTH_LONG).show();
+            return false;
         }
-        if (height == 0) {
-            errMsg.append("Height must be large than or equal to 0!\n");
+        if(!mSession.prepare(info)){
+            Toast.makeText(this, "Error: " + mSession.getLastErrorMessage(), Toast.LENGTH_LONG).show();
+            return false;
         }
-        if (fileName == null) {
-            errMsg.append("Filename cannot be left null!");
+        if (mSession.start()) {
+            mLastRecorderInfo = info;
+            return true;
+        } else {
+            Toast.makeText(this, "Error: " + mSession.getLastErrorMessage(), Toast.LENGTH_LONG).show();
+            return false;
         }
-        if (fileName != null && fileName.isEmpty()) {
-            errMsg.append("Filename cannot be left empty!");
-        }
-        return errMsg.toString();
     }
 
-
-    /**
-     * The IBinder returned when we are bound to an activity/fragment. It allows who we are bound to
-     * to maintain a handle to this instance (which in and of itself allows it to manipulate the current state)
-     * as well as an observable to be notified on any state changes.
-     */
     public class RecorderBinder extends Binder {
         public RecorderService getService() {
             return RecorderService.this;
         }
 
-        public Observable<RecorderState> observeStateChanges() {
-            return mStateChangeObserver.asObservable();
+        public Observable<RecordingSession.RecorderState> observeStateChanges() {
+            return mSession.observeStateChanges();
         }
     }
 

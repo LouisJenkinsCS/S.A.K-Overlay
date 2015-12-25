@@ -53,10 +53,6 @@
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/google_api_key" />
 
-        <activity
-            android:name=".Activities.PermissionActivity"
-            android:label="@string/title_activity_permission" >
-        </activity>
     </application>
 
 </manifest>
