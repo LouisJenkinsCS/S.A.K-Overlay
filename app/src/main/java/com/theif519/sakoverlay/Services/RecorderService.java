@@ -19,8 +19,9 @@ import android.widget.Toast;
 
 import com.theif519.sakoverlay.POJO.PermissionInfo;
 import com.theif519.sakoverlay.R;
-import com.theif519.sakoverlay.Sessions.RecorderInfo;
-import com.theif519.sakoverlay.Sessions.RecordingSession;
+import com.theif519.sakoverlay.Sessions.Recording.RecordingInfo;
+import com.theif519.sakoverlay.Sessions.Recording.RecordingSession;
+import com.theif519.sakoverlay.Sessions.Recording.RecordingState;
 
 import rx.Observable;
 
@@ -44,8 +45,8 @@ public class RecorderService extends Service {
     }
 
     private RecordingSession mSession;
-    private RecordingSession.RecorderState mState;
-    private RecorderInfo mLastRecorderInfo;
+    private RecordingState mState;
+    private RecordingInfo mLastRecordingInfo;
 
     @Nullable
     @Override
@@ -134,8 +135,8 @@ public class RecorderService extends Service {
                                     stop();
                                     break;
                                 case STOPPED:
-                                    if (mLastRecorderInfo != null) {
-                                        start(mLastRecorderInfo);
+                                    if (mLastRecordingInfo != null) {
+                                        start(mLastRecordingInfo);
                                     } else {
                                         Toast.makeText(RecorderService.this, "Requires previous recording session to start!", Toast.LENGTH_SHORT).show();
                                     }
@@ -170,7 +171,7 @@ public class RecorderService extends Service {
         }
     }
 
-    public boolean start(RecorderInfo info) {
+    public boolean start(RecordingInfo info) {
         StringBuilder errMsg = new StringBuilder();
         if(!info.isValid(errMsg)){
             Toast.makeText(this, "Error: " + errMsg, Toast.LENGTH_LONG).show();
@@ -181,7 +182,7 @@ public class RecorderService extends Service {
             return false;
         }
         if (mSession.start()) {
-            mLastRecorderInfo = info;
+            mLastRecordingInfo = info;
             return true;
         } else {
             Toast.makeText(this, "Error: " + mSession.getLastErrorMessage(), Toast.LENGTH_LONG).show();
@@ -194,7 +195,7 @@ public class RecorderService extends Service {
             return RecorderService.this;
         }
 
-        public Observable<RecordingSession.RecorderState> observeStateChanges() {
+        public Observable<RecordingState> observeStateChanges() {
             return mSession.observeStateChanges();
         }
     }

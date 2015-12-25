@@ -23,7 +23,7 @@ import com.theif519.sakoverlay.POJO.PermissionInfo;
 import com.theif519.sakoverlay.POJO.VideoInfo;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Services.RecorderService;
-import com.theif519.sakoverlay.Sessions.RecorderInfo;
+import com.theif519.sakoverlay.Sessions.Recording.RecordingInfo;
 import com.theif519.utils.Misc.FileRetriever;
 
 import java.io.File;
@@ -141,7 +141,7 @@ public class ScreenRecorderWidget extends BaseWidget {
                     EditText height = (EditText) ((AlertDialog) dialog1).findViewById(R.id.dialog_recorder_resolution_height);
                     CheckBox audio = (CheckBox) ((AlertDialog) dialog1).findViewById(R.id.dialog_recorder_audio_checkbox);
                     EditText fileName = (EditText) ((AlertDialog) dialog1).findViewById(R.id.dialog_recorder_filename_name);
-                    mServiceHandle.start(new RecorderInfo(Integer.parseInt(width.getText().toString()), Integer.parseInt(height.getText().toString()),
+                    mServiceHandle.start(new RecordingInfo(Integer.parseInt(width.getText().toString()), Integer.parseInt(height.getText().toString()),
                             audio.isChecked(), fileName.getText().toString()));
                     dialog1.dismiss();
                 }).setNegativeButton("Cancel", (dialog1, which) -> {
@@ -156,7 +156,9 @@ public class ScreenRecorderWidget extends BaseWidget {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getActivity().unbindService(mServiceConnectionHandler);
+        if(mServiceConnectionHandler != null) {
+            getActivity().unbindService(mServiceConnectionHandler);
+        }
         if (mServiceHandle != null) {
             mServiceHandle.die();
         }

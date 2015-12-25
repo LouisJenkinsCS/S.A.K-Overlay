@@ -24,7 +24,7 @@ import com.theif519.sakoverlay.POJO.MenuOptions;
 import com.theif519.sakoverlay.POJO.ViewState;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
-import com.theif519.sakoverlay.Sessions.WidgetSessionManager;
+import com.theif519.sakoverlay.Sessions.Widgets.WidgetSessionManager;
 import com.theif519.sakoverlay.Views.TouchInterceptorLayout;
 
 import org.json.JSONException;

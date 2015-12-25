@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteStatement;
 import android.os.Looper;
 import android.util.Log;
 
+import com.theif519.sakoverlay.Sessions.Widgets.WidgetSessionData;
+
 import java.util.ArrayList;
 import java.util.List;
 

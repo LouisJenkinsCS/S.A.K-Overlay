@@ -7,7 +7,7 @@ import android.widget.EditText;
 
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.Transformers;
-import com.theif519.sakoverlay.Sessions.WidgetSessionManager;
+import com.theif519.sakoverlay.Sessions.Widgets.WidgetSessionManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;

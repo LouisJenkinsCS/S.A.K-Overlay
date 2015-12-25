@@ -15,7 +15,7 @@ import android.view.Surface;
 import android.view.WindowManager;
 
 import com.theif519.sakoverlay.Misc.Globals;
-import com.theif519.sakoverlay.Sessions.RecorderInfo;
+import com.theif519.sakoverlay.Sessions.Recording.RecordingInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,18 +43,18 @@ public class MediaRecorder {
     private int mTrackIndex;
     private boolean mMuxerStarted;
 
-    public void prepare(Context context, com.theif519.sakoverlay.POJO.PermissionInfo permissionInfo, RecorderInfo recorderInfo){
+    public void prepare(Context context, com.theif519.sakoverlay.POJO.PermissionInfo permissionInfo, RecordingInfo recordingInfo){
         MediaCodec codec;
         MediaMuxer muxer;
         if(mCodec != null || mSurface != null){
             throw new RuntimeException("Called prepare twice(?)");
         }
-        mOutputFile = new File(Globals.RECORDER_FILE_SAVE_PATH + recorderInfo.getFileName());
+        mOutputFile = new File(Globals.RECORDER_FILE_SAVE_PATH + recordingInfo.getFileName());
         Log.d(getClass().getName(), "Video recording to file " + mOutputFile);
         mBufferInfo = new MediaCodec.BufferInfo();
         try {
             // Create and configure the MediaFormat
-            MediaFormat format = MediaFormat.createAudioFormat(MIME_TYPE, recorderInfo.getWidth(), recorderInfo.getHeight());
+            MediaFormat format = MediaFormat.createAudioFormat(MIME_TYPE, recordingInfo.getWidth(), recordingInfo.getHeight());
             format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
             format.setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE);
             format.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
@@ -71,10 +71,10 @@ public class MediaRecorder {
             Log.w(getClass().getName(), "Something failed during recorder init: " + e);
             releaseEncoder();
         }
-        setup(context, permissionInfo, recorderInfo);
+        setup(context, permissionInfo, recordingInfo);
     }
 
-    public void setup(Context context, com.theif519.sakoverlay.POJO.PermissionInfo permissionInfo, RecorderInfo recorderInfo){
+    public void setup(Context context, com.theif519.sakoverlay.POJO.PermissionInfo permissionInfo, RecordingInfo recordingInfo){
         if(!isRecording() || mSurface != null){
             // Not recording, or already initialized
             return;
@@ -82,7 +82,7 @@ public class MediaRecorder {
         try {
             mProjection = ((MediaProjectionManager) context.getSystemService(Context.MEDIA_PROJECTION_SERVICE))
                     .getMediaProjection(permissionInfo.getResultCode(), permissionInfo.getIntent());
-            mDisplay = createVirtualDisplay(context, recorderInfo.getWidth(), recorderInfo.getHeight());
+            mDisplay = createVirtualDisplay(context, recordingInfo.getWidth(), recordingInfo.getHeight());
             mCodec.start();
         } catch (RuntimeException ex){
             Log.w(getClass().getName(), "Something failed during recorder init: " + ex);

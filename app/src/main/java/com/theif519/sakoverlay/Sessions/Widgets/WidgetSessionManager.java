@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.Sessions;
+package com.theif519.sakoverlay.Sessions.Widgets;
 
 import android.content.Context;
 import android.util.Log;
@@ -7,6 +7,7 @@ import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Fragments.Widgets.BaseWidget;
 import com.theif519.sakoverlay.Fragments.Widgets.WidgetFactory;
 import com.theif519.sakoverlay.Rx.Transformers;
+import com.theif519.sakoverlay.Sessions.SessionDatabase;
 
 import org.json.JSONObject;
 

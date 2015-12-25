@@ -27,7 +27,7 @@ import com.theif519.sakoverlay.POJO.MenuOptions;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Services.NotificationService;
-import com.theif519.sakoverlay.Sessions.WidgetSessionManager;
+import com.theif519.sakoverlay.Sessions.Widgets.WidgetSessionManager;
 import com.theif519.utils.Misc.MutableObject;
 import com.theif519.utils.Misc.ServiceTools;
 import com.theif519.utils.Misc.ShakeDetector;

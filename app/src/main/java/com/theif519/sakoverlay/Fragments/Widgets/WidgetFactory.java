@@ -1,6 +1,6 @@
 package com.theif519.sakoverlay.Fragments.Widgets;
 
-import com.theif519.sakoverlay.Sessions.WidgetSessionData;
+import com.theif519.sakoverlay.Sessions.Widgets.WidgetSessionData;
 
 /**
  * Created by theif519 on 10/31/2015.

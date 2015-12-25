@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.Sessions;
+package com.theif519.sakoverlay.Sessions.Widgets;
 
 import com.theif519.sakoverlay.Fragments.Widgets.BaseWidget;
 
