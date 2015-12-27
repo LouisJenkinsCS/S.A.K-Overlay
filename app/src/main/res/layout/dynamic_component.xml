@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="top|end"
+        android:id="@+id/top_right_resize_button"
+        android:textSize="30sp"
+        android:background="@android:color/transparent"
+        android:text="&#8689;"/>
+
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="top|start"
+        android:id="@+id/top_left_resize_button"
+        android:textSize="30sp"
+        android:background="@android:color/transparent"
+        android:text="&#8689;"/>
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="center"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="50dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginEnd="50dp"
+        android:id="@+id/move_button"
+        android:textSize="30sp"
+        android:background="@android:color/transparent" />
+
+
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom|end"
+        android:id="@+id/bottom_right_resize_button"
+        android:textSize="30sp"
+        android:background="@android:color/transparent"
+        android:text="&#8690;"/>
+
+    <Button
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom|start"
+        android:id="@+id/bottom_left_resize_button"
+        android:textSize="30sp"
+        android:background="@android:color/transparent"
+        android:text="&#8690;"/>
+
+</FrameLayout>

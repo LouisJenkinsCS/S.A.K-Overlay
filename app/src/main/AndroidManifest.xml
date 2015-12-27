@@ -45,6 +45,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Activities.LayoutCreatorActivity"/>
 
         <service android:name=".Services.NotificationService" />
         <service android:name=".Services.RecorderService" />

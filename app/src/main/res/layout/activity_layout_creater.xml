@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:background="@color/transparent_fragment"
+    android:layout_height="fill_parent">
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginBottom="50dp"
+        android:id="@+id/layout_view"/>
+
+    <ImageButton
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_gravity="top|right"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/close"
+        android:id="@+id/layout_close"/>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/layout_create_button"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:text="Button" />
+
+        <Button
+            android:id="@+id/layout_create_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:text="Layout" />
+
+        <Button
+            android:id="@+id/layout_create_text"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:text="Text View" />
+
+        <Button
+            android:id="@+id/layout_create_image"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:text="Image View" />
+
+    </LinearLayout>
+
+</FrameLayout>

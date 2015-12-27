@@ -3,6 +3,7 @@ package com.theif519.sakoverlay.Activities;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -204,6 +205,7 @@ public class MainActivity extends Activity {
                 .addOption("Google Maps", R.drawable.maps, () -> createWidgetSession(new GoogleMapsWidget()))
                 .addOption("Sticky Note", R.drawable.sticky_note, () -> createWidgetSession(new NotePadWidget()))
                 .addOption("Screen Recorder", R.drawable.screen_recorder, () -> createWidgetSession(new ScreenRecorderWidget()))
+                .addOption("Custom", null, () -> startActivity(new Intent(this, LayoutCreatorActivity.class)))
                 .create(this);
         makeImmersive(mMenuPopup.getContentView());
     }
