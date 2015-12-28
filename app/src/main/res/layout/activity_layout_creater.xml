@@ -29,24 +29,28 @@
             android:id="@+id/layout_create_button"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
+            android:tag="Button"
             android:text="Button" />
 
         <Button
             android:id="@+id/layout_create_layout"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
+            android:tag="LinearLayout"
             android:text="Layout" />
 
         <Button
             android:id="@+id/layout_create_text"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
+            android:tag="TextView"
             android:text="Text View" />
 
         <Button
             android:id="@+id/layout_create_image"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
+            android:tag="ImageView"
             android:text="Image View" />
 
     </LinearLayout>

@@ -2,6 +2,7 @@ package com.theif519.sakoverlay.Builders;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.PopupWindow;
@@ -34,7 +35,9 @@ public class MenuBuilder {
     }
 
     public PopupWindow create(Context context) {
-        PopupWindow window = new PopupWindow(new ListView(context), 300, 500, true);
+        int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, context.getResources().getDisplayMetrics());
+        int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 400, context.getResources().getDisplayMetrics());
+        PopupWindow window = new PopupWindow(new ListView(context), width, height, true);
         MenuOptionsAdapter adapter = new MenuOptionsAdapter(mMenuOptions, context);
         ListView listView = (ListView) window.getContentView();
         listView.setAdapter(adapter);
