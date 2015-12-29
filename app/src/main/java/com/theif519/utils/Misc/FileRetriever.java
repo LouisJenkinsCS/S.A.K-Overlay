@@ -74,7 +74,7 @@ public final class FileRetriever {
         File f = new File(dir);
         f.mkdirs();
         File[] arr = f.listFiles();
-        Collections.addAll(files, arr);
+        if(arr != null) Collections.addAll(files, arr);
         return files;
     }
 }

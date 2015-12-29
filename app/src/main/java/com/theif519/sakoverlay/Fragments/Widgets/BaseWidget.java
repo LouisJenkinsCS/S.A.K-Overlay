@@ -6,6 +6,7 @@ import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -39,7 +40,7 @@ public class BaseWidget extends Fragment {
 
     protected ViewState mViewState;
     protected String LAYOUT_TAG;
-    protected int mLayoutId, mIconId, mMinWidth = MeasureTools.scaleInverse(250), mMinHeight = MeasureTools.scaleInverse(250);
+    protected int mLayoutId, mIconId, mMinWidth, mMinHeight;
     protected long id = -1;
     private TouchInterceptorLayout mContentView;
     private ImageButton mTaskBarButton;
@@ -49,6 +50,8 @@ public class BaseWidget extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mContentView = (TouchInterceptorLayout) inflater.inflate(mLayoutId, container, false);
         mContentView.setVisibility(View.INVISIBLE);
+        mMinWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 250, getResources().getDisplayMetrics());
+        mMinHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 250, getResources().getDisplayMetrics());
         setupTaskItem();
         createOptions();
         // Ensures that the following methods are called after the view is fully drawn and setup.

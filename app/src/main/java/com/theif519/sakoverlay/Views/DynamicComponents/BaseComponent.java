@@ -2,6 +2,7 @@ package com.theif519.sakoverlay.Views.DynamicComponents;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,6 +16,13 @@ import com.theif519.sakoverlay.R;
  * Created by theif519 on 12/27/2015.
  */
 public abstract class BaseComponent extends FrameLayout {
+
+    private final GestureDetector gestureDetector = new GestureDetector(new GestureDetector.SimpleOnGestureListener(){
+        @Override
+        public void onLongPress(MotionEvent e) {
+            BaseComponent.this.onLongPress();
+        }
+    });
 
     private Button mResizeButton, mMoveButton;
     private ViewGroup mContainer;
@@ -61,6 +69,7 @@ public abstract class BaseComponent extends FrameLayout {
     private float touchXOffset, touchYOffset;
 
     private boolean move(View v, MotionEvent event) {
+        if(gestureDetector.onTouchEvent(event)) return true;
         ViewGroup parent = (ViewGroup) v.getParent().getParent();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
@@ -80,4 +89,7 @@ public abstract class BaseComponent extends FrameLayout {
 
     abstract protected void addView(Context context, ViewGroup container);
 
+    protected void onLongPress(){
+
+    }
 }
