@@ -10,14 +10,18 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 
+import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Created by theif519 on 12/27/2015.
  */
 public abstract class BaseComponent extends FrameLayout {
 
-    private final GestureDetector gestureDetector = new GestureDetector(new GestureDetector.SimpleOnGestureListener(){
+    private final GestureDetector gestureDetector = new GestureDetector(new GestureDetector.SimpleOnGestureListener() {
         @Override
         public void onLongPress(MotionEvent e) {
             BaseComponent.this.onLongPress();
@@ -41,7 +45,6 @@ public abstract class BaseComponent extends FrameLayout {
         mMoveButton.setOnTouchListener(this::move);
         mContainer = (ViewGroup) findViewById(R.id.component_container);
         addView(context, mContainer);
-        setBackground(context.getDrawable(R.color.white));
         setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
@@ -69,7 +72,7 @@ public abstract class BaseComponent extends FrameLayout {
     private float touchXOffset, touchYOffset;
 
     private boolean move(View v, MotionEvent event) {
-        if(gestureDetector.onTouchEvent(event)) return true;
+        if (gestureDetector.onTouchEvent(event)) return true;
         ViewGroup parent = (ViewGroup) v.getParent().getParent();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
@@ -89,7 +92,31 @@ public abstract class BaseComponent extends FrameLayout {
 
     abstract protected void addView(Context context, ViewGroup container);
 
-    protected void onLongPress(){
+    protected void onLongPress() {
 
+    }
+
+    public JSONObject serialize() {
+        try {
+            return new JSONObject()
+                    .put(Globals.Keys.X, mContainer.getX())
+                    .put(Globals.Keys.Y, mContainer.getY())
+                    .put(Globals.Keys.WIDTH, mContainer.getWidth())
+                    .put(Globals.Keys.HEIGHT, mContainer.getHeight());
+        } catch (JSONException e) {
+            throw new RuntimeException("Error serializing BaseComponent: Threw a JSONException with message \"" + e.getMessage() + "\"");
+        }
+    }
+
+    public void deserialize(JSONObject obj) {
+        try {
+            mContainer.setX((float) obj.getDouble(Globals.Keys.X));
+            mContainer.setY((float) obj.getDouble(Globals.Keys.Y));
+            mContainer.getLayoutParams().width = obj.getInt(Globals.Keys.WIDTH);
+            mContainer.getLayoutParams().height = obj.getInt(Globals.Keys.HEIGHT);
+            mContainer.requestLayout();
+        } catch (JSONException e){
+            throw new RuntimeException("Error deserializing BaseComponent: Threw a JSONException with message \"" + e.getMessage() + "\"");
+        }
     }
 }

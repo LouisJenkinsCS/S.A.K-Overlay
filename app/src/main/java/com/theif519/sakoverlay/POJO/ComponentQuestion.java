@@ -1,13 +1,14 @@
 package com.theif519.sakoverlay.POJO;
 
 import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.theif519.sakoverlay.Builders.ComponentOptionsBuilder;
+import com.theif519.sakoverlay.R;
 
 /**
  * Created by theif519 on 12/29/2015.
@@ -58,21 +59,12 @@ public class ComponentQuestion {
     }
 
     public View build(Context context){
-        LinearLayout container = new LinearLayout(context);
-        container.setOrientation(LinearLayout.HORIZONTAL);
-        TextView textView = new TextView(context);
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LinearLayout container = (LinearLayout) inflater.inflate(R.layout.component_option_question, null);
+        TextView textView = (TextView) container.findViewById(R.id.component_option_question_description);
         textView.setText(mQuestion);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.setMargins(5, 5, 5, 5);
-        textView.setLayoutParams(params);
-        container.addView(textView);
-        EditText editText = new EditText(context);
-        editText.setInputType(mInputType);
-        params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.setMargins(5, 5, 5, 5);
+        EditText editText = (EditText) container.findViewById(R.id.component_option_question_answer);
         editText.setTag("Answer");
-        container.addView(editText);
-        container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         container.setTag(mIndex);
         return container;
     }
