@@ -1,19 +1,14 @@
 package com.theif519.sakoverlay.POJO;
 
 import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.theif519.sakoverlay.Builders.ComponentOptionsBuilder;
-import com.theif519.sakoverlay.R;
+import com.theif519.sakoverlay.Views.ComponentOptionQuestion;
 
 /**
  * Created by theif519 on 12/29/2015.
  */
-public class ComponentQuestion {
+public class ComponentQuestion implements ComponentOptionsBuilder.IViewCallbacks<ComponentOptionQuestion, String> {
     private String mQuestion;
     private int mInputType, mIndex;
     private ComponentOptionsBuilder.AnswerProcessor mProcessorCallback;
@@ -58,14 +53,28 @@ public class ComponentQuestion {
         this.mProcessorCallback = mProcessorCallback;
     }
 
-    public View build(Context context){
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        LinearLayout container = (LinearLayout) inflater.inflate(R.layout.component_option_question, null);
-        TextView textView = (TextView) container.findViewById(R.id.component_option_question_description);
-        textView.setText(mQuestion);
-        EditText editText = (EditText) container.findViewById(R.id.component_option_question_answer);
-        editText.setTag("Answer");
-        container.setTag(mIndex);
-        return container;
+    @Override
+    public ComponentOptionQuestion createView(Context context) {
+        return new ComponentOptionQuestion(context, mQuestion, mInputType);
+    }
+
+    @Override
+    public String getResult(ComponentOptionQuestion view) {
+        return view.getAnswer();
+    }
+
+    @Override
+    public boolean isResultValid(String result) {
+        return result != null;
+    }
+
+    @Override
+    public String getBadResultMessage(String result) {
+        return "Result was null!";
+    }
+
+    @Override
+    public void handleResult(String result) {
+        mProcessorCallback.onAnswer(result);
     }
 }

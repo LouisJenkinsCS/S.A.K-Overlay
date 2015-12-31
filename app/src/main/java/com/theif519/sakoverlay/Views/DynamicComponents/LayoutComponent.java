@@ -2,7 +2,7 @@ package com.theif519.sakoverlay.Views.DynamicComponents;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.ViewGroup;
+import android.view.View;
 import android.widget.LinearLayout;
 
 /**
@@ -21,7 +21,7 @@ public class LayoutComponent extends  BaseComponent {
     }
 
     @Override
-    protected void addView(Context context, ViewGroup container) {
-        container.addView(new LinearLayout(context));
+    protected View createView(Context context) {
+        return new LinearLayout(context);
     }
 }

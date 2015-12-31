@@ -2,9 +2,10 @@ package com.theif519.sakoverlay.Builders;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.util.ArrayMap;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.POJO.ComponentQuestion;
@@ -17,7 +18,41 @@ import java.util.List;
  */
 public class ComponentOptionsBuilder {
 
-    private List<ComponentQuestion> mList;
+    public interface IViewCallbacks<ViewType extends View, ReturnType> {
+        ViewType createView(Context context);
+
+        ReturnType getResult(ViewType view);
+
+        boolean isResultValid(ReturnType result);
+
+        String getBadResultMessage(ReturnType result);
+
+        void handleResult(ReturnType result);
+    }
+
+    public abstract class NoResultViewCallback<T extends  View> implements IViewCallbacks<T, Void> {
+        @Override
+        public Void getResult(T view) {
+            return null;
+        }
+
+        @Override
+        public boolean isResultValid(Void result) {
+            return true;
+        }
+
+        @Override
+        public String getBadResultMessage(Void result) {
+            return null;
+        }
+
+        @Override
+        public void handleResult(Void result) {
+
+        }
+    }
+
+    private List<IViewCallbacks> mList;
     private String mTitle = "";
 
     public ComponentOptionsBuilder() {
@@ -28,7 +63,7 @@ public class ComponentOptionsBuilder {
         boolean onAnswer(String answer);
     }
 
-    public ComponentOptionsBuilder setTitle(String title){
+    public ComponentOptionsBuilder setTitle(String title) {
         mTitle = title;
         return this;
     }
@@ -38,32 +73,49 @@ public class ComponentOptionsBuilder {
         return this;
     }
 
+    // TODO
+    public ComponentOptionsBuilder addView(IViewCallbacks callbacks){
+        return this;
+    }
+
+    // TODO
+    public ComponentOptionsBuilder addViewNoResult(NoResultViewCallback callback){
+        return this;
+    }
+
+
+    /*
+        TODO: Fix this! The interface needs to be badly redesigned (when I'm not drunk off Rum!!!), and it's throwing
+        TODO: Unchecked Cast warnings all over the place. Refactor!
+     */
     public AlertDialog build(Context context) {
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
-        Stream
-                .of(mList)
-                .map(question -> question.build(context))
-                .forEach(layout::addView);
+        ArrayMap<IViewCallbacks, View> map = new ArrayMap<>();
+        for(IViewCallbacks callbacks : mList){
+            map.put(callbacks, callbacks.createView(context));
+        }
         return new AlertDialog.Builder(context)
                 .setTitle(mTitle)
                 .setView(layout)
                 .setPositiveButton("OK!", (thisDialog, which) -> {
                     boolean isValid = true;
-                    for(int i = 0; i < mList.size(); i++){
-                        View v = layout.findViewWithTag(i);
-                        if(v != null){
-                            ComponentQuestion question = mList.get(i);
-                            if(question.getProcessorCallback() != null){
-                                EditText editText = (EditText) v.findViewWithTag("Answer");
-                                if(!question.getProcessorCallback().onAnswer(editText.getText().toString())){
-                                    isValid = false;
+                    StringBuilder errMsg = new StringBuilder();
+                    Stream
+                            .of(map)
+                            .forEach(entry -> {
+                                View v = entry.getValue();
+                                IViewCallbacks callbacks = entry.getKey();
+                                Object result = callbacks.getResult(v);
+                                if (callbacks.isResultValid(result)) {
+                                    callbacks.handleResult(result);
+                                    thisDialog.dismiss();
+                                } else {
+                                    errMsg.append(callbacks.getBadResultMessage(result));
                                 }
-                            }
-                        }
-                    }
-                    if(isValid){
-                        thisDialog.dismiss();
+                            });
+                    if (((AlertDialog) thisDialog).isShowing()) {
+                        Toast.makeText(context, "Bad User Input: \"" + errMsg.toString() + "\"", Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("No!", (thisDialog, which) -> thisDialog.dismiss())

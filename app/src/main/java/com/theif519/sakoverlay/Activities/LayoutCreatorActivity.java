@@ -1,7 +1,6 @@
 package com.theif519.sakoverlay.Activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,7 +10,6 @@ import android.widget.Button;
 import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Views.DynamicComponents.BaseComponent;
 import com.theif519.sakoverlay.Views.DynamicComponents.ComponentFactory;
-import com.theif519.utils.Misc.Callbacks;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,18 +18,6 @@ import org.json.JSONException;
  * Created by theif519 on 12/26/2015.
  */
 public class LayoutCreatorActivity extends Activity {
-
-    public interface IViewCallbacks {
-        View createView(Context context);
-
-        Object getResult(View view);
-
-        boolean isResultValid(Object result);
-
-        String getBadResultMessage(Object result);
-
-        void handleResult(Object result);
-    }
 
     private Button mTextButton, mImageViewButton, mLayoutButton, mButtonButton;
     private ViewGroup mLayout;
@@ -50,16 +36,7 @@ public class LayoutCreatorActivity extends Activity {
         mLayoutButton.setOnClickListener(this::createItem);
         mButtonButton.setOnClickListener(this::createItem);
         findViewById(R.id.layout_close).setOnClickListener(v -> {
-            new Callbacks.CallbackOnRootChildren<View>() {
-                @Override
-                public void onChild(View child) {
-                    if (child != mLayout) {
-                        Log.i(getClass().getName(), child.getClass().getSimpleName() + ": { X: " +
-                                child.getX() + ", Y: " + child.getY() + ", Width: " + child.getWidth() + ", Height: " +
-                                child.getHeight() + " }");
-                    }
-                }
-            }.onChild(mLayout);
+            Log.i(getClass().getName(), "Serialized Data: { " + new String(serialize()) + " }");
             finish();
         });
     }
