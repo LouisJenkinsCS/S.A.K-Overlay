@@ -45,7 +45,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activities.LayoutCreatorActivity"/>
+        <activity android:name=".Activities.LayoutCreatorActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:windowSoftInputMode="adjustPan|stateHidden"
+            android:launchMode="singleTask"/>
 
         <service android:name=".Services.NotificationService" />
         <service android:name=".Services.RecorderService" />

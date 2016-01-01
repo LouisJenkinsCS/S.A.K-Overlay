@@ -2,22 +2,33 @@ package com.theif519.sakoverlay.Views.DynamicComponents;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.theif519.sakoverlay.Animations.ResizeAnimation;
+import com.theif519.sakoverlay.Listeners.OnAnimationEndListener;
+import com.theif519.sakoverlay.Listeners.OnAnimationStartListener;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
+import com.theif519.sakoverlay.Views.AutoResizeTextView;
+import com.theif519.utils.Misc.MutableObject;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,6 +79,7 @@ public abstract class BaseComponent extends FrameLayout {
         mRoot = (FrameLayout) findViewById(R.id.component_wrapper_root);
         setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         mOptionsMenu = createOptions();
+        mOptionsMenu.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setup();
     }
 
@@ -144,7 +156,9 @@ public abstract class BaseComponent extends FrameLayout {
 
     protected void addOptionDialog(ViewGroup layout) {
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.component_base, layout);
+        ViewGroup v = (ViewGroup) inflater.inflate(R.layout.component_base, null);
+        layout.addView(createCategory("Base Component", v));
+        layout.addView(v);
         mX = (EditText) layout.findViewById(R.id.component_base_x);
         mY = (EditText) layout.findViewById(R.id.component_base_y);
         mWidth = (EditText) layout.findViewById(R.id.component_base_width);
@@ -254,6 +268,45 @@ public abstract class BaseComponent extends FrameLayout {
         setY(Integer.parseInt(mY.getText().toString()));
         mRoot.invalidate();
         mRoot.requestLayout();
+    }
+
+    protected View createCategory(String category, final ViewGroup layout){
+        TextView button = new AutoResizeTextView(getContext());
+        button.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, getResources().getDisplayMetrics()));
+        button.setGravity(Gravity.CENTER);
+        button.setText(category);
+        button.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, getResources().getDisplayMetrics())));
+        button.setBackgroundColor(getResources().getColor(android.R.color.transparent));
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        final MutableObject<Integer> width = new MutableObject<>(0), height = new MutableObject<>(0);
+        button.setOnClickListener(v -> {
+            if(layout.getVisibility() == VISIBLE){
+                if(width.get() == 0 && height.get() == 0) {
+                    width.set(layout.getWidth());
+                    height.set(layout.getHeight());
+                }
+                ResizeAnimation animation = new ResizeAnimation(layout, 0, 0);
+                animation.setDuration(500);
+                animation.setAnimationListener(new OnAnimationEndListener() {
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        layout.setVisibility(INVISIBLE);
+                    }
+                });
+                layout.startAnimation(animation);
+            } else {
+                ResizeAnimation animation = new ResizeAnimation(layout, width.get(), height.get());
+                animation.setDuration(500);
+                animation.setAnimationListener(new OnAnimationStartListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+                        layout.setVisibility(VISIBLE);
+                    }
+                });
+                layout.startAnimation(animation);
+            }
+        });
+        return button;
     }
 
     public JSONObject serialize() {

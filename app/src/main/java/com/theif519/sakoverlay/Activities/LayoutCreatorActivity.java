@@ -19,7 +19,7 @@ import org.json.JSONException;
  */
 public class LayoutCreatorActivity extends Activity {
 
-    private Button mTextButton, mImageViewButton, mLayoutButton, mButtonButton;
+    private Button mTextButton, mImageViewButton, mLayoutButton, mButtonButton, mEditTextButton;
     private ViewGroup mLayout;
 
     @Override
@@ -30,11 +30,13 @@ public class LayoutCreatorActivity extends Activity {
         mImageViewButton = (Button) findViewById(R.id.layout_create_image);
         mLayoutButton = (Button) findViewById(R.id.layout_create_layout);
         mButtonButton = (Button) findViewById(R.id.layout_create_button);
+        mEditTextButton = (Button) findViewById(R.id.layout_create_edit_text);
         mLayout = (ViewGroup) findViewById(R.id.layout_view);
         mTextButton.setOnClickListener(this::createItem);
         mImageViewButton.setOnClickListener(this::createItem);
         mLayoutButton.setOnClickListener(this::createItem);
         mButtonButton.setOnClickListener(this::createItem);
+        mEditTextButton.setOnClickListener(this::createItem);
         findViewById(R.id.layout_close).setOnClickListener(v -> {
             Log.i(getClass().getName(), "Serialized Data: { " + new String(serialize()) + " }");
             finish();

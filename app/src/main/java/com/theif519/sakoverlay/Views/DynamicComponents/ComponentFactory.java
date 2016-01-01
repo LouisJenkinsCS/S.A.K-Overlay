@@ -14,6 +14,8 @@ public class ComponentFactory {
                 return new TextComponent(context);
             case LayoutComponent.IDENTIFIER:
                 return new LayoutComponent(context);
+            case EditTextComponent.IDENTIFIER:
+                return new EditTextComponent(context);
             default:
                 return null;
         }

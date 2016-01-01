@@ -7,25 +7,23 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
         android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Text: "
+            android:text="Input Type: "
+            android:layout_gravity="center"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginTop="5dp"
-            android:layout_marginStart="5dp"
-            android:layout_marginEnd="5dp"/>
+            android:textStyle="bold" />
 
-        <EditText
+        <Spinner
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="5dp"
-            android:layout_marginStart="5dp"
-            android:inputType="textAutoComplete"
-            android:id="@+id/component_text_value"/>
+            android:layout_gravity="center"
+            android:id="@+id/component_text_editable_input_type"
+            android:entries="@array/input_types"/>
 
     </LinearLayout>
 

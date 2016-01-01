@@ -17,6 +17,12 @@
         <item>Hide</item>
         <item>Resize</item>
     </string-array>
+    <string-array name="input_types">
+        <item>Date/Time</item>
+        <item>Number</item>
+        <item>Phone</item>
+        <item>Text</item>
+    </string-array>
     <string name="google_api_key">AIzaSyB7pvlJWlbNLlxp-IHdc_kKM9OKIbMTAjg</string>
     <string name="overlay_notification_text">Launch Overlay</string>
     <string name="title_activity_maps">Map</string>

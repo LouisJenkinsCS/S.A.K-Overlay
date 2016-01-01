@@ -21,7 +21,7 @@ import org.json.JSONObject;
  */
 public class TextComponent extends BaseComponent {
 
-    private AutoResizeTextView mTextView;
+    protected TextView TEXT_VIEW;
     private TextView mValue;
     public static final String IDENTIFIER = "TextView";
     private static final String TEXT_VALUE = "Text Value";
@@ -36,49 +36,42 @@ public class TextComponent extends BaseComponent {
 
     @Override
     protected View createView(Context context) {
-        mTextView = new AutoResizeTextView(context);
-        getViewTreeObserver().addOnGlobalLayoutListener(() -> mTextView.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, getHeight(), getResources().getDisplayMetrics())));
-        mTextView.setText("Default Text!");
-        mTextView.setTextColor(ColorStateList.valueOf(context.getResources().getColor(R.color.black)));
-        mTextView.setGravity(Gravity.CENTER);
-        mTextView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        return mTextView;
+        TEXT_VIEW = new AutoResizeTextView(context);
+        getViewTreeObserver().addOnGlobalLayoutListener(() -> TEXT_VIEW.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, getHeight(), getResources().getDisplayMetrics())));
+        TEXT_VIEW.setText("Default Text!");
+        TEXT_VIEW.setTextColor(ColorStateList.valueOf(context.getResources().getColor(R.color.black)));
+        TEXT_VIEW.setGravity(Gravity.CENTER);
+        TEXT_VIEW.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        return TEXT_VIEW;
     }
 
     @Override
     protected void addOptionDialog(ViewGroup layout) {
         super.addOptionDialog(layout);
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.component_text, layout);
+        ViewGroup v = (ViewGroup) inflater.inflate(R.layout.component_text, null);
+        layout.addView(createCategory("Text Component", v));
+        layout.addView(v);
         mValue = (TextView) layout.findViewById(R.id.component_text_value);
-    }
-
-    @Override
-    protected void sanitizeResults(ViewGroup layout, StringBuilder errMsg) {
-        super.sanitizeResults(layout, errMsg);
-        if(mValue.getText().toString().isEmpty()){
-            errMsg.append("Text cannot be left empty!");
-            errMsg.append("\n");
-        }
     }
 
     @Override
     protected void clearResults(ViewGroup layout) {
         super.clearResults(layout);
-        mValue.setText(mTextView.getText());
+        mValue.setText(TEXT_VIEW.getText());
     }
 
     @Override
     protected void handleResults(ViewGroup layout) {
         super.handleResults(layout);
-        mTextView.setText(mValue.getText());
+        TEXT_VIEW.setText(mValue.getText());
     }
 
     @Override
     public JSONObject serialize() {
         try {
             return super.serialize()
-                    .put(TEXT_VALUE, mTextView.getText());
+                    .put(TEXT_VALUE, TEXT_VIEW.getText());
         } catch (JSONException e) {
             throw new RuntimeException("Error serializing TextComponent: Threw a JSONException with message \"" + e.getMessage() + "\"");
         }
@@ -88,7 +81,7 @@ public class TextComponent extends BaseComponent {
     public void deserialize(JSONObject obj) {
         super.deserialize(obj);
         try {
-            mTextView.setText(obj.getString(TEXT_VALUE));
+            TEXT_VIEW.setText(obj.getString(TEXT_VALUE));
         } catch (JSONException e) {
             throw new RuntimeException("Error deserializing TextComponent: Threw a JSONException with message \"" + e.getMessage() + "\"");
         }
