@@ -10,7 +10,7 @@ import android.widget.LinearLayout;
  */
 public class LayoutComponent extends  BaseComponent {
 
-    public static final String IDENTIFIER = "LinearLayout";
+    public static final String IDENTIFIER = "Layout";
 
     public LayoutComponent(Context context) {
         super(context);

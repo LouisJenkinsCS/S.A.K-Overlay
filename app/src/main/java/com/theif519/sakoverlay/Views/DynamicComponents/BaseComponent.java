@@ -1,32 +1,27 @@
 package com.theif519.sakoverlay.Views.DynamicComponents;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.Animation;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
-import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.theif519.sakoverlay.Animations.ResizeAnimation;
 import com.theif519.sakoverlay.Listeners.OnAnimationEndListener;
 import com.theif519.sakoverlay.Listeners.OnAnimationStartListener;
 import com.theif519.sakoverlay.Misc.Globals;
 import com.theif519.sakoverlay.R;
+import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Views.AutoResizeTextView;
 import com.theif519.utils.Misc.MutableObject;
 
@@ -38,29 +33,10 @@ import org.json.JSONObject;
  */
 public abstract class BaseComponent extends FrameLayout {
 
-    class LongPressComponentMenuGesture extends  GestureDetector.SimpleOnGestureListener {
-
-        private ViewGroup mLayout;
-
-        protected LongPressComponentMenuGesture(ViewGroup layout){
-            mLayout = layout;
-        }
-
-        @Override
-        public void onLongPress(MotionEvent e) {
-            clearResults(mLayout);
-            mOptionsMenu.show();
-        }
-    }
-
-    private GestureDetector mComponentMenuGesture;
-
-    private Button mResizeButton, mMoveButton;
     private FrameLayout mContainer, mRoot;
     private RadioButton mWidthWrapContent, mHeightWrapContent, mWidthFillParent, mHeightFillParent, mWidthCustom, mHeightCustom;
     private EditText mWidth, mHeight, mX, mY;
-    private View mContentView;
-    private AlertDialog mOptionsMenu;
+    private LinearLayout mContentView;
 
     public BaseComponent(Context context) {
         this(context, null);
@@ -70,16 +46,13 @@ public abstract class BaseComponent extends FrameLayout {
         super(context, attrs);
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.dynamic_component, this);
-        mResizeButton = (Button) findViewById(R.id.component_wrapper_resize);
-        mResizeButton.setOnTouchListener(this::resize);
-        mMoveButton = (Button) findViewById(R.id.component_wrapper_move);
-        mMoveButton.setOnTouchListener(this::move);
+        findViewById(R.id.component_wrapper_resize).setOnTouchListener(this::resize);
+        findViewById(R.id.component_wrapper_move).setOnTouchListener(this::move);
         mContainer = (FrameLayout) findViewById(R.id.component_wrapper_container);
-        mContainer.addView(mContentView = createView(context));
+        mContainer.addView(createView(context));
         mRoot = (FrameLayout) findViewById(R.id.component_wrapper_root);
         setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        mOptionsMenu = createOptions();
-        mOptionsMenu.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        createOptions();
         setup();
     }
 
@@ -107,7 +80,6 @@ public abstract class BaseComponent extends FrameLayout {
     private float touchXOffset, touchYOffset;
 
     private boolean move(View v, MotionEvent event) {
-        if (mComponentMenuGesture.onTouchEvent(event)) return true;
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 touchXOffset = (int) event.getRawX() - getX();
@@ -126,32 +98,12 @@ public abstract class BaseComponent extends FrameLayout {
 
     abstract protected View createView(Context context);
 
-    private AlertDialog createOptions() {
-        ScrollView scrollView = new ScrollView(getContext());
-        LinearLayout layout = new LinearLayout(getContext());
-        layout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        layout.setOrientation(LinearLayout.VERTICAL);
-        scrollView.addView(layout);
-        addOptionDialog(layout);
-        mComponentMenuGesture = new GestureDetector(new LongPressComponentMenuGesture(layout));
-        return new AlertDialog.Builder(getContext())
-                .setTitle("Component Options")
-                .setView(scrollView)
-                .setPositiveButton("OK!", (thisDialog, which) -> {
-                    StringBuilder errMsg = new StringBuilder();
-                    sanitizeResults(layout, errMsg);
-                    if (errMsg.toString().isEmpty()) {
-                        handleResults(layout);
-                        thisDialog.dismiss();
-                    } else {
-                        Toast.makeText(getContext(), "Error: \"" + errMsg.toString() + "\"", Toast.LENGTH_LONG).show();
-                    }
-                })
-                .setNegativeButton("NO!", (thisDialog, which) -> {
-                    thisDialog.dismiss();
-                })
-                .setOnDismissListener((thisDialog) -> clearResults(layout))
-                .create();
+    private void createOptions() {
+        mContentView = new LinearLayout(getContext());
+        mContentView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mContentView.setOrientation(LinearLayout.VERTICAL);
+        addOptionDialog(mContentView);
+        clearResults(mContentView);
     }
 
     protected void addOptionDialog(ViewGroup layout) {
@@ -280,8 +232,8 @@ public abstract class BaseComponent extends FrameLayout {
         button.setTypeface(Typeface.DEFAULT_BOLD);
         final MutableObject<Integer> width = new MutableObject<>(0), height = new MutableObject<>(0);
         button.setOnClickListener(v -> {
-            if(layout.getVisibility() == VISIBLE){
-                if(width.get() == 0 && height.get() == 0) {
+            if (layout.getVisibility() == VISIBLE) {
+                if (width.get() == 0 && height.get() == 0) {
                     width.set(layout.getWidth());
                     height.set(layout.getHeight());
                 }
@@ -332,5 +284,20 @@ public abstract class BaseComponent extends FrameLayout {
         } catch (JSONException e) {
             throw new RuntimeException("Error deserializing BaseComponent: Threw a JSONException with message \"" + e.getMessage() + "\"");
         }
+    }
+
+    private void onFocus(){
+        RxBus.publish(mContentView);
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if(ev.getAction() == MotionEvent.ACTION_DOWN){
+            onFocus();
+        }
+        if((ev.getActionMasked() & (MotionEvent.ACTION_UP | MotionEvent.ACTION_MOVE)) != 0){
+            clearResults(mContentView);
+        }
+        return false;
     }
 }

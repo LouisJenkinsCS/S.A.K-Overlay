@@ -57,11 +57,34 @@ Pseudocode Example
 (::) -> Setter Action
 ? -> User input
 : -> Function call, comma separated
+"" -> Compile-time Defined
 
 When Button1 is clicked, it will execute the user defined instructions. Anything shown in any brackets will be obtained through the script-helper menu. Hence, the user has to only type the source String. Should only take about 15 seconds in reality if they copy paste.
+
+Compiled as...
 
 Button1.onClick
     IF {ImageView1}[isVisible]
         {ImageView1}(setVisible::false)
     ELSE
         {ImageView1}(setSource:"https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png")
+
+Seen as...
+
+    IF ImageView1.isVisible()
+        ImageView1.setVisible(false)
+    ELSE
+        ImageView1.setSource("https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png")
+
+When Button2 is clicked, it will execute a simple for loop. GlobalsFuncs and LocalVars global in reference, but will display to the user the appropriate information. Also, when the for loop is done and we leave the scope of the loop, "X" will be removed from LocalVars, unless defined as a global variable. The AS operator will be optional, and is used to store each index in the variable X.
+
+Compiled as...
+
+Button2.onClick
+    FOR "1" to "99" AS "X"
+        {GlobalFuncs}(println: "Index: " + {LocalVars}(get::"X"))
+
+Seen as...
+
+    FOR 1 to 99 AS X
+        println("Index: " + X)

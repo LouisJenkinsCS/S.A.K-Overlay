@@ -29,7 +29,7 @@ public class EditTextComponent extends TextComponent {
 
     private static final String INPUT_TYPE = "InputType";
 
-    public static final String IDENTIFIER = "EditText";
+    public static final String IDENTIFIER = "Edit Text";
 
     public EditTextComponent(Context context) {
         super(context);

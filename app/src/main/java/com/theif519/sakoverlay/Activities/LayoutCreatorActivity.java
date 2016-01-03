@@ -2,14 +2,20 @@ package com.theif519.sakoverlay.Activities;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.view.GravityCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ExpandableListView;
 
+import com.theif519.sakoverlay.Builders.ComponentSelectorBuilder;
 import com.theif519.sakoverlay.R;
+import com.theif519.sakoverlay.Rx.RxBus;
 import com.theif519.sakoverlay.Views.DynamicComponents.BaseComponent;
-import com.theif519.sakoverlay.Views.DynamicComponents.ComponentFactory;
+import com.theif519.sakoverlay.Views.DynamicComponents.EditTextComponent;
+import com.theif519.sakoverlay.Views.DynamicComponents.LayoutComponent;
+import com.theif519.sakoverlay.Views.DynamicComponents.TextComponent;
+import com.theif519.sakoverlay.Views.NonModalDrawerLayout;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,37 +25,43 @@ import org.json.JSONException;
  */
 public class LayoutCreatorActivity extends Activity {
 
-    private Button mTextButton, mImageViewButton, mLayoutButton, mButtonButton, mEditTextButton;
     private ViewGroup mLayout;
+    private NonModalDrawerLayout mDrawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_layout_creater);
-        mTextButton = (Button) findViewById(R.id.layout_create_text);
-        mImageViewButton = (Button) findViewById(R.id.layout_create_image);
-        mLayoutButton = (Button) findViewById(R.id.layout_create_layout);
-        mButtonButton = (Button) findViewById(R.id.layout_create_button);
-        mEditTextButton = (Button) findViewById(R.id.layout_create_edit_text);
+        mDrawerLayout = (NonModalDrawerLayout) findViewById(R.id.layout_creator_root);
+        mDrawerLayout.setScrimColor(getResources().getColor(android.R.color.transparent));
         mLayout = (ViewGroup) findViewById(R.id.layout_view);
-        mTextButton.setOnClickListener(this::createItem);
-        mImageViewButton.setOnClickListener(this::createItem);
-        mLayoutButton.setOnClickListener(this::createItem);
-        mButtonButton.setOnClickListener(this::createItem);
-        mEditTextButton.setOnClickListener(this::createItem);
+        new ComponentSelectorBuilder()
+                .addCategory("Text")
+                .addComponent(TextComponent.IDENTIFIER, null)
+                        //.addComponent("Button", null)
+                .addComponent(EditTextComponent.IDENTIFIER, null)
+                .addCategory("Grouping")
+                .addComponent(LayoutComponent.IDENTIFIER, null)
+                .addCategory("Image")
+                .addCategory("Web")
+                .onCreate(this::addComponent)
+                .build(this, (ExpandableListView) findViewById(R.id.component_selector_list));
+        RxBus.observe(View.class)
+                .subscribe(v -> {
+                    ViewGroup viewGroup = (ViewGroup) findViewById(R.id.component_attribute_editor_container);
+                    viewGroup.removeAllViews();
+                    viewGroup.addView(v);
+                });
+        mDrawerLayout.setModalView(findViewById(R.id.layout_creator_attributes));
         findViewById(R.id.layout_close).setOnClickListener(v -> {
             Log.i(getClass().getName(), "Serialized Data: { " + new String(serialize()) + " }");
             finish();
         });
     }
 
-    private void createItem(View v) {
-        BaseComponent component = ComponentFactory.getComponent(this, (String) v.getTag());
-        if (component == null) {
-            Log.w(getClass().getName(), "ComponentFactory returned null for the tag: \"" + v.getTag() + "\"");
-            return;
-        }
+    private void addComponent(BaseComponent component) {
         mLayout.addView(component);
+        mDrawerLayout.closeDrawer(GravityCompat.START);
     }
 
     private byte[] serialize() {

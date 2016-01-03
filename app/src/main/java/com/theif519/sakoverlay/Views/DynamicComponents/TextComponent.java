@@ -23,7 +23,7 @@ public class TextComponent extends BaseComponent {
 
     protected TextView TEXT_VIEW;
     private TextView mValue;
-    public static final String IDENTIFIER = "TextView";
+    public static final String IDENTIFIER = "Text View";
     private static final String TEXT_VALUE = "Text Value";
 
     public TextComponent(Context context) {
