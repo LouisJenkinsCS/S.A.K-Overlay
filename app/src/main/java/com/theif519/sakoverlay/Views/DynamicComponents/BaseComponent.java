@@ -37,6 +37,8 @@ public abstract class BaseComponent extends FrameLayout {
     private RadioButton mWidthWrapContent, mHeightWrapContent, mWidthFillParent, mHeightFillParent, mWidthCustom, mHeightCustom;
     private EditText mWidth, mHeight, mX, mY;
     private LinearLayout mContentView;
+    private Conditionals mConditionals = new Conditionals();
+    private Actions mActions = new Actions();
 
     public BaseComponent(Context context) {
         this(context, null);
@@ -69,6 +71,8 @@ public abstract class BaseComponent extends FrameLayout {
                 mRoot.getLayoutParams().height = (int) Math.abs(event.getRawY() - tmpY);
                 mRoot.invalidate();
                 mRoot.requestLayout();
+                mWidth.setText("" + getWidth());
+                mHeight.setText("" + getHeight());
                 return false;
             case MotionEvent.ACTION_UP:
                 return true;
@@ -88,6 +92,8 @@ public abstract class BaseComponent extends FrameLayout {
             case MotionEvent.ACTION_MOVE:
                 setX(event.getRawX() - touchXOffset);
                 setY(event.getRawY() - touchYOffset);
+                mX.setText("" + (int) getX());
+                mY.setText("" + (int) getY());
                 return false;
             case MotionEvent.ACTION_UP:
                 return true;
@@ -133,6 +139,14 @@ public abstract class BaseComponent extends FrameLayout {
                 parent.setVisibility(VISIBLE);
             } else parent.setVisibility(INVISIBLE);
         });
+    }
+
+    public Conditionals getConditionals(){
+        return mConditionals;
+    }
+
+    public Actions getActions(){
+        return mActions;
     }
 
     protected void sanitizeResults(ViewGroup layout, StringBuilder errMsg) {
@@ -288,6 +302,7 @@ public abstract class BaseComponent extends FrameLayout {
 
     private void onFocus(){
         RxBus.publish(mContentView);
+        clearResults(mContentView);
     }
 
     @Override
@@ -295,9 +310,24 @@ public abstract class BaseComponent extends FrameLayout {
         if(ev.getAction() == MotionEvent.ACTION_DOWN){
             onFocus();
         }
-        if((ev.getActionMasked() & (MotionEvent.ACTION_UP | MotionEvent.ACTION_MOVE)) != 0){
-            clearResults(mContentView);
-        }
         return false;
+    }
+
+    /**
+     * All possible conditionals for this component. Everything should return a boolean.
+     */
+    public class Conditionals {
+        public boolean isVisible(){
+            return getVisibility() == VISIBLE;
+        }
+    }
+
+    /**
+     * All possible actions for this component. Parameters are obtained reflectively.
+     */
+    public class Actions {
+        public void setVisible(boolean state){
+            setVisibility(state ? VISIBLE : INVISIBLE);
+        }
     }
 }

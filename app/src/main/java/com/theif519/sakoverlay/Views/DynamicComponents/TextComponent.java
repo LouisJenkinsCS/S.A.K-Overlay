@@ -86,4 +86,8 @@ public class TextComponent extends BaseComponent {
             throw new RuntimeException("Error deserializing TextComponent: Threw a JSONException with message \"" + e.getMessage() + "\"");
         }
     }
+
+    public class TextConditionals extends Conditionals {
+
+    }
 }

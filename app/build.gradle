@@ -16,6 +16,7 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -23,13 +24,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        textReport true
+        textOutput 'stdout'
+        warning 'MissingTranslation'
+        warning 'ResourceType'
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:23.1.0'
-    compile 'com.google.android.gms:play-services:8.1.0'
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.google.android.gms:play-services:8.3.0'
     compile 'com.annimon:stream:1.0.5'
+    compile 'com.jakewharton.timber:timber:4.1.0'
     compile fileTree(include: '*.jar', dir: 'libs')
     compile files('libs/ISOParser/isoparser-1.1.17.jar')
     compile files('libs/ReactiveX/rxandroid-1.0.1.jar')

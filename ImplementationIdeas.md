@@ -5,6 +5,10 @@ IF Statement
     + Can explicitly be set using the "With" operator
 - Obtains the possible conditionals for the set object (defined by the instance of the class).
     + Displays all conditionals in a dropdown spinner
+- Follows the pattern of...
+    +   IF REFERENCE.CONDITION
+    +   Preceded by statement block.
+        *   REFERENCE.ACTION
 AND Statement
 - Used to join two or more conditionals into one.
     + Can only be used with the current reference
@@ -88,3 +92,40 @@ Seen as...
 
     FOR 1 to 99 AS X
         println("Index: " + X)
+
+Menu
+- Global Variables
+- Local Variables
+- Functions
+    + Are global
+    + I.E, Println
+- References/Components
+    + Allows interaction with other components.
+
+
+IF REFERENCE.CONDITION
+        REFERENCE.ACTION
+
+Steps to create the Menu...
+- Maintain a list of components
+    +   Each component is given a unique identifier as a key in a map
+        *       By default, it will be the IDENTIFIER plus a number if duplicates are found.
+    +   Each component is mapped to their possible conditionals and actions.
+        *   Value should be a method. The methods should have an annotation describing how it SHOULD be used, and each parameter as well. This will be obtained reflectively, as each parameter and type will be determined as well.
+            -   For each parameter and type, it will set the input accordingly, unless an Object is detected, upon which should throw a runtime exception. If it expects a BaseComponent or a specific subclass of BaseComponent, that's fine.
+
+@Documentation(usage="Checks if component is visible", params=null, return="If visible")
+public boolean isVisible()
+
+becomes
+
+Usage: Checks if component is visible.
+
+Returns: If visible
+boolean isVisible()
+
+public void setSource(String src)
+
+becomes
+
+void setSource(String src)
