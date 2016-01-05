@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Activities/MainActivity.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Widgets/BaseWidget.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Widgets/NotePadWidget.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Fragments/Widgets/WidgetFactory.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Core/Activities/MainActivity.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Widgets/BaseWidget.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Widgets/NotePadWidget.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/sakoverlay/Widgets/WidgetFactory.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/AttributeRetriever.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/Callbacks.java" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/theif519/utils/Misc/FileRetriever.java" charset="windows-1252" />

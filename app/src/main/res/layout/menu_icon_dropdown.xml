@@ -23,7 +23,7 @@
                 android:gravity="center"
                 android:textStyle="bold" />
 
-            <com.theif519.sakoverlay.Views.MenuChildItem
+            <com.theif519.sakoverlay.Core.Views.MenuChildItem
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/menu_bar_browser_option"
@@ -31,7 +31,7 @@
                 app:mciDescription="Web Browser"
                 app:mciIcon="@drawable/browser"/>
 
-            <com.theif519.sakoverlay.Views.MenuChildItem
+            <com.theif519.sakoverlay.Core.Views.MenuChildItem
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/menu_bar_maps_option"
@@ -39,7 +39,7 @@
                 app:mciDescription="Google Maps"
                 app:mciIcon="@drawable/maps"/>
 
-            <com.theif519.sakoverlay.Views.MenuChildItem
+            <com.theif519.sakoverlay.Core.Views.MenuChildItem
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/menu_bar_sticky_option"
@@ -47,7 +47,7 @@
                 android:clickable="true"
                 app:mciIcon="@drawable/sticky_note"/>
 
-            <com.theif519.sakoverlay.Views.MenuChildItem
+            <com.theif519.sakoverlay.Core.Views.MenuChildItem
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/menu_bar_recorder_option"

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.theif519.sakoverlay.Views.TouchInterceptorLayout
+<com.theif519.sakoverlay.Widgets.Views.TouchInterceptorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:scaleX="@dimen/floating_fragment_scale"
@@ -9,7 +9,7 @@
     android:orientation="vertical"
     app:tilIdentifier="Google Maps">
 
-    <com.theif519.sakoverlay.Views.TitleBar
+    <com.theif519.sakoverlay.Widgets.Views.TitleBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:tbTitle="Maps"/>
@@ -43,4 +43,4 @@
 
     </FrameLayout>
 
-</com.theif519.sakoverlay.Views.TouchInterceptorLayout>
+</com.theif519.sakoverlay.Widgets.Views.TouchInterceptorLayout>

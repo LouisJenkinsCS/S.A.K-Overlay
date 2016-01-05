@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.theif519.sakoverlay.Views.TouchInterceptorLayout
+<com.theif519.sakoverlay.Widgets.Views.TouchInterceptorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="@dimen/screen_recorder_width"
@@ -10,7 +10,7 @@
     android:orientation="vertical"
     app:tilIdentifier="Screen Recorder">
 
-    <com.theif519.sakoverlay.Views.TitleBar
+    <com.theif519.sakoverlay.Widgets.Views.TitleBar
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:id="@+id/title_bar"
@@ -84,4 +84,4 @@
 
 
 
-</com.theif519.sakoverlay.Views.TouchInterceptorLayout>
+</com.theif519.sakoverlay.Widgets.Views.TouchInterceptorLayout>

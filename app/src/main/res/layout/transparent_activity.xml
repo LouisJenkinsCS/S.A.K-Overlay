@@ -5,6 +5,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:background="@android:color/transparent"
-    tools:context="com.theif519.sakoverlay.Activities.PermissionActivity">
+    tools:context="com.theif519.sakoverlay.Core.Activities.PermissionActivity">
 
 </RelativeLayout>
