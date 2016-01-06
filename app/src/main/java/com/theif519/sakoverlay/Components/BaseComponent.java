@@ -16,6 +16,8 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
+import com.theif519.sakoverlay.Components.Misc.Actions;
+import com.theif519.sakoverlay.Components.Misc.Conditionals;
 import com.theif519.sakoverlay.Core.Animations.ResizeAnimation;
 import com.theif519.sakoverlay.Core.Listeners.OnAnimationEndListener;
 import com.theif519.sakoverlay.Core.Listeners.OnAnimationStartListener;
@@ -316,7 +318,7 @@ public abstract class BaseComponent extends FrameLayout {
     /**
      * All possible conditionals for this component. Everything should return a boolean.
      */
-    public class Conditionals {
+    public class BaseConditionals extends Conditionals {
         public boolean isVisible(){
             return getVisibility() == VISIBLE;
         }
@@ -325,7 +327,7 @@ public abstract class BaseComponent extends FrameLayout {
     /**
      * All possible actions for this component. Parameters are obtained reflectively.
      */
-    public class Actions {
+    public class BaseActions extends Actions {
         public void setVisible(boolean state){
             setVisibility(state ? VISIBLE : INVISIBLE);
         }

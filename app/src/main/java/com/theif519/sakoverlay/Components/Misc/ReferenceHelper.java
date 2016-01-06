@@ -1,5 +1,8 @@
 package com.theif519.sakoverlay.Components.Misc;
 
+import com.theif519.sakoverlay.Components.BaseComponent;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,10 +12,17 @@ import java.util.List;
  * TODO: This way I can use an Observable easily to map each.
  */
 public class ReferenceHelper {
-    List<ReferenceType<?>> mReferenceList;
+    List<ReferenceType<BaseComponent>> mReferenceList;
 
-    public ReferenceHelper(List<ReferenceType<?>> references) {
-        this.mReferenceList = references;
+    public ReferenceHelper() {
+        mReferenceList = new ArrayList<>();
     }
-    
+
+    public ReferenceHelper add(ReferenceType<BaseComponent>... refs){
+        for(ReferenceType<BaseComponent> ref: refs){
+            mReferenceList.add(ref);
+        }
+        return this;
+    }
+
 }

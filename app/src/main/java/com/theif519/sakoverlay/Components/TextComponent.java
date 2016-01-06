@@ -87,7 +87,7 @@ public class TextComponent extends BaseComponent {
         }
     }
 
-    public class TextConditionals extends Conditionals {
+    public class TextConditionals extends BaseConditionals {
 
     }
 }
