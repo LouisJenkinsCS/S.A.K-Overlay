@@ -48,7 +48,7 @@ public class ConditionalType<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public MethodWrapper<T>[] getAll() {
+    public MethodWrapper<T>[] getAllMethods() {
         return mConditionals.toArray(new MethodWrapper[mConditionals.size()]);
     }
 }

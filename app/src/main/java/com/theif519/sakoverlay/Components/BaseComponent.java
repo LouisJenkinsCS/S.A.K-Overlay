@@ -10,21 +10,24 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.theif519.sakoverlay.Components.Misc.Actions;
 import com.theif519.sakoverlay.Components.Misc.Conditionals;
+import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
 import com.theif519.sakoverlay.Core.Animations.ResizeAnimation;
 import com.theif519.sakoverlay.Core.Listeners.OnAnimationEndListener;
 import com.theif519.sakoverlay.Core.Listeners.OnAnimationStartListener;
 import com.theif519.sakoverlay.Core.Misc.Globals;
-import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Core.Rx.RxBus;
 import com.theif519.sakoverlay.Core.Views.AutoResizeTextView;
+import com.theif519.sakoverlay.R;
 import com.theif519.utils.Misc.MutableObject;
 
 import org.json.JSONException;
@@ -41,6 +44,7 @@ public abstract class BaseComponent extends FrameLayout {
     private LinearLayout mContentView;
     private Conditionals mConditionals = new Conditionals();
     private Actions mActions = new Actions();
+    private ReferenceHelper mHelper;
 
     public BaseComponent(Context context) {
         this(context, null);
@@ -58,6 +62,14 @@ public abstract class BaseComponent extends FrameLayout {
         setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         createOptions();
         setup();
+    }
+
+    protected ReferenceHelper getHelper(){
+        return mHelper;
+    }
+
+    public void setHelper(ReferenceHelper helper){
+        mHelper = helper;
     }
 
     private float tmpX, tmpY;
@@ -111,6 +123,19 @@ public abstract class BaseComponent extends FrameLayout {
         mContentView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mContentView.setOrientation(LinearLayout.VERTICAL);
         addOptionDialog(mContentView);
+        Button button = new Button(getContext());
+        button.setText("Submit");
+        button.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        button.setOnClickListener(v -> {
+            StringBuilder errMsg = new StringBuilder();
+            sanitizeResults(mContentView, errMsg);
+            if (!errMsg.toString().isEmpty()) {
+                Toast.makeText(getContext(), "Error: \"" + errMsg.toString() + "\"", Toast.LENGTH_LONG).show();
+            } else {
+                handleResults(mContentView);
+            }
+        });
+        mContentView.addView(button);
         clearResults(mContentView);
     }
 
@@ -313,6 +338,14 @@ public abstract class BaseComponent extends FrameLayout {
             onFocus();
         }
         return false;
+    }
+
+    public Class<? extends Conditionals> getConditionalClass(){
+        return BaseConditionals.class;
+    }
+
+    public Class<? extends Actions> getActionClass(){
+        return BaseActions.class;
     }
 
     /**

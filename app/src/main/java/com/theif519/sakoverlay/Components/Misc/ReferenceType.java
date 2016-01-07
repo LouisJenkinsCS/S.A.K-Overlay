@@ -10,12 +10,14 @@ public class ReferenceType<T> {
     private ConditionalType<T> mConditionals;
     private ActionType<T> mActions;
     private List<ReferenceType<?>> mReferences;
+    private String mIdentifier;
 
-    public static <T> ReferenceType<T> from(T instance, Class<? extends Conditionals> conditionalClass, Class<? extends Actions> actionClass){
-        return new ReferenceType<>(ConditionalType.from(instance, conditionalClass), ActionType.from(instance, actionClass), null);
+    public static <T> ReferenceType<T> from(T instance, String id, Class<? extends Conditionals> conditionalClass, Class<? extends Actions> actionClass){
+        return new ReferenceType<>(id, ConditionalType.from(instance, conditionalClass), ActionType.from(instance, actionClass), null);
     }
 
-    public ReferenceType(ConditionalType<T> conditionals, ActionType<T> actions, List<ReferenceType<?>> references) {
+    public ReferenceType(String id, ConditionalType<T> conditionals, ActionType<T> actions, List<ReferenceType<?>> references) {
+        mIdentifier = id;
         mConditionals = conditionals == null ? ConditionalType.<T>empty() : conditionals;
         mActions = actions == null ? ActionType.<T>empty() : actions;
         mReferences = references == null ? new ArrayList<>() : references;
@@ -47,6 +49,15 @@ public class ReferenceType<T> {
     @SuppressWarnings("unchecked")
     public ReferenceType<T>[] getReferences(){
         return mReferences.toArray(new ReferenceType[mReferences.size()]);
+    }
+
+    public String getId(){
+        return mIdentifier;
+    }
+
+    public ReferenceType<T> setId(String id){
+        mIdentifier = id;
+        return this;
     }
 
     public ReferenceType<T> removeAction(MethodWrapper<T> action){

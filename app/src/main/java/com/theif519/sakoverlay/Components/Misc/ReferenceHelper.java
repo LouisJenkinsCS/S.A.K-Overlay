@@ -1,8 +1,11 @@
 package com.theif519.sakoverlay.Components.Misc;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Components.BaseComponent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -13,16 +16,24 @@ import java.util.List;
  */
 public class ReferenceHelper {
     List<ReferenceType<BaseComponent>> mReferenceList;
+    private static final String[] STATEMENTS = { "IF", "ELSE IF", "ELSE"};
 
     public ReferenceHelper() {
         mReferenceList = new ArrayList<>();
     }
 
     public ReferenceHelper add(ReferenceType<BaseComponent>... refs){
-        for(ReferenceType<BaseComponent> ref: refs){
-            mReferenceList.add(ref);
-        }
+        Collections.addAll(mReferenceList, refs);
         return this;
+    }
+
+    public List<ReferenceType<?>> getAllReferences(){
+        return Stream.of(mReferenceList)
+                .collect(Collectors.toList());
+    }
+
+    public String[] getStatements(){
+        return STATEMENTS;
     }
 
 }

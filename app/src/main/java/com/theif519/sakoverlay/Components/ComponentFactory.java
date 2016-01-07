@@ -16,6 +16,8 @@ public class ComponentFactory {
                 return new LayoutComponent(context);
             case EditTextComponent.IDENTIFIER:
                 return new EditTextComponent(context);
+            case ButtonComponent.IDENTIFIER:
+                return new ButtonComponent(context);
             default:
                 return null;
         }

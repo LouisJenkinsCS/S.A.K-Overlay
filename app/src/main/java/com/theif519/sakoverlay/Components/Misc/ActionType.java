@@ -49,7 +49,7 @@ public class ActionType<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public MethodWrapper<T>[] getAll() {
+    public MethodWrapper<T>[] getAllMethods() {
         return mActions.toArray(new MethodWrapper[mActions.size()]);
     }
 }

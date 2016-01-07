@@ -18,7 +18,7 @@ import java.util.List;
 public class ComponentSelectorBuilder {
 
     public interface OnCreateListener {
-        void onCreate(BaseComponent component);
+        void onCreate(BaseComponent component, String id);
     }
 
     private OnCreateListener mListener;
@@ -53,7 +53,8 @@ public class ComponentSelectorBuilder {
         listView.setAdapter(adapter);
         listView.setOnChildClickListener((parent, v, groupPosition, childPosition, id) -> {
             if(mListener == null) return false;
-            mListener.onCreate(adapter.getChild(groupPosition, childPosition).create(context));
+            ComponentSelectorItem item = adapter.getChild(groupPosition, childPosition);
+            mListener.onCreate(item.create(context), item.toString());
             return true;
         });
         return adapter;

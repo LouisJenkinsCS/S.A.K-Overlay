@@ -40,6 +40,7 @@ Types of Constructs
     + Scope-based and Context-based conditionals
 - Action
     + Actions performed on references and variables in the current scope.
+    + Can return a value and have a numerous amount of parameters, including variadic.
 - Reference
     + Refers to a Component currently in the layout.
         * Defines it's own actions, conditionals, etc.
@@ -47,6 +48,10 @@ Types of Constructs
     + Variables used to store information locally.
 - Global Variable
     + Variables used to store information globally.
+- Getter
+    + Obtains and returns a value, can be used for a given parameter with a matching return type.
+- Setter
+    + A subtype of Action, sets a value and returns nothing.
 
 Script-Helper Menu
 - Brings up possible options based on scope and context.
@@ -129,3 +134,23 @@ public void setSource(String src)
 becomes
 
 void setSource(String src)
+
+Button1.onClick {
+    ImageView1.setVisible(Functions.Equal(ImageView1,))
+}
+
+
+Functions
+- Equal
+    + Takes two ReferenceTypes
+        * If both implement comparable, use that.
+    + Returns a boolean
+- NotEqual
+    + Inverse of Equal
+- Eval
+    + Takes three parameters
+        * Two ReferenceTypes
+        * One Operator
+    + I.E
+        * Functions.Eval(LocalVar.curr, ==, ImageView1)
+    + Evaluates an expression.

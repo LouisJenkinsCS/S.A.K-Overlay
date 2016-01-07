@@ -10,8 +10,11 @@ import android.widget.ExpandableListView;
 
 import com.theif519.sakoverlay.Components.BaseComponent;
 import com.theif519.sakoverlay.Components.Builders.ComponentSelectorBuilder;
+import com.theif519.sakoverlay.Components.ButtonComponent;
 import com.theif519.sakoverlay.Components.EditTextComponent;
 import com.theif519.sakoverlay.Components.LayoutComponent;
+import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
+import com.theif519.sakoverlay.Components.Misc.ReferenceType;
 import com.theif519.sakoverlay.Components.TextComponent;
 import com.theif519.sakoverlay.Components.View.NonModalDrawerLayout;
 import com.theif519.sakoverlay.R;
@@ -24,6 +27,8 @@ import org.json.JSONException;
  * Created by theif519 on 12/26/2015.
  */
 public class LayoutCreatorActivity extends Activity {
+
+    private ReferenceHelper mHelper = new ReferenceHelper();
 
     private ViewGroup mLayout;
     private NonModalDrawerLayout mDrawerLayout;
@@ -38,7 +43,7 @@ public class LayoutCreatorActivity extends Activity {
         new ComponentSelectorBuilder()
                 .addCategory("Text")
                 .addComponent(TextComponent.IDENTIFIER, null)
-                        //.addComponent("Button", null)
+                .addComponent(ButtonComponent.IDENTIFIER, null)
                 .addComponent(EditTextComponent.IDENTIFIER, null)
                 .addCategory("Grouping")
                 .addComponent(LayoutComponent.IDENTIFIER, null)
@@ -59,7 +64,9 @@ public class LayoutCreatorActivity extends Activity {
         });
     }
 
-    private void addComponent(BaseComponent component) {
+    private void addComponent(BaseComponent component, String id) {
+        mHelper.add(ReferenceType.from(component, id, component.getConditionalClass(), component.getActionClass()));
+        component.setHelper(mHelper);
         mLayout.addView(component);
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }

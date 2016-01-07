@@ -1,5 +1,6 @@
 package com.theif519.sakoverlay.Components;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.util.AttributeSet;
@@ -8,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import com.theif519.sakoverlay.Components.Misc.ConstructHelper;
 import com.theif519.sakoverlay.R;
 
 import org.json.JSONObject;
@@ -16,6 +18,8 @@ import org.json.JSONObject;
  * Created by theif519 on 1/2/2016.
  */
 public class ButtonComponent extends TextComponent {
+
+    public static final String IDENTIFIER = "Button";
 
     private Button mOnClickButton;
 
@@ -43,11 +47,16 @@ public class ButtonComponent extends TextComponent {
         layout.addView(createCategory("Button Component", v));
         layout.addView(v);
         mOnClickButton = (Button) layout.findViewById(R.id.component_text_button_onclick);
-    }
-
-    @Override
-    protected void handleResults(ViewGroup layout) {
-        super.handleResults(layout);
+        mOnClickButton.setOnClickListener(v1 -> new AlertDialog.Builder(getContext())
+                .setTitle("Button onClick")
+                .setView(new ConstructHelper(getContext(), getHelper()).getView())
+                .setPositiveButton("OK!", (dialog1, which) -> {
+                    dialog1.dismiss();
+                })
+                .setNegativeButton("NO!", (dialog2, which) -> {
+                    dialog2.dismiss();
+                })
+                .show());
     }
 
     @Override
