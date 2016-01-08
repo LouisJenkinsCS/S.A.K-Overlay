@@ -1,18 +1,15 @@
 package com.theif519.sakoverlay.Components.Misc;
 
 import android.content.Context;
-import android.util.TypedValue;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
-import android.widget.PopupMenu;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Components.View.ComponentConstructIf;
+import com.theif519.sakoverlay.Components.View.ComponentConstructView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -74,34 +71,12 @@ public class ConstructHelper {
         mMainLayout.addView(mCurrentLayout = new LinearLayout(context));
         mCurrentLayout.setOrientation(LinearLayout.HORIZONTAL);
         mCurrentLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        TextView textView = new TextView(context);
-        textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        textView.setText("Click Here");
-        textView.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, context.getResources().getDisplayMetrics()));
-        createMenu(textView);
-        mCurrentLayout.addView(textView);
+        mCurrentLayout.addView(new ComponentConstructView(context, helper).setOptions(ComponentConstructView.COMPONENTS|ComponentConstructView.STATEMENTS));
         mCurrentLayout.addView(new ComponentConstructIf(context, helper));
     }
 
     public View getView(){
         return mMainLayout;
-    }
-
-    private void createMenu(View v){
-        int groupStatement = 1, groupComponents = 2;
-        int statementIf = 1, statementElse = 2;
-        v.setOnClickListener(v1 -> {
-            // TODO: You MUST add these to a submenu, NOT the current menu!
-            PopupMenu menu = new PopupMenu(mContext.get(), v);
-            menu.getMenu().add(groupStatement, Menu.NONE, Menu.NONE, "Statements");
-            menu.getMenu().addSubMenu(groupStatement, statementIf, statementIf, "If");
-            menu.getMenu().addSubMenu(groupStatement, statementElse, statementIf, "Else");
-            menu.getMenu().add(groupComponents, Menu.NONE, Menu.NONE, "Components");
-            Stream.of(mHelper.getAllReferences())
-                    .flatMap(ref -> Stream.of(ref.getId()))
-                    .forEach(id -> menu.getMenu().addSubMenu(groupComponents, Menu.NONE, Menu.NONE, id));
-            menu.show();
-        });
     }
 
     private void configureSpinner(Spinner spinner) {
