@@ -10,8 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.theif519.sakoverlay.R;
 import com.theif519.sakoverlay.Core.Views.AutoResizeTextView;
+import com.theif519.sakoverlay.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -88,6 +88,24 @@ public class TextComponent extends BaseComponent {
     }
 
     public class TextConditionals extends BaseConditionals {
+        public boolean isEmpty(){
+            return TEXT_VIEW.getText().toString().isEmpty();
+        }
+    }
 
+    public class TextActions extends BaseActions {
+        public void setText(String text) {
+            TEXT_VIEW.setText(text);
+        }
+
+        public void setTextSize(int size){
+            TEXT_VIEW.setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
+        }
+    }
+
+    public class TextGetters {
+        public String getText(){
+            return TEXT_VIEW.getText().toString();
+        }
     }
 }

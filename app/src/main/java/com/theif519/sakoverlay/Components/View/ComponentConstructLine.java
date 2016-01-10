@@ -12,6 +12,7 @@ import com.theif519.sakoverlay.Components.Misc.ConstructStatement;
 import com.theif519.sakoverlay.Components.Misc.MethodWrapper;
 import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
 import com.theif519.sakoverlay.Components.Misc.ReferenceType;
+import static com.theif519.sakoverlay.Components.Misc.QueryTypes.*;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import rx.subjects.BehaviorSubject;
 public class ComponentConstructLine extends LinearLayout {
 
     private ReferenceHelper mHelper;
-    private List<ComponentConstructView> mChain = new ArrayList<>();
+    private List<Code> mChain = new ArrayList<>();
     private Queue<Integer> mModeQueue = new ArrayDeque<>();
     private ReferenceType<?> mCurrentReference;
     private boolean mIsFinished;
@@ -46,13 +47,13 @@ public class ComponentConstructLine extends LinearLayout {
             Log.i(getClass().getName(), String.format("Times Nested: %d; Margin Start: %d",
                     timesNested, params.getMarginStart()));
         }
-        mModeQueue.add(ComponentConstructView.COMPONENTS | ComponentConstructView.STATEMENTS);
+        mModeQueue.add(REFERENCES | STATEMENTS);
         generateConstructView();
     }
 
     public void generateConstructView() {
         if (mIsFinished) return;
-        ComponentConstructView view = new ComponentConstructView(getContext(), mHelper);
+        Code view = new Code(getContext(), mHelper);
         view.setPaddingRelative(getPaddingStart() + (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics()),
                 getPaddingTop(), getPaddingEnd(), getPaddingBottom());
         int nextOptions = mModeQueue.remove();
@@ -73,8 +74,8 @@ public class ComponentConstructLine extends LinearLayout {
             switch (statement) {
                 case IF:
                 case ELSE_IF:
-                    mModeQueue.add(ComponentConstructView.COMPONENTS);
-                    mModeQueue.add(ComponentConstructView.CONDITIONALS);
+                    mModeQueue.add(REFERENCES);
+                    mModeQueue.add(CONDITIONALS);
                     isStatement = true;
                     // End Line or add Optional Operator.
                     break;
@@ -88,29 +89,10 @@ public class ComponentConstructLine extends LinearLayout {
                 return;
             }
             if (mModeQueue.isEmpty()) {
-                mModeQueue.add(ComponentConstructView.ACTIONS);
+                mModeQueue.add(ACTIONS);
             }
             getCurrentReference(newMode);
         }
-    }
-
-    private void getCurrentReference(String refId) {
-        mCurrentReference = Stream.of(mHelper.getAllReferences())
-                .map(ref -> Pair.create(ref, ref.getId()))
-                .filter(pair -> pair.second.equals(refId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Attempt to obtain reference from selected ID is invalid!"))
-                .first;
-    }
-
-    private boolean referenceContainsMethod(String methodName) {
-        return Stream
-                .concat(
-                        Stream.of(mCurrentReference.getConditionals().getAllMethods()),
-                        Stream.of(mCurrentReference.getActions().getAllMethods())
-                )
-                .map(MethodWrapper::getMethodName)
-                .anyMatch(methodName::equals);
     }
 
     private void setFinished(ComponentConstructBlock.NestDirection direction) {

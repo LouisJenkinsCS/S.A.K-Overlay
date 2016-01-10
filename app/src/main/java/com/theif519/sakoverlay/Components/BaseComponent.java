@@ -355,6 +355,10 @@ public abstract class BaseComponent extends FrameLayout {
         public boolean isVisible(){
             return getVisibility() == VISIBLE;
         }
+
+        public boolean isEnabled(){
+            return BaseComponent.this.isEnabled();
+        }
     }
 
     /**
@@ -363,6 +367,23 @@ public abstract class BaseComponent extends FrameLayout {
     public class BaseActions extends Actions {
         public void setVisible(boolean state){
             setVisibility(state ? VISIBLE : INVISIBLE);
+        }
+        public void setX(float x){
+            BaseComponent.this.setX(x);
+        }
+        public void setY(float y){
+            BaseComponent.this.setY(y);
+        }
+        public void setWidth(int width){
+            mRoot.getLayoutParams().width = width;
+            mRoot.requestLayout();
+        }
+        public void setHeight(int height){
+            mRoot.getLayoutParams().height = height;
+            mRoot.requestLayout();
+        }
+        public void setEnabled(boolean state){
+            BaseComponent.this.setEnabled(state);
         }
     }
 }

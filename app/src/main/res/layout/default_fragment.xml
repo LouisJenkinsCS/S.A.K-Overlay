@@ -24,7 +24,8 @@
             android:layout_height="wrap_content"
             android:textSize="30sp"
             android:textStyle="bold|italic"
-            android:text="For some reason, we were unable to show the apprioriate widget! Sorry!"/>
+            android:text="For some reason, we were unable to show the apprioriate widget! Sorry!"
+            android:contextClickable="false" />
 
         <Button
             android:layout_width="50dp"

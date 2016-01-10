@@ -1,12 +1,11 @@
 package com.theif519.sakoverlay.Components.Misc;
 
-import com.annimon.stream.Collectors;
-import com.annimon.stream.Stream;
-import com.theif519.sakoverlay.Components.BaseComponent;
+import android.util.ArrayMap;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.annimon.stream.Optional;
+import com.annimon.stream.Stream;
+
+import java.util.Map;
 
 /**
  * Created by theif519 on 1/4/2016.
@@ -15,21 +14,50 @@ import java.util.List;
  * TODO: This way I can use an Observable easily to map each.
  */
 public class ReferenceHelper {
-    List<ReferenceType<BaseComponent>> mReferenceList;
+    Map<String, ReferenceType<?>> mMappedReferences;
     private static final String[] STATEMENTS = { "IF", "ELSE IF", "ELSE"};
 
-    public ReferenceHelper() {
-        mReferenceList = new ArrayList<>();
+    private static final ReferenceHelper INSTANCE = new ReferenceHelper();
+
+    public static ReferenceHelper getInstance(){
+        return INSTANCE;
     }
 
-    public ReferenceHelper add(ReferenceType<BaseComponent>... refs){
-        Collections.addAll(mReferenceList, refs);
+    public ReferenceHelper() {
+        mMappedReferences = new ArrayMap<>();
+    }
+
+    public ReferenceHelper add(ReferenceType<?>... referenceTypes){
+        Stream.of(referenceTypes)
+                .forEach(ref -> mMappedReferences.put(ref.getName(), ref));
         return this;
     }
 
-    public List<ReferenceType<?>> getAllReferences(){
-        return Stream.of(mReferenceList)
-                .collect(Collectors.toList());
+    public Stream<ReferenceType<?>> getAllReferences(){
+        return Stream.of(mMappedReferences.values());
+    }
+
+    public Stream<Map.Entry<String, ReferenceType<?>>> getMappedReferences(){
+        return Stream.of(mMappedReferences);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> Stream<ReferenceType<T>> getAllReferencesOfType(Class<T> clazz){
+        return Stream.of(mMappedReferences.values())
+                .filter(ref -> clazz.isAssignableFrom(ref.getInstanceClass()))
+                .map(ref -> (ReferenceType<T>) ref);
+    }
+
+    public boolean contains(ReferenceType<?> referenceType){
+        return mMappedReferences.containsValue(referenceType);
+    }
+
+    public boolean contains(String referenceName){
+        return mMappedReferences.containsKey(referenceName);
+    }
+
+    public Optional<ReferenceType<?>> get(String referenceName){
+        return Optional.ofNullable(mMappedReferences.get(referenceName));
     }
 
     public String[] getStatements(){
