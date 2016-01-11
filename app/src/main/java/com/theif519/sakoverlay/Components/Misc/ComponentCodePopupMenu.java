@@ -53,9 +53,9 @@ public class ComponentCodePopupMenu extends PopupMenu implements PopupMenu.OnMen
             ReferenceHelper.getInstance().getMappedReferences()
                     .forEach(mappedReference -> components.add(REFERENCES, Menu.NONE, Menu.NONE, mappedReference.getKey()));
         } else { // Note we do not want to both obtain methods and the reference itself. That would be silly.
-            ReferenceType<?> ref = reference.orElseThrow(() ->
-                    new RuntimeException("An attempt was made to retrieve methods from a null reference!"));
             if (BitmaskTools.isSet(mask, CONDITIONALS)) {
+                ReferenceType<?> ref = reference.orElseThrow(() ->
+                        new RuntimeException("An attempt was made to retrieve conditional methods from a null reference!"));
                 SubMenu conditionals = menu.addSubMenu(Menu.NONE, CONDITIONALS, 2, "Conditionals");
                 ref.getConditionals().getMappedMethods()
                         .map(Map.Entry::getKey)
@@ -63,6 +63,8 @@ public class ComponentCodePopupMenu extends PopupMenu implements PopupMenu.OnMen
                         .forEach(name -> conditionals.add(CONDITIONALS, Menu.NONE, Menu.NONE, name));
             }
             if (BitmaskTools.isSet(mask, ACTIONS)) {
+                ReferenceType<?> ref = reference.orElseThrow(() ->
+                        new RuntimeException("An attempt was made to retrieve action methods from a null reference!"));
                 SubMenu conditionals = menu.addSubMenu(Menu.NONE, ACTIONS, 3, "Actions");
                 ref.getActions().getMappedMethods()
                         .map(Map.Entry::getKey)

@@ -5,7 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-import com.theif519.sakoverlay.Components.View.ComponentConstructBlock;
+import com.theif519.sakoverlay.Components.View.BlockOfCode;
 
 import java.lang.ref.WeakReference;
 
@@ -51,19 +51,16 @@ public class ConstructHelper {
 
     private LinearLayout mMainLayout, mCurrentLayout;
     private WeakReference<Context> mContext;
-    private ReferenceHelper mHelper;
-    private ReferenceType<?> mCurrentReference;
 
-    public ConstructHelper(Context context, ReferenceHelper helper) {
+    public ConstructHelper(Context context) {
         mContext = new WeakReference<>(context);
-        mHelper = helper;
         mMainLayout = new LinearLayout(context);
         mMainLayout.setOrientation(LinearLayout.VERTICAL);
         mMainLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mMainLayout.addView(mCurrentLayout = new LinearLayout(context));
         mCurrentLayout.setOrientation(LinearLayout.HORIZONTAL);
         mCurrentLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        mCurrentLayout.addView(new ComponentConstructBlock(context, helper));
+        mCurrentLayout.addView(new BlockOfCode(context));
     }
 
     public View getView(){

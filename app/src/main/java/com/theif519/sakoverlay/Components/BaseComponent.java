@@ -20,7 +20,6 @@ import android.widget.Toast;
 
 import com.theif519.sakoverlay.Components.Misc.Actions;
 import com.theif519.sakoverlay.Components.Misc.Conditionals;
-import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
 import com.theif519.sakoverlay.Core.Animations.ResizeAnimation;
 import com.theif519.sakoverlay.Core.Listeners.OnAnimationEndListener;
 import com.theif519.sakoverlay.Core.Listeners.OnAnimationStartListener;
@@ -42,9 +41,6 @@ public abstract class BaseComponent extends FrameLayout {
     private RadioButton mWidthWrapContent, mHeightWrapContent, mWidthFillParent, mHeightFillParent, mWidthCustom, mHeightCustom;
     private EditText mWidth, mHeight, mX, mY;
     private LinearLayout mContentView;
-    private Conditionals mConditionals = new Conditionals();
-    private Actions mActions = new Actions();
-    private ReferenceHelper mHelper;
 
     public BaseComponent(Context context) {
         this(context, null);
@@ -62,14 +58,6 @@ public abstract class BaseComponent extends FrameLayout {
         setLayoutParams(new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         createOptions();
         setup();
-    }
-
-    protected ReferenceHelper getHelper(){
-        return mHelper;
-    }
-
-    public void setHelper(ReferenceHelper helper){
-        mHelper = helper;
     }
 
     private float tmpX, tmpY;
@@ -166,14 +154,6 @@ public abstract class BaseComponent extends FrameLayout {
                 parent.setVisibility(VISIBLE);
             } else parent.setVisibility(INVISIBLE);
         });
-    }
-
-    public Conditionals getConditionals(){
-        return mConditionals;
-    }
-
-    public Actions getActions(){
-        return mActions;
     }
 
     protected void sanitizeResults(ViewGroup layout, StringBuilder errMsg) {

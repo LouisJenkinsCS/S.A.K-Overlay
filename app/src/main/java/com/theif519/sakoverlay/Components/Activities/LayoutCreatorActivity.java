@@ -28,8 +28,6 @@ import org.json.JSONException;
  */
 public class LayoutCreatorActivity extends Activity {
 
-    private ReferenceHelper mHelper = new ReferenceHelper();
-
     private ViewGroup mLayout;
     private NonModalDrawerLayout mDrawerLayout;
 
@@ -64,9 +62,9 @@ public class LayoutCreatorActivity extends Activity {
         });
     }
 
+    // TODO: Make generic so that "<T extends BaseComponent> void addComponent(T component, Class<T> clazz, String name)" is the declaration.
     private void addComponent(BaseComponent component, String id) {
-        mHelper.add(ReferenceType.from(component, id, component.getConditionalClass(), component.getActionClass()));
-        component.setHelper(mHelper);
+        ReferenceHelper.getInstance().add(ReferenceType.from(component, BaseComponent.class, id, component.getConditionalClass(), component.getActionClass()));
         mLayout.addView(component);
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }

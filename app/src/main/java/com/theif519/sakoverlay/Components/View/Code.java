@@ -42,6 +42,7 @@ public class Code extends TextView {
         setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, getResources().getDisplayMetrics()));
         setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         setOnClickListener(v -> mMenu.show());
+        setup();
     }
 
     public Code setInstructionType(int mask) {
@@ -78,7 +79,8 @@ public class Code extends TextView {
                             break;
                         case CONDITIONALS:
                         case ACTIONS:
-                            MethodWrapper<?> methodWrapper = mReference.getAllMappedMethods()
+                            MethodWrapper<?> methodWrapper = mPrev.getReference().orElseThrow(() -> new RuntimeException("Reference from previous Code returned null!"))
+                                    .getAllMappedMethods()
                                     .filter(mappedMethod -> pair.second.equals(mappedMethod.getKey()))
                                     .map(Map.Entry::getValue)
                                     .findFirst()

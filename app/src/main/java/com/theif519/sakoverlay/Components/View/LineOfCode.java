@@ -4,12 +4,14 @@ import android.content.Context;
 import android.util.Pair;
 import android.widget.LinearLayout;
 
+import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Components.Misc.ConstructStatement;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
 import rx.subscriptions.CompositeSubscription;
 
@@ -38,19 +40,23 @@ public class LineOfCode extends LinearLayout {
         setOrientation(HORIZONTAL);
         setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         mNextInstruction = REFERENCES | STATEMENTS;
+        spawnCode();
     }
 
     private void spawnCode() {
         Code code = new Code(getContext());
-        code.setPrevious(mCodeChain.get(mCodeChain.size() - 1));
+        if(mCodeChain.size() != 0){
+            code.setPrevious(mCodeChain.get(mCodeChain.size()- 1));
+        }
         code.setInstructionType(mNextInstruction);
         mCodeChain.add(code);
         addView(code);
-        code.observeSelectionChanges()
+        mSubscriptions.add(code.observeSelectionChanges()
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pair -> {
                     mIsFinished = false;
                     // Remove excess code if the code is not the very last in the list.
-                    if(code != mCodeChain.get(mCodeChain.size() - 1)) {
+                    if (code != mCodeChain.get(mCodeChain.size() - 1)) {
                         for (int i = 0; i < mCodeChain.size(); i++) {
                             Code current = mCodeChain.get(i);
                             if (current == code) {
@@ -80,6 +86,7 @@ public class LineOfCode extends LinearLayout {
                                     throw new RuntimeException("Invalid statement string returned from child Code!");
                             }
                             mNextInstruction = REFERENCES;
+                            break;
                         case REFERENCES:
                             switch (mMode) {
                                 case STATEMENTS_IF:
@@ -106,6 +113,7 @@ public class LineOfCode extends LinearLayout {
                                 default:
                                     throw new RuntimeException("Invalid: Conditional method chosen in incompatible statement!");
                             }
+                            break;
                         case ACTIONS:
                             switch (mMode) {
                                 case STATEMENTS_IF:
@@ -115,12 +123,20 @@ public class LineOfCode extends LinearLayout {
                                 case STATEMENTS:
                                     mIsFinished = true;
                             }
+                            break;
                     }
                     mLineChanged.onNext(Pair.create(mMode, mIsFinished));
-                    if(!mIsFinished){
+                    if (!mIsFinished) {
                         spawnCode();
                     }
-                });
+                }));
+    }
+
+    public void finish(){
+        mSubscriptions.unsubscribe();
+        Stream.of(mCodeChain)
+                .forEach(Code::finished);
+        mLineChanged.onCompleted();
     }
 
     public Observable<Pair<Integer, Boolean>> observeLineChange() {

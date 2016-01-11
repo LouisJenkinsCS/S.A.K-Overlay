@@ -49,7 +49,7 @@ public class ButtonComponent extends TextComponent {
         mOnClickButton = (Button) layout.findViewById(R.id.component_text_button_onclick);
         mOnClickButton.setOnClickListener(v1 -> new AlertDialog.Builder(getContext())
                 .setTitle("Button onClick")
-                .setView(new ConstructHelper(getContext(), getHelper()).getView())
+                .setView(new ConstructHelper(getContext()).getView())
                 .setPositiveButton("OK!", (dialog1, which) -> {
                     dialog1.dismiss();
                 })
