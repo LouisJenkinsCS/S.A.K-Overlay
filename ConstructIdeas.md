@@ -35,3 +35,35 @@ Adapters
     + Getter
     + Setter
     + Influenced by older mode.
+
+
+PopupMenu
+- Handles...
+    + Querying from ReferenceHelper to retreive set selection options
+    + Handling button clicks and notifying parent (Code)
+Code
+- Handles...
+    + User Input
+        * Switch between TextView + PopupMenu and EditText with certain InputType
+    + Notifying parent (LineOfCode) of selection change.
+LineOfCode
+- Handles...
+    + Spawning Code
+        * In response to Code children's selection
+    + Deleting excess Code
+        * In reponse to Code's children selection (If midway change)
+    + Keep track of it's type
+        * STATEMENT_IF, STATEMENT_ELSE, etc.
+    + Notifying parent when all child Code has finished based on type.
+LineWrapper
+- Handles...
+    + Adds buttons for user input based on completion
+        * Delete, Add New, Copy, etc.
+    + Adds Horizontal Scrollview
+    + Notify parent BlockOfCode when a button is pressed.
+BlockOfCode
+- Handles...
+    + Spawning LinesOfCode
+        * In response to User Input for LineWrapper
+    + Deleting LinesOfCode
+        * Either in response to User Input from LineWrapper, or if a parent LineOfCode (I.E, IF for IF...ELSE statement) gets deleted.

@@ -36,7 +36,7 @@ public class ComponentConstructBlock extends LinearLayout {
     }
 
     private void generateConstructLine() {
-        ComponentConstructLine line = new ComponentConstructLine(getContext(), mHelper, nested);
+        LineOfCode line = new LineOfCode(getContext(), mHelper, nested);
         line.observeLineFinish()
                 .subscribe(nestDirection -> {
                     nested += nestDirection.getVal();

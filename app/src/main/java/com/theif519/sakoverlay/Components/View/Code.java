@@ -33,6 +33,7 @@ public class Code extends TextView {
     private BehaviorSubject<Pair<Integer, Object>> mSelection = BehaviorSubject.create();
     private Subscription mSubscription;
     private ReferenceType<?> mReference;
+    private Code mPrev;
 
     public Code(Context context) {
         super(context);
@@ -43,14 +44,23 @@ public class Code extends TextView {
         setOnClickListener(v -> mMenu.show());
     }
 
-    public Code setSelections(int mask, Optional<ReferenceType<?>> ref) {
-        mMenu.setOptions(mask, ref);
-        ref.ifPresent(reference -> mReference = reference);
+    public Code setInstructionType(int mask) {
+        mMenu.setOptions(mask, mPrev != null ? mPrev.getReference() : Optional.empty());
         return this;
     }
 
-    public void finished(){
+    public Code setPrevious(Code code) {
+        mPrev = code;
+        return this;
+    }
+
+    public Optional<ReferenceType<?>> getReference() {
+        return Optional.ofNullable(mReference);
+    }
+
+    public void finished() {
         mSubscription.unsubscribe();
+        mSelection.onCompleted();
     }
 
     public Observable<Pair<Integer, Object>> observeSelectionChanges() {
@@ -81,7 +91,7 @@ public class Code extends TextView {
                             selection = Pair.create(pair.first, methodWrapper);
                             break;
                         case REFERENCES:
-                            selection = Pair.create(pair.first, ReferenceHelper.getInstance().get(pair.second)
+                            selection = Pair.create(pair.first, mReference = ReferenceHelper.getInstance().get(pair.second)
                                     .orElseThrow(() -> new RuntimeException("Was unable to find the ReferenceType associated with returned Reference ID: \"" + pair.second + "\"")));
                             setText(pair.second + ".");
                             break;

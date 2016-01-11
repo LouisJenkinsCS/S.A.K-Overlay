@@ -6,7 +6,7 @@ package com.theif519.sakoverlay.Components.Misc;
 public enum ConstructStatement {
     IF, ELSE_IF, ELSE;
 
-    private static final String IF_STRING = "if", ELSE_IF_STRING = "else if", ELSE_STRING = "else";
+    public static final String IF_STRING = "if", ELSE_IF_STRING = "else if", ELSE_STRING = "else";
 
     @Override
     public String toString() {
