@@ -1,4 +1,4 @@
-package com.theif519.sakoverlay.Components.Misc;
+package com.theif519.sakoverlay.Components.Types;
 
 /**
  * Created by theif519 on 1/10/2016.

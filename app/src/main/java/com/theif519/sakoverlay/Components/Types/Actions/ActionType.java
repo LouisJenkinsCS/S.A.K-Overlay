@@ -1,7 +1,10 @@
-package com.theif519.sakoverlay.Components.Misc;
+package com.theif519.sakoverlay.Components.Types.Actions;
 
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
+import com.theif519.sakoverlay.Components.Misc.MethodWrapper;
+import com.theif519.sakoverlay.Components.Types.Actions.Impl.Actions;
+import com.theif519.sakoverlay.Components.Types.MethodType;
 
 import java.lang.reflect.Method;
 import java.util.List;

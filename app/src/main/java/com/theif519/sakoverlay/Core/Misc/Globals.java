@@ -23,6 +23,7 @@ public final class Globals {
     public static final int OVERLAY_NOTIFICATION_ID = 90;
     public static final int RECORDER_NOTIFICATION_ID = 91;
     public static final String RECORDER_FILE_SAVE_PATH = "/sdcard/Recordings/";
+    public static final String XML_NAMESPACE = "http://schemas.android.com/apk/res-auto";
 
     /**
      * Used to keep track of various and/or generic keys.

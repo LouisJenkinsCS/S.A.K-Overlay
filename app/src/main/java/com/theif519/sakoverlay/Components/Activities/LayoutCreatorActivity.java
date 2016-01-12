@@ -14,7 +14,7 @@ import com.theif519.sakoverlay.Components.ButtonComponent;
 import com.theif519.sakoverlay.Components.EditTextComponent;
 import com.theif519.sakoverlay.Components.LayoutComponent;
 import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
-import com.theif519.sakoverlay.Components.Misc.ReferenceType;
+import com.theif519.sakoverlay.Components.Types.ReferenceType;
 import com.theif519.sakoverlay.Components.TextComponent;
 import com.theif519.sakoverlay.Components.View.NonModalDrawerLayout;
 import com.theif519.sakoverlay.R;

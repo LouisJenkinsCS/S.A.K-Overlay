@@ -9,10 +9,10 @@ import java.util.List;
 
 import rx.subscriptions.CompositeSubscription;
 
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_ELSE;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_ELSE_IF;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_IF;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_ELSE;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_ELSE_IF;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_IF;
 
 /**
  * Created by theif519 on 1/8/2016.

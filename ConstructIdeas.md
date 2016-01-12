@@ -67,3 +67,32 @@ BlockOfCode
         * In response to User Input for LineWrapper
     + Deleting LinesOfCode
         * Either in response to User Input from LineWrapper, or if a parent LineOfCode (I.E, IF for IF...ELSE statement) gets deleted.
+
+Redesign Decisions
+- Attribute Menu
+    + Have PopupMenu attached to text at top
+        * Have it automatically select current selected components
+        * But also have it list other components as well to query their attributes
+    + Have either a tab layout for different types of attribute options or PopupMenu appear from a TextView
+        * Position & Size
+        * Text
+        * Callbacks
+        * etc.
+    + Have each category fill the entire Drawer, within a vertical and horizontal scrollview.
+    + Redesign DynamicComponent to allow it to easily add (and remove) options to (and from) the attribute menu.
+- LayoutCreator
+    + Improve overall design
+    + Handle interaction between dynamic components
+        * Create a class to handle collision and snapping
+        * I.E, make it easier to align two different components up
+            - Or even align with the sides or center, etc.
+        * Could probably be done by having them emit invisible lines which can be checked with for collision.
+- Callbacks
+    + Move to BaseComponent
+        * View handles all onTouch and onClick events
+    + Remove any parenthesis and stick with indentation
+        * Indentation is easier to understand for new programmers
+            - I.E, Python
+    + Make more elegant and aesthetically pleasing
+        * Maybe not now, but adding animations should make it more desirable.
+    + 

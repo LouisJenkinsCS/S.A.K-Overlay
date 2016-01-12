@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.PopupMenu;
 
 import com.annimon.stream.Optional;
+import com.theif519.sakoverlay.Components.Types.ReferenceType;
 import com.theif519.utils.Misc.BitmaskTools;
 
 import java.util.Map;
@@ -17,13 +18,13 @@ import java.util.Map;
 import rx.Observable;
 import rx.subjects.BehaviorSubject;
 
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.ACTIONS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.CONDITIONALS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.REFERENCES;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_ELSE;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_ELSE_IF;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_IF;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.ACTIONS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.CONDITIONALS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.REFERENCES;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_ELSE;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_ELSE_IF;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_IF;
 
 /**
  * Created by theif519 on 1/10/2016.

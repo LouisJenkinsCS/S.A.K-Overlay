@@ -22,4 +22,8 @@
     <declare-styleable name="TouchInterceptorLayout">
         <attr name="tilIdentifier" format="string"/>
     </declare-styleable>
+
+    <declare-styleable name="MaxHeightScrollView">
+        <attr name="maxHeight" format="dimension"/>
+    </declare-styleable>
 </resources>

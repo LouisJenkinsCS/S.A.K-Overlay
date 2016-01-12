@@ -18,8 +18,10 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.theif519.sakoverlay.Components.Misc.Actions;
-import com.theif519.sakoverlay.Components.Misc.Conditionals;
+import com.theif519.sakoverlay.Components.Types.Actions.Impl.Actions;
+import com.theif519.sakoverlay.Components.Types.Actions.Impl.BaseActions;
+import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.BaseConditionals;
+import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.Conditionals;
 import com.theif519.sakoverlay.Core.Animations.ResizeAnimation;
 import com.theif519.sakoverlay.Core.Listeners.OnAnimationEndListener;
 import com.theif519.sakoverlay.Core.Listeners.OnAnimationStartListener;
@@ -328,42 +330,4 @@ public abstract class BaseComponent extends FrameLayout {
         return BaseActions.class;
     }
 
-    /**
-     * All possible conditionals for this component. Everything should return a boolean.
-     */
-    public class BaseConditionals extends Conditionals {
-        public boolean isVisible(){
-            return getVisibility() == VISIBLE;
-        }
-
-        public boolean isEnabled(){
-            return BaseComponent.this.isEnabled();
-        }
-    }
-
-    /**
-     * All possible actions for this component. Parameters are obtained reflectively.
-     */
-    public class BaseActions extends Actions {
-        public void setVisible(boolean state){
-            setVisibility(state ? VISIBLE : INVISIBLE);
-        }
-        public void setX(float x){
-            BaseComponent.this.setX(x);
-        }
-        public void setY(float y){
-            BaseComponent.this.setY(y);
-        }
-        public void setWidth(int width){
-            mRoot.getLayoutParams().width = width;
-            mRoot.requestLayout();
-        }
-        public void setHeight(int height){
-            mRoot.getLayoutParams().height = height;
-            mRoot.requestLayout();
-        }
-        public void setEnabled(boolean state){
-            BaseComponent.this.setEnabled(state);
-        }
-    }
 }

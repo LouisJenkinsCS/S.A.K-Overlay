@@ -10,7 +10,7 @@ import com.annimon.stream.Optional;
 import com.theif519.sakoverlay.Components.Misc.ComponentCodePopupMenu;
 import com.theif519.sakoverlay.Components.Misc.MethodWrapper;
 import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
-import com.theif519.sakoverlay.Components.Misc.ReferenceType;
+import com.theif519.sakoverlay.Components.Types.ReferenceType;
 import com.theif519.sakoverlay.Core.Rx.Transformers;
 
 import java.util.Map;
@@ -19,10 +19,10 @@ import rx.Observable;
 import rx.Subscription;
 import rx.subjects.BehaviorSubject;
 
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.ACTIONS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.CONDITIONALS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.REFERENCES;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.ACTIONS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.CONDITIONALS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.REFERENCES;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS;
 
 /**
  * Created by theif519 on 1/7/2016.
@@ -75,7 +75,7 @@ public class Code extends TextView {
                     switch (pair.first) {
                         case STATEMENTS:
                             selection = Pair.create(pair.first, pair.second);
-                            setText(pair.second + "(");
+                            setText(pair.second + "\t");
                             break;
                         case CONDITIONALS:
                         case ACTIONS:

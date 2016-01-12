@@ -15,13 +15,13 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
 import rx.subscriptions.CompositeSubscription;
 
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.ACTIONS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.CONDITIONALS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.REFERENCES;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_ELSE;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_ELSE_IF;
-import static com.theif519.sakoverlay.Components.Misc.QueryTypes.STATEMENTS_IF;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.ACTIONS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.CONDITIONALS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.REFERENCES;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_ELSE;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_ELSE_IF;
+import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS_IF;
 
 /**
  * Created by theif519 on 1/8/2016.
@@ -60,13 +60,16 @@ public class LineOfCode extends LinearLayout {
                         for (int i = 0; i < mCodeChain.size(); i++) {
                             Code current = mCodeChain.get(i);
                             if (current == code) {
-                                for (int j = i + 1; j < mCodeChain.size(); j++) {
+                                for (int j = i; j < mCodeChain.size(); j++) {
                                     Code excess = mCodeChain.remove(mCodeChain.size() - 1);
                                     excess.finished();
                                     removeView(excess);
                                 }
                             }
                         }
+                    }
+                    if(code == mCodeChain.get(0)){
+                        mMode = 0; // Reset mode
                     }
                     // Based on the type, handle the returned object.
                     switch (pair.first) {
