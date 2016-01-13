@@ -2,11 +2,13 @@ package com.theif519.sakoverlay.Components.View;
 
 import android.content.Context;
 import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
-import com.theif519.sakoverlay.Components.Misc.MethodWrapper;
+import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 import com.theif519.sakoverlay.Components.Types.ReferenceType;
+import com.theif519.sakoverlay.R;
 
 import java.lang.ref.WeakReference;
 
@@ -17,14 +19,20 @@ public class ParameterFillerDialog {
 
     private WeakReference<Context> mContextReference;
     private MethodWrapper<?> mWrapper;
+    private View mParameterFillerView;
 
     public ParameterFillerDialog(Context context, MethodWrapper<?> wrapper) {
-        mContextReference = new WeakReference<Context>(context);
+        mContextReference = new WeakReference<>(context);
         mWrapper = wrapper;
+        mParameterFillerView = LayoutInflater.from(context).inflate(R.layout.component_parameter_filler, null);
     }
 
     private View generateLayout(){
         return null;
+    }
+
+    private void setup() {
+
     }
 
     private View generateInputView(Class<?> type) {
@@ -51,6 +59,10 @@ public class ParameterFillerDialog {
             throw new UnsupportedOperationException("Currently unable to generate an input view for a ReferenceType argument!");
         }
         return v;
+    }
+
+    private boolean isBoolean(Class<?> clazz){
+        return Boolean.class == clazz || boolean.class == clazz;
     }
 
     private boolean isNumber(Class<?> clazz) {

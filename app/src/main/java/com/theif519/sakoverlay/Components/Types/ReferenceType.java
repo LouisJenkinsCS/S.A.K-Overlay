@@ -4,7 +4,7 @@ import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Components.Types.Actions.Impl.Actions;
 import com.theif519.sakoverlay.Components.Types.Conditionals.ConditionalType;
 import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.Conditionals;
-import com.theif519.sakoverlay.Components.Misc.MethodWrapper;
+import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 import com.theif519.sakoverlay.Components.Types.Actions.ActionType;
 
 import java.util.ArrayList;

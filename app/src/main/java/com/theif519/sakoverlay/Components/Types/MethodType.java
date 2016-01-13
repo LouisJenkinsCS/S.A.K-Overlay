@@ -4,7 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
-import com.theif519.sakoverlay.Components.Misc.MethodWrapper;
+import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 
 import java.util.Map;
 

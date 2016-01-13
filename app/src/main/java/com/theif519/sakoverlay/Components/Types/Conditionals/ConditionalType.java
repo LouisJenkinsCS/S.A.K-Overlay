@@ -2,7 +2,7 @@ package com.theif519.sakoverlay.Components.Types.Conditionals;
 
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
-import com.theif519.sakoverlay.Components.Misc.MethodWrapper;
+import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.Conditionals;
 import com.theif519.sakoverlay.Components.Types.MethodType;
 

@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import com.annimon.stream.Optional;
 import com.theif519.sakoverlay.Components.Misc.ComponentCodePopupMenu;
-import com.theif519.sakoverlay.Components.Misc.MethodWrapper;
+import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
 import com.theif519.sakoverlay.Components.Types.ReferenceType;
 import com.theif519.sakoverlay.Core.Rx.Transformers;
@@ -86,7 +86,7 @@ public class Code extends TextView {
                                     .findFirst()
                                     .orElseThrow(() -> new RuntimeException("Was unable to find the method associated with the returned method name: \"" + pair.second + "\"."));
                             String suffix;
-                            if (methodWrapper.getParameterTypes().length == 0) {
+                            if (methodWrapper.getParameters().count() == 0) {
                                 suffix = "()";
                             } else suffix = "(...)";
                             setText(pair.second + suffix);
