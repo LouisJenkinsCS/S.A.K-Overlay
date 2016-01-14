@@ -12,8 +12,8 @@ public class ParameterWrapper<T> {
     }
 
     public ParameterWrapper(String name, String description, Class<T> type) {
-        mDescription = description;
-        mName = name;
+        mDescription = (description != null && description.isEmpty()) ? null : description;
+        mName = (name != null && name.isEmpty()) ? null : name;
         mType = type;
     }
 

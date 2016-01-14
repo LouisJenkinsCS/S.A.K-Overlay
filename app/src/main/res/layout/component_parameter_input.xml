@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Type"
+        android:layout_marginTop="15dp"
+        android:textSize="18sp"
+        android:textStyle="bold|italic"
+        android:id="@+id/component_parameter_input_type"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="::"
+        android:layout_marginTop="15dp"
+        android:textSize="18sp"
+        android:textStyle="italic"
+        android:id="@+id/component_parameter_input_buffer"
+        android:layout_toEndOf="@id/component_parameter_input_type"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Name:"
+        android:layout_marginTop="15dp"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_toEndOf="@id/component_parameter_input_buffer"
+        android:id="@+id/component_parameter_input_name"/>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="20dp"
+        android:layout_toEndOf="@id/component_parameter_input_name"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/component_parameter_input_container"/>
+
+</RelativeLayout>

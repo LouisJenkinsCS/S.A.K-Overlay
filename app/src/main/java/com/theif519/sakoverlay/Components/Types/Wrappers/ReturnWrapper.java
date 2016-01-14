@@ -13,7 +13,7 @@ public class ReturnWrapper<T> {
     }
 
     public ReturnWrapper(String description, Class<T> type){
-        mDescription = description;
+        mDescription = (description != null && description.isEmpty()) ? null : description;
         mType = type;
     }
 

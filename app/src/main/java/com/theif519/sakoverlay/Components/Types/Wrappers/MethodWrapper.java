@@ -2,6 +2,7 @@ package com.theif519.sakoverlay.Components.Types.Wrappers;
 
 import android.util.Log;
 
+import com.annimon.stream.Optional;
 import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Core.Rx.Transformers;
 
@@ -20,7 +21,7 @@ import rx.Observable;
 public class MethodWrapper<T> {
 
     @Retention(RetentionPolicy.RUNTIME)
-    @interface MethodDescriptions {
+    public @interface MethodDescriptions {
         String methodDescription() default "";
 
         String[] parameterNames() default {};
@@ -66,6 +67,9 @@ public class MethodWrapper<T> {
         MethodDescriptions methodDescriptions = method.getAnnotation(MethodDescriptions.class);
         if (methodDescriptions != null) {
             mMethodDescription = methodDescriptions.methodDescription();
+            if(mMethodDescription.isEmpty()){
+                mMethodDescription = null;
+            }
             String[] parameterDescriptions = methodDescriptions.parameterDescriptions();
             String[] parameterNames = methodDescriptions.parameterNames();
             Class<?>[] parameterTypes = method.getParameterTypes();
@@ -98,6 +102,10 @@ public class MethodWrapper<T> {
         return declaration;
     }
 
+    public int getParameterCount(){
+        return mParameters.size();
+    }
+
     public Stream<ParameterWrapper<?>> getParameters() {
         return Stream.of(mParameters);
     }
@@ -110,8 +118,8 @@ public class MethodWrapper<T> {
         return mMethodDeclaration;
     }
 
-    public String getDescription() {
-        return mMethodDescription;
+    public Optional<String> getDescription() {
+        return Optional.ofNullable(mMethodDescription);
     }
 
     public String getMethodName() {

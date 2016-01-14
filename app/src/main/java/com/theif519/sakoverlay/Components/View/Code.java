@@ -88,7 +88,10 @@ public class Code extends TextView {
                             String suffix;
                             if (methodWrapper.getParameters().count() == 0) {
                                 suffix = "()";
-                            } else suffix = "(...)";
+                            } else {
+                                suffix = "(...)";
+                                new ParameterFillerDialog(getContext(), methodWrapper).show();
+                            }
                             setText(pair.second + suffix);
                             selection = Pair.create(pair.first, methodWrapper);
                             break;

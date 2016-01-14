@@ -6,6 +6,7 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/component_parameter_filler_method_description_root"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -16,8 +17,7 @@
             android:gravity="center"
             android:text="Description"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:id="@+id/component_parameter_filler_method_description"/>
+            android:textStyle="bold" />
 
         <com.theif519.sakoverlay.Components.View.MaxHeightScrollView
             android:layout_width="fill_parent"
@@ -26,21 +26,31 @@
             custom:maxHeight="150dp">
 
             <TextView
+                android:id="@+id/component_parameter_filler_method_description"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:text="Method Description"
-                android:textSize="16sp"/>
+                android:textSize="16sp" />
 
         </com.theif519.sakoverlay.Components.View.MaxHeightScrollView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/component_parameter_filler_method_parameters_root"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
             android:layout_marginTop="10dp"
+            android:gravity="center"
             android:text="Parameters"
-            android:textStyle="bold"
-            android:gravity="center"/>
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <com.theif519.sakoverlay.Components.View.MaxHeightScrollView
             android:layout_width="fill_parent"
@@ -48,79 +58,74 @@
             custom:maxHeight="150dp">
 
             <LinearLayout
+                android:id="@+id/component_parameter_filler_method_parameters_container"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/component_parameter_filler_method_parameters"
-                android:orientation="vertical"/>
+                android:orientation="vertical" />
 
         </com.theif519.sakoverlay.Components.View.MaxHeightScrollView>
-
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:text="Returns"
-                android:gravity="center"/>
-
-            <com.theif519.sakoverlay.Components.View.MaxHeightScrollView
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                custom:maxHeight="100dp">
-
-                <TextView
-                    android:layout_marginTop="5dp"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:text="Return Description"
-                    android:id="@+id/component_parameter_filler_method_return_description"/>
-
-            </com.theif519.sakoverlay.Components.View.MaxHeightScrollView>
-
-            <TextView
-                android:layout_marginTop="5dp"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:text="ReturnType"
-                android:id="@+id/component_parameter_filler_method_return_type"/>
-
-        </LinearLayout>
 
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/component_parameter_filler_method_return_root"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="10dp"
         android:orientation="vertical">
 
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textSize="24sp"
-            android:textStyle="bold|italic"
-            android:text="Method Name"
             android:gravity="center"
-            android:id="@+id/component_parameter_filler_method_declaration"/>
-        
+            android:text="Returns"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/component_parameter_filler_method_return_type"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="5dp"
+            android:text="ReturnType"
+            android:textSize="16sp" />
+
+        <com.theif519.sakoverlay.Components.View.MaxHeightScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            custom:maxHeight="100dp">
+
+            <TextView
+                android:id="@+id/component_parameter_filler_method_return_description"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="5dp"
+                android:text="Return Description"
+                android:textSize="16sp" />
+
+        </com.theif519.sakoverlay.Components.View.MaxHeightScrollView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/component_parameter_filler_method_declaration_root"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:orientation="vertical">
+
         <com.theif519.sakoverlay.Components.View.MaxHeightScrollView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             custom:maxHeight="300dp">
 
             <LinearLayout
+                android:id="@+id/component_parameter_filler_container"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:id="@+id/component_parameter_filler_container"
-                android:orientation="vertical"/>
+                android:orientation="vertical" />
 
         </com.theif519.sakoverlay.Components.View.MaxHeightScrollView>
 
