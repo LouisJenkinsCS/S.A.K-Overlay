@@ -16,28 +16,6 @@ public class BaseActions extends Actions {
         mView = v;
     }
 
-    public void setVisible(boolean state) {
-        mView.setVisibility(state ? View.VISIBLE : View.INVISIBLE);
-    }
-
-    public void setX(float x) {
-        mView.setX(x);
-    }
-
-    public void setY(float y) {
-        mView.setY(y);
-    }
-
-    public void setWidth(int width) {
-        mView.getLayoutParams().width = width;
-        mView.requestLayout();
-    }
-
-    public void setHeight(int height) {
-        mView.getLayoutParams().height = height;
-        mView.requestLayout();
-    }
-
     @MethodWrapper.MethodDescriptions(
             methodDescription = "Changes the visibility of the view.",
             parameterNames = {
@@ -45,6 +23,73 @@ public class BaseActions extends Actions {
             },
             parameterDescriptions = {
                     "Whether or not the view is visible"
+            }
+    )
+    public void setVisible(boolean state) {
+        mView.setVisibility(state ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    @MethodWrapper.MethodDescriptions(
+            methodDescription = "Sets the view's X coordinate.",
+            parameterNames = {
+                    "x"
+            },
+            parameterDescriptions = {
+                    "New X coordinate of the view."
+            }
+    )
+    public void setX(float x) {
+        mView.setX(x);
+    }
+
+    @MethodWrapper.MethodDescriptions(
+            methodDescription = "Sets the view's Y coordinate.",
+            parameterNames = {
+                    "y"
+            },
+            parameterDescriptions = {
+                    "New Y coordinate of the view."
+            }
+    )
+    public void setY(float y) {
+        mView.setY(y);
+    }
+
+    @MethodWrapper.MethodDescriptions(
+            methodDescription = "Sets the view's width.",
+            parameterNames = {
+                    "width"
+            },
+            parameterDescriptions = {
+                    "New width of the view."
+            }
+    )
+    public void setWidth(int width) {
+        mView.getLayoutParams().width = width;
+        mView.requestLayout();
+    }
+
+    @MethodWrapper.MethodDescriptions(
+            methodDescription = "Sets the view's height.",
+            parameterNames = {
+                    "height"
+            },
+            parameterDescriptions = {
+                    "New height of the view."
+            }
+    )
+    public void setHeight(int height) {
+        mView.getLayoutParams().height = height;
+        mView.requestLayout();
+    }
+
+    @MethodWrapper.MethodDescriptions(
+            methodDescription = "Changes whether or not this view is enabled.",
+            parameterNames = {
+                    "state"
+            },
+            parameterDescriptions = {
+                    "Whether or not the view is enabled"
             }
     )
     public void setEnabled(boolean state) {

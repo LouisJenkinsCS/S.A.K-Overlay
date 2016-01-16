@@ -14,16 +14,17 @@
         android:textStyle="bold"
         android:id="@+id/component_attribute_editor_title"/>
 
-    <ScrollView
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Category..."
+        android:layout_gravity="center"
+        android:textSize="16sp"
+        android:id="@+id/component_attribute_editor_category"/>
+
+    <ViewFlipper
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/component_attribute_editor_container">
-
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:orientation="vertical"/>
-
-    </ScrollView>
+        android:id="@+id/component_attribute_editor_flipper"/>
 
 </LinearLayout>
