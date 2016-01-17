@@ -24,7 +24,13 @@
 
     <ViewFlipper
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:id="@+id/component_attribute_editor_flipper"/>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/component_attribute_editor_container"
+        android:orientation="vertical"/>
 
 </LinearLayout>
