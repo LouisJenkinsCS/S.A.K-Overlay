@@ -1,6 +1,7 @@
 package com.theif519.sakoverlay.Components.View;
 
 import android.content.Context;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import com.annimon.stream.Optional;
@@ -20,6 +21,7 @@ public class AttributeMenu extends LinearLayout {
     public AttributeMenu(Context context) {
         super(context);
         setOrientation(VERTICAL);
+        setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
     public void add(BaseViewManager manager){

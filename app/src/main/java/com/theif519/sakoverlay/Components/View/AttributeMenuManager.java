@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 import com.annimon.stream.Optional;
@@ -41,6 +42,19 @@ public class AttributeMenuManager extends LinearLayout {
             mFlipper.setDisplayedChild(mFlipper.indexOfChild(mMappedCategories.get(title).second));
             mCategoryName.setText(title);
             return true;
+        });
+        mCategoryName.setOnClickListener(v -> mMenu.show());
+        findViewById(R.id.component_attribute_editor_submit).setOnClickListener(v -> {
+            StringBuilder errMsg = new StringBuilder();
+            getAttributeMenus()
+                    .filter(menu -> menu.validate().isPresent())
+                    .forEach(errMsg::append);
+            if(errMsg.toString().isEmpty()){
+                getAttributeMenus()
+                        .forEach(AttributeMenu::handle);
+            } else {
+                Toast.makeText(getContext(), errMsg.toString(), Toast.LENGTH_LONG).show();
+            }
         });
         // TODO: Probably install a listener to mFlipper's LayoutChange to monitor when View changes to change text view with it.
     }

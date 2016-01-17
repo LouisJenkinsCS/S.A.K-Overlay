@@ -13,12 +13,12 @@ import com.theif519.sakoverlay.Components.Builders.ComponentSelectorBuilder;
 import com.theif519.sakoverlay.Components.ButtonComponent;
 import com.theif519.sakoverlay.Components.EditTextComponent;
 import com.theif519.sakoverlay.Components.LayoutComponent;
+import com.theif519.sakoverlay.Components.Misc.AttributeMenuHelper;
 import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
-import com.theif519.sakoverlay.Components.Types.ReferenceType;
 import com.theif519.sakoverlay.Components.TextComponent;
+import com.theif519.sakoverlay.Components.Types.ReferenceType;
 import com.theif519.sakoverlay.Components.View.NonModalDrawerLayout;
 import com.theif519.sakoverlay.R;
-import com.theif519.sakoverlay.Core.Rx.RxBus;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,22 +40,17 @@ public class LayoutCreatorActivity extends Activity {
         mLayout = (ViewGroup) findViewById(R.id.layout_view);
         new ComponentSelectorBuilder()
                 .addCategory("Text")
-                .addComponent(TextComponent.IDENTIFIER, null)
-                .addComponent(ButtonComponent.IDENTIFIER, null)
-                .addComponent(EditTextComponent.IDENTIFIER, null)
+                .addComponent(TextComponent.TEXT_VALUE, null)
+                .addComponent(ButtonComponent.TEXT_VALUE, null)
+                .addComponent(EditTextComponent.TEXT_VALUE, null)
                 .addCategory("Grouping")
-                .addComponent(LayoutComponent.IDENTIFIER, null)
+                .addComponent(LayoutComponent.TEXT_VALUE, null)
                 .addCategory("Image")
                 .addCategory("Web")
                 .onCreate(this::addComponent)
                 .build(this, (ExpandableListView) findViewById(R.id.component_selector_list));
-        RxBus.observe(View.class)
-                .subscribe(v -> {
-                    ViewGroup viewGroup = (ViewGroup) findViewById(R.id.component_attribute_editor_container);
-                    viewGroup.removeAllViews();
-                    viewGroup.addView(v);
-                });
-        mDrawerLayout.setModalView(findViewById(R.id.layout_creator_attributes));
+        mDrawerLayout.setModalView(findViewById(R.id.layout_creator_attributes_container));
+        AttributeMenuHelper.initialize(this, (ViewGroup) findViewById(R.id.layout_creator_attributes_container));
         findViewById(R.id.layout_close).setOnClickListener(v -> {
             Log.i(getClass().getName(), "Serialized Data: { " + new String(serialize()) + " }");
             finish();

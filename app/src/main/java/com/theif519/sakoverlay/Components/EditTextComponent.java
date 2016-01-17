@@ -3,8 +3,8 @@ package com.theif519.sakoverlay.Components;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
+import android.support.annotation.NonNull;
 import android.text.InputType;
-import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,10 +13,15 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 
+import com.annimon.stream.Optional;
+import com.theif519.sakoverlay.Components.Misc.AttributeMenuHelper;
+import com.theif519.sakoverlay.Components.Misc.BaseViewManager;
 import com.theif519.sakoverlay.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import rx.Observable;
 
 /**
  * Created by theif519 on 1/1/2016.
@@ -29,14 +34,11 @@ public class EditTextComponent extends TextComponent {
 
     private static final String INPUT_TYPE = "InputType";
 
-    public static final String IDENTIFIER = "Edit Text";
+    public static final String IDENTIFIER = "EditText";
+    public static final String TEXT_VALUE = "Edit Text";
 
-    public EditTextComponent(Context context) {
-        super(context);
-    }
-
-    public EditTextComponent(Context context, AttributeSet attrs) {
-        super(context, attrs);
+    public EditTextComponent(Context context, String key) {
+        super(context, key);
     }
 
     @Override
@@ -52,44 +54,66 @@ public class EditTextComponent extends TextComponent {
     }
 
     @Override
-    protected void addOptionDialog(ViewGroup layout) {
-        super.addOptionDialog(layout);
-        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        ViewGroup v = (ViewGroup) inflater.inflate(R.layout.component_text_editable, null);
-        layout.addView(createCategory("EditText Component", v));
-        layout.addView(v);
-        mInputType = (Spinner) layout.findViewById(R.id.component_text_editable_input_type);
+    protected AttributeMenuHelper createAttributeMenu() {
+        return super.createAttributeMenu()
+                .add("Editable", createEditTextAttrs());
+    }
+
+    private BaseViewManager createEditTextAttrs() {
+        ViewGroup layout = (ViewGroup) LayoutInflater.from(getContext()).inflate(R.layout.component_text_editable, null);
+        final Spinner inputType = (Spinner) layout.findViewById(R.id.component_text_editable_input_type);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item,
-                new String[] { INPUT_TYPE_TEXT, INPUT_TYPE_NUMBER, INPUT_TYPE_DATETIME, INPUT_TYPE_PHONE });
+                new String[]{INPUT_TYPE_TEXT, INPUT_TYPE_NUMBER, INPUT_TYPE_DATETIME, INPUT_TYPE_PHONE});
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mInputType.setAdapter(adapter);
-    }
+        inputType.setAdapter(adapter);
+        return new BaseViewManager(layout) {
+            @Override
+            public Optional<String> validate() {
+                return Optional.empty();
+            }
 
-    @Override
-    protected void clearResults(ViewGroup layout) {
-        super.clearResults(layout);
-        mInputType.setSelection(0);
-    }
+            @Override
+            public void handle() {
+                switch ((String) inputType.getSelectedItem()) {
+                    case INPUT_TYPE_TEXT:
+                        TEXT_VIEW.setInputType(InputType.TYPE_CLASS_TEXT);
+                        break;
+                    case INPUT_TYPE_NUMBER:
+                        TEXT_VIEW.setInputType(InputType.TYPE_CLASS_NUMBER);
+                        break;
+                    case INPUT_TYPE_PHONE:
+                        TEXT_VIEW.setInputType(InputType.TYPE_CLASS_PHONE);
+                        break;
+                    case INPUT_TYPE_DATETIME:
+                        TEXT_VIEW.setInputType(InputType.TYPE_CLASS_DATETIME);
+                        break;
+                }
+            }
 
-    @Override
-    protected void handleResults(ViewGroup layout) {
-        super.handleResults(layout);
-        int inputType = 0;
-        switch((String) mInputType.getSelectedItem()){
-            case INPUT_TYPE_TEXT:
-                inputType = InputType.TYPE_CLASS_TEXT;
-                break;
-            case INPUT_TYPE_NUMBER:
-                inputType = InputType.TYPE_CLASS_NUMBER;
-                break;
-            case INPUT_TYPE_PHONE:
-                inputType = InputType.TYPE_CLASS_PHONE;
-                break;
-            case INPUT_TYPE_DATETIME:
-                inputType = InputType.TYPE_CLASS_DATETIME;
-                break;
-        }
-        TEXT_VIEW.setInputType(inputType);
+            @Override
+            public void reset() {
+                switch (TEXT_VIEW.getInputType()) {
+                    case InputType.TYPE_CLASS_TEXT:
+                        inputType.setSelection(0);
+                        break;
+                    case InputType.TYPE_CLASS_NUMBER:
+                        inputType.setSelection(1);
+                        break;
+                    case InputType.TYPE_CLASS_DATETIME:
+                        inputType.setSelection(2);
+                        break;
+                    case InputType.TYPE_CLASS_PHONE:
+                        inputType.setSelection(3);
+                        break;
+                }
+            }
+
+            @NonNull
+            @Override
+            public Observable<Void> observeStateChanges() {
+                return Observable.never();
+            }
+        };
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.theif519.sakoverlay.Components;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.util.AttributeSet;
+import android.support.annotation.NonNull;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -10,9 +10,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.annimon.stream.Optional;
+import com.theif519.sakoverlay.Components.Misc.AttributeMenuHelper;
+import com.theif519.sakoverlay.Components.Misc.BaseViewManager;
 import com.theif519.sakoverlay.Components.Types.Actions.Impl.Actions;
-import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.Conditionals;
 import com.theif519.sakoverlay.Components.Types.Actions.Impl.TextActions;
+import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.Conditionals;
 import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.TextConditionals;
 import com.theif519.sakoverlay.Core.Views.AutoResizeTextView;
 import com.theif519.sakoverlay.R;
@@ -20,22 +23,19 @@ import com.theif519.sakoverlay.R;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import rx.Observable;
+
 /**
  * Created by theif519 on 12/28/2015.
  */
 public class TextComponent extends BaseComponent {
 
     protected TextView TEXT_VIEW;
-    private TextView mValue;
-    public static final String IDENTIFIER = "Text View";
-    private static final String TEXT_VALUE = "Text Value";
+    public static final String IDENTIFIER = "TextView";
+    public static final String TEXT_VALUE = "Text Value";
 
-    public TextComponent(Context context) {
-        super(context);
-    }
-
-    public TextComponent(Context context, AttributeSet attrs) {
-        super(context, attrs);
+    public TextComponent(Context context, String key) {
+        super(context, key);
     }
 
     @Override
@@ -47,28 +47,6 @@ public class TextComponent extends BaseComponent {
         TEXT_VIEW.setGravity(Gravity.CENTER);
         TEXT_VIEW.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         return TEXT_VIEW;
-    }
-
-    @Override
-    protected void addOptionDialog(ViewGroup layout) {
-        super.addOptionDialog(layout);
-        LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        ViewGroup v = (ViewGroup) inflater.inflate(R.layout.component_text, null);
-        layout.addView(createCategory("Text Component", v));
-        layout.addView(v);
-        mValue = (TextView) layout.findViewById(R.id.component_text_value);
-    }
-
-    @Override
-    protected void clearResults(ViewGroup layout) {
-        super.clearResults(layout);
-        mValue.setText(TEXT_VIEW.getText());
-    }
-
-    @Override
-    protected void handleResults(ViewGroup layout) {
-        super.handleResults(layout);
-        TEXT_VIEW.setText(mValue.getText());
     }
 
     @Override
@@ -89,6 +67,39 @@ public class TextComponent extends BaseComponent {
         } catch (JSONException e) {
             throw new RuntimeException("Error deserializing TextComponent: Threw a JSONException with message \"" + e.getMessage() + "\"");
         }
+    }
+
+    @Override
+    protected AttributeMenuHelper createAttributeMenu() {
+        return super.createAttributeMenu()
+                .add("Text", createTextAttrs());
+    }
+
+    private BaseViewManager createTextAttrs(){
+        ViewGroup layout = (ViewGroup) LayoutInflater.from(getContext()).inflate(R.layout.component_text, null);
+        final TextView value = (TextView) layout.findViewById(R.id.component_text_value);
+        return new BaseViewManager(layout) {
+            @Override
+            public Optional<String> validate() {
+                return Optional.empty();
+            }
+
+            @Override
+            public void handle() {
+                TEXT_VIEW.setText(value.getText());
+            }
+
+            @Override
+            public void reset() {
+                value.setText(TEXT_VIEW.getText());
+            }
+
+            @NonNull
+            @Override
+            public Observable<Void> observeStateChanges() {
+                return Observable.never();
+            }
+        };
     }
 
     @Override

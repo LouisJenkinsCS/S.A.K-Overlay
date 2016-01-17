@@ -2,6 +2,7 @@ package com.theif519.sakoverlay.Components.Misc;
 
 import android.content.Context;
 import android.util.ArrayMap;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.annimon.stream.Optional;
@@ -19,9 +20,9 @@ public class AttributeMenuHelper {
 
     private static AttributeMenuHelper INSTANCE;
 
-    public static void initialize(Context context){
+    public static void initialize(Context context, ViewGroup container){
         if(INSTANCE == null){
-            INSTANCE = new AttributeMenuHelper(context);
+            INSTANCE = new AttributeMenuHelper(context, container);
         }
     }
 
@@ -33,13 +34,15 @@ public class AttributeMenuHelper {
         return INSTANCE;
     }
 
+    private ViewGroup mContainer;
     private Map<String, AttributeMenuManager> mMappedManagers;
     private WeakReference<Context> mContext;
     private AttributeMenuManager mCurrentManager;
 
-    public AttributeMenuHelper(Context context) {
+    public AttributeMenuHelper(Context context, ViewGroup container) {
         mContext = new WeakReference<>(context);
         mMappedManagers = new ArrayMap<>();
+        mContainer = container;
     }
 
     private Context getContext() {
@@ -57,6 +60,12 @@ public class AttributeMenuHelper {
 
     public AttributeMenuHelper remove(String category){
         mCurrentManager.remove(category);
+        return this;
+    }
+
+    public AttributeMenuHelper show(){
+        mContainer.removeAllViews();
+        mContainer.addView(mCurrentManager);
         return this;
     }
 
