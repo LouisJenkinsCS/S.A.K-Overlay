@@ -4,35 +4,43 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal">
 
+    <Space
+        android:id="@+id/component_loc_wrapper_nesting"
+        android:layout_width="1dp"
+        android:layout_height="wrap_content" />
+
     <HorizontalScrollView
         android:id="@+id/component_loc_wrapper_container"
         android:layout_width="0dp"
         android:layout_height="fill_parent"
-        android:layout_weight="9"
+        android:layout_weight="8"
         android:fillViewport="true" />
 
-    <RelativeLayout
+    <LinearLayout
+        android:id="@+id/component_loc_wrapper_button_group"
         android:layout_width="0dp"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_weight="2"
         android:gravity="center"
-        android:layout_weight="1">
+        android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/component_loc_wrapper_button_next"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:background="@drawable/plus"
             android:scaleType="fitCenter"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
         <ImageButton
             android:id="@+id/component_loc_wrapper_button_delete"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:layout_below="@+id/component_loc_wrapper_button_next"
             android:background="@drawable/minus"
             android:scaleType="fitCenter" />
 
-    </RelativeLayout>
+    </LinearLayout>
+
 </LinearLayout>

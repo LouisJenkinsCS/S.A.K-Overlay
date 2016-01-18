@@ -51,7 +51,8 @@ public class BlockOfCode extends LinearLayout {
                     break;
                 case STATEMENTS_ELSE_IF:
                 case STATEMENTS_ELSE:
-                    wrapper.setNesting(prev.getNesting()-1);
+                    wrapper.setNesting(prev.getNesting());
+                    prev.setNesting(prev.getNesting()-1);
                     break;
             }
         }

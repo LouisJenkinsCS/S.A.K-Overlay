@@ -29,7 +29,7 @@ public class ComponentFactory {
     public static String generateName(String identifier){
         for(int i = 0; i < Integer.MAX_VALUE; i++){
             String generated = identifier + i;
-            if(!ReferenceHelper.getInstance().contains(generated)) return identifier;
+            if(!ReferenceHelper.getInstance().contains(generated)) return generated;
         }
         Log.wtf(ComponentFactory.class.getSimpleName(), "Somehow all generated keys from 0 to " + Integer.MAX_VALUE + " has been taken!");
         return null;

@@ -116,6 +116,10 @@ public abstract class BaseComponent extends FrameLayout {
         }
     }
 
+    public String getKey(){
+        return mKey;
+    }
+
     public void deserialize(JSONObject obj) {
         try {
             setX((float) obj.getDouble(Globals.Keys.X));

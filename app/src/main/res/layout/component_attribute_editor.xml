@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:text="No Component Selected"
         android:gravity="center"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold"
         android:id="@+id/component_attribute_editor_title"/>
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:text="Select Category..."
         android:layout_gravity="center"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:id="@+id/component_attribute_editor_category"/>
 
     <ScrollView
@@ -27,10 +27,10 @@
         android:layout_height="0dp"
         android:layout_weight="9">
 
-        <ViewFlipper
+        <FrameLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/component_attribute_editor_flipper"/>
+            android:id="@+id/component_attribute_editor_container"/>
 
     </ScrollView>
 

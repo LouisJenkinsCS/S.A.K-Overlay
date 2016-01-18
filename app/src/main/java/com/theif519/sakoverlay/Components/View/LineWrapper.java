@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.Space;
 
 import com.theif519.sakoverlay.R;
 
@@ -22,6 +23,8 @@ public class LineWrapper extends LinearLayout {
     private ViewGroup mContainer;
     private LineOfCode mLine;
     private ImageButton mNext, mDelete;
+    private Space mNestingSpace;
+    private ViewGroup mButtonGroup;
     private BehaviorSubject<Pair<Integer, Boolean>> mLineChanged = BehaviorSubject.create();
     private Subscription mLineChangeSubscription;
     private int mCurrentNesting, mType;
@@ -30,10 +33,16 @@ public class LineWrapper extends LinearLayout {
     public LineWrapper(Context context) {
         super(context);
         LayoutInflater.from(context).inflate(R.layout.component_loc_wrapper, this);
+        mButtonGroup = (ViewGroup) findViewById(R.id.component_loc_wrapper_button_group);
+        mNestingSpace = (Space) findViewById(R.id.component_loc_wrapper_nesting);
         mContainer = (ViewGroup) findViewById(R.id.component_loc_wrapper_container);
         mNext = (ImageButton) findViewById(R.id.component_loc_wrapper_button_next);
         mDelete = (ImageButton) findViewById(R.id.component_loc_wrapper_button_delete);
         mLine = new LineOfCode(context);
+        mLine.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            mButtonGroup.getLayoutParams().height = mLine.getHeight();
+            mButtonGroup.requestLayout();
+        });
         mContainer.addView(mLine);
         setup();
     }
@@ -44,11 +53,8 @@ public class LineWrapper extends LinearLayout {
     }
 
     public LineWrapper setNesting(int nesting){
-        post(() -> {
-            ((LinearLayout.LayoutParams) getLayoutParams()).setMarginStart(
-                    (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10 * (mCurrentNesting = nesting), getResources().getDisplayMetrics()));
-            requestLayout();
-        });
+        mNestingSpace.getLayoutParams().width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 25 * (mCurrentNesting = nesting), getResources().getDisplayMetrics());
+        mNestingSpace.requestLayout();
         return this;
     }
 

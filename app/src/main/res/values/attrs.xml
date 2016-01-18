@@ -26,4 +26,9 @@
     <declare-styleable name="MaxHeightScrollView">
         <attr name="maxHeight" format="dimension"/>
     </declare-styleable>
+
+    <declare-styleable name="MaxDimensionLayout">
+        <attr name="maxDimensionHeight" format="dimension"/>
+        <attr name="maxDimensionWidth" format="dimension"/>
+    </declare-styleable>
 </resources>

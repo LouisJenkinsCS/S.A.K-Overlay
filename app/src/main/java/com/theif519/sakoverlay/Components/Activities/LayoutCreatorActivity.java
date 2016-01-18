@@ -59,7 +59,7 @@ public class LayoutCreatorActivity extends Activity {
 
     // TODO: Make generic so that "<T extends BaseComponent> void addComponent(T component, Class<T> clazz, String name)" is the declaration.
     private void addComponent(BaseComponent component, String id) {
-        ReferenceHelper.getInstance().add(ReferenceType.from(component, BaseComponent.class, id, component.getConditionalClass(), component.getActionClass()));
+        ReferenceHelper.getInstance().add(ReferenceType.from(component, BaseComponent.class, component.getKey(), component.getConditionalClass(), component.getActionClass()));
         mLayout.addView(component);
         mDrawerLayout.closeDrawer(GravityCompat.START);
     }

@@ -5,11 +5,11 @@ import android.util.ArrayMap;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ViewFlipper;
 
 import com.annimon.stream.Optional;
 import com.annimon.stream.Stream;
@@ -26,20 +26,21 @@ public class AttributeMenuManager extends LinearLayout {
 
     private TextView mComponentName, mCategoryName;
     private PopupMenu mMenu;
-    private ViewFlipper mFlipper;
+    private ViewGroup mContainer;
     private Map<String, Pair<Integer, AttributeMenu>> mMappedCategories = new ArrayMap<>();
 
     public AttributeMenuManager(Context context, String componentName) {
         super(context);
         LayoutInflater.from(context).inflate(R.layout.component_attribute_editor, this);
-        mFlipper = (ViewFlipper) findViewById(R.id.component_attribute_editor_flipper);
+        mContainer = (ViewGroup) findViewById(R.id.component_attribute_editor_container);
         mComponentName = (TextView) findViewById(R.id.component_attribute_editor_title);
         mComponentName.setText(componentName);
         mCategoryName = (TextView) findViewById(R.id.component_attribute_editor_category);
         mMenu = new PopupMenu(context, mCategoryName);
         mMenu.setOnMenuItemClickListener(item -> {
             String title = item.getTitle().toString();
-            mFlipper.setDisplayedChild(mFlipper.indexOfChild(mMappedCategories.get(title).second));
+            mContainer.removeAllViews();
+            mContainer.addView(mMappedCategories.get(title).second);
             mCategoryName.setText(title);
             return true;
         });
@@ -47,7 +48,9 @@ public class AttributeMenuManager extends LinearLayout {
         findViewById(R.id.component_attribute_editor_submit).setOnClickListener(v -> {
             StringBuilder errMsg = new StringBuilder();
             getAttributeMenus()
-                    .filter(menu -> menu.validate().isPresent())
+                    .map(AttributeMenu::validate)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .forEach(errMsg::append);
             if(errMsg.toString().isEmpty()){
                 getAttributeMenus()
@@ -64,8 +67,8 @@ public class AttributeMenuManager extends LinearLayout {
             int id = new Random().nextInt();
             mMenu.getMenu().add(Menu.NONE, id, mMappedCategories.size(), category);
             AttributeMenu menu = new AttributeMenu(getContext());
-            mMappedCategories.put(category, Pair.create(mMappedCategories.size(), menu));
-            mFlipper.addView(menu);
+            menu.add(manager);
+            mMappedCategories.put(category, Pair.create(id, menu));
         } else {
             mMappedCategories.get(category).second.add(manager);
         }
@@ -79,7 +82,7 @@ public class AttributeMenuManager extends LinearLayout {
         int id = menuPair.first;
         AttributeMenu menu = menuPair.second;
         menu.removeAll();
-        mFlipper.removeView(menu);
+        mMappedCategories.remove(category);
         mMenu.getMenu().removeItem(id);
     }
 
