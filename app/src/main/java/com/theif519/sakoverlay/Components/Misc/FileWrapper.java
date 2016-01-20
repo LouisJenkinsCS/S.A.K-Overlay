@@ -1,0 +1,33 @@
+package com.theif519.sakoverlay.Components.Misc;
+
+import android.support.annotation.NonNull;
+
+import java.io.File;
+
+/**
+ * Created by theif519 on 1/20/2016.
+ */
+public class FileWrapper implements Comparable<FileWrapper> {
+    private File mFile;
+
+    public FileWrapper(File mFile) {
+        this.mFile = mFile;
+    }
+
+    public boolean matches(String regExp){
+        return mFile.getName().matches(regExp);
+    }
+
+    @Override
+    public int compareTo(@NonNull FileWrapper another) {
+        return mFile.compareTo(another.mFile);
+    }
+
+    public File getFile() {
+        return mFile;
+    }
+
+    public void setFile(File mFile) {
+        this.mFile = mFile;
+    }
+}
