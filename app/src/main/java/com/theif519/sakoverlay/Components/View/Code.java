@@ -4,14 +4,14 @@ import android.content.Context;
 import android.util.Pair;
 import android.util.TypedValue;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.annimon.stream.Optional;
 import com.theif519.sakoverlay.Components.Misc.ComponentCodePopupMenu;
-import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 import com.theif519.sakoverlay.Components.Misc.ReferenceHelper;
 import com.theif519.sakoverlay.Components.Types.ReferenceType;
+import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 import com.theif519.sakoverlay.Core.Rx.Transformers;
+import com.theif519.sakoverlay.Core.Views.AutoResizeTextView;
 
 import java.util.Map;
 
@@ -27,7 +27,7 @@ import static com.theif519.sakoverlay.Components.Types.QueryTypes.STATEMENTS;
 /**
  * Created by theif519 on 1/7/2016.
  */
-public class Code extends TextView {
+public class Code extends AutoResizeTextView {
 
     private ComponentCodePopupMenu mMenu;
     private BehaviorSubject<Pair<Integer, Object>> mSelection = BehaviorSubject.create();
@@ -39,7 +39,7 @@ public class Code extends TextView {
         super(context);
         mMenu = new ComponentCodePopupMenu(context, this);
         setText("Select...");
-        setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16, getResources().getDisplayMetrics()));
+        setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16, getResources().getDisplayMetrics()));
         setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         setOnClickListener(v -> mMenu.show());
         setup();

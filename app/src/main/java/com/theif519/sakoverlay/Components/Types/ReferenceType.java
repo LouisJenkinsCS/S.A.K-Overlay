@@ -1,11 +1,9 @@
 package com.theif519.sakoverlay.Components.Types;
 
 import com.annimon.stream.Stream;
-import com.theif519.sakoverlay.Components.Types.Actions.Impl.Actions;
-import com.theif519.sakoverlay.Components.Types.Conditionals.ConditionalType;
-import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.Conditionals;
-import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 import com.theif519.sakoverlay.Components.Types.Actions.ActionType;
+import com.theif519.sakoverlay.Components.Types.Conditionals.ConditionalType;
+import com.theif519.sakoverlay.Components.Types.Wrappers.MethodWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,16 +19,16 @@ public class ReferenceType<T> {
     private String mIdentifier;
     private Class<T> mInstanceClass;
 
-    public static <T> ReferenceType<T> from(T instance, Class<T> instanceClass, String id,
-                                            Class<? extends Conditionals> conditionalClass, Class<? extends Actions> actionClass) {
-        return new ReferenceType<>(instanceClass, id, ConditionalType.from(instance, conditionalClass), ActionType.from(instance, actionClass), null);
+    public static <T> ReferenceType<T> from(IReference<T> instance) {
+        return new ReferenceType<>(instance, null);
     }
 
-    public ReferenceType(Class<T> instanceClass, String id, ConditionalType<T> conditionals, ActionType<T> actions, List<ReferenceType<?>> references) {
-        mIdentifier = id;
-        mInstanceClass = instanceClass;
-        mConditionals = conditionals == null ? ConditionalType.<T>empty() : conditionals;
-        mActions = actions == null ? ActionType.<T>empty() : actions;
+    @SuppressWarnings("unchecked")
+    private ReferenceType(IReference<T> ref, List<ReferenceType<?>> references) {
+        mIdentifier = ref.getKey();
+        mInstanceClass = ref.getType();
+        mConditionals = ref.getConditionals() == null ? ConditionalType.<T>empty() : ConditionalType.from((T) ref, ref.getConditionals());
+        mActions = ref.getActions() == null ? ActionType.<T>empty() : ActionType.from((T) ref, ref.getActions());
         mReferences = references == null ? new ArrayList<>() : references;
     }
 
