@@ -2,6 +2,14 @@
 
 ## What is it?
 
+S.A.K-Overlay is the brand new, unique and original Window Manager for Android. A Window Manager, in this sense, is a container which allows the dynamic placement of Widgets to the user's specifications. While this definition may differ from the conventional meaning, it maintains the central philosophy in mind.
+
+S.A.K-Overlay allows the user to place custom-made Widgets wherever they may please, and is persistent in that they are maintained across user-sessions. S.A.K-Overlay will soon allow the user to create their own custom Widgets via our Drag-and-Drop tools, which will allow the user to create a Widget Layout from scratch to be inflated later. This means you can create your own mini-apps within S.A.K-Overlay without any prior programming experience. Code can be similated through our Callback Generator, which will support operations which effect other user-aligned Widget Views (created inside the Widget Layout), or even effect Widgets outside of the Widget Layout (I.E, pre-made Widgets, or launching another app). This feature is far off from completion, but is steadily getting there,and will be one of the defining features of this application.
+
+S.A.K-Overlay also will soon allow the user to place homescreen widgets as well, allowing S.A.K-Overlay to act as a second, more portable Homescreen.
+
+To summarize, this will allow the user to align and place (or even Snap) Widgets, either pre-made, user-created, or homescreen, wherever they please. The ability to detach (Remove from central container, add to WindowManager) the Widget from the overlay will also be created soon.
+
 ### Window Manager
 
 #### Widgets
