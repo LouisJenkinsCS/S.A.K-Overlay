@@ -126,6 +126,10 @@ public class SessionDatabase extends SQLiteOpenHelper {
         return exists;
     }
 
+    /*
+        TODO: Make a public long create() or reserve() method which returns an id and reserves a spot.
+     */
+
     public long insert(WidgetSessionData session){
         setupIfNecessary();
         mInsert.bindString(1, session.getTag());
