@@ -23,7 +23,8 @@
                 android:text="Widget Description"
                 android:textStyle="bold"
                 android:textSize="20sp"
-                android:layout_gravity="center" />
+                android:layout_gravity="center"
+                android:id="@+id/widget_view_description"/>
 
         </HorizontalScrollView>
 
