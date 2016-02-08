@@ -16,38 +16,37 @@ To summarize, this will allow the user to align and place (or even Snap) Widgets
 
 Comes with already created and configured, convenient widgets.
 
-##### Web Browser
+##### Web Browser **[STABLE]**
 
-* Minimal web browser
-* Basic navigation of history
+Browse the web with the minimal implementation of our Web Browser. Contains basic history tracking, and in the future will be tracked across sessions.
 
-##### Sticky Note
+##### Sticky Note **[STABLE]**
 
 * Write notes
 * Persistent
 
-##### Google Maps
+##### Google Maps**[STABLE]**
 
 * Shows current location and address
 
-##### Screen Recorder
+##### Screen Recorder **[UNSTABLE]**
 
 * Records the screen
 * Can be controlled through a "floating" controller (Play/Stop button)
 
-##### Custom
+##### Custom **[IN DEVELOPMENT]**
 
 Allows the creation of your own personal Widgets, allowing the user to use our Drag-and-Drop tools as a WYSIWYG layout creation tool, as well allowing more minimial and simple callbacks functions which allows the user to interract with other componenets of the layout, other layouts, or even other other applications, aptly named the Callback Generator.
 
-#### Move & Resize
+#### Move & Resize **[IN DEVELOPMENT]**
 
 Allows you, the user, to move and adjust Widgets wherever and however you want. Widgets are preserved across sessions and recreated if needed to be exactly where you placed them. Snap Widgets to sides of the screen or corners, maximize or minimize them, all of the power is at your finger tips.
 
-##### Not Just Inside The Overlay
+##### Not Just Inside The Overlay **[UNIMPLEMENTED]**
 
 The ability to "detatch" the Widget will also be made possible, allowing users to not only create their own Widgets, but have it exist outside of the Overlay. This process is done by removing it from the Overlay and adding it to Android's own WindowManager. 
 
-#### Multitasking
+#### Multitasking **[IN DEVELOPMENT]**
 
 Allows the user to not only launch Widgets, it also allows the user to manage multiple of them, leading to a more natural multitasking experience. They can be aligned however you please to further promote productivity, and is transparent so as to help ensure that application it is overlaying does not killed by the Android Out-Of-Memory manager.
 
