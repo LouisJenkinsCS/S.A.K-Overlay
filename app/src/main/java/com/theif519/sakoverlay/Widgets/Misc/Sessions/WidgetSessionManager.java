@@ -3,14 +3,19 @@ package com.theif519.sakoverlay.Widgets.Misc.Sessions;
 import android.content.Context;
 import android.util.Log;
 
-import com.annimon.stream.Optional;
-import com.theif519.sakoverlay.Core.Database.SessionDatabase;
-import com.theif519.sakoverlay.Core.Rx.Transformers;
+import com.annimon.stream.Stream;
 import com.theif519.sakoverlay.Widgets.BaseWidget;
 import com.theif519.sakoverlay.Widgets.POJO.WidgetSessionData;
 import com.theif519.sakoverlay.Widgets.WidgetFactory;
+import com.theif519.sakoverlay.Core.Rx.Transformers;
+import com.theif519.sakoverlay.Core.Database.SessionDatabase;
+
+import org.json.JSONObject;
+
+import java.util.List;
 
 import rx.Observable;
+import rx.Subscriber;
 import rx.subjects.PublishSubject;
 
 /**
@@ -41,7 +46,14 @@ public class WidgetSessionManager {
      */
     public Observable<Long> appendSession(BaseWidget widget) {
         Log.i(getClass().getName(), "Appending a new widget to session data!");
-        return mDatabase.insert(widget.getLayoutTag())
+        return Observable
+                .create(new Observable.OnSubscribe<Long>() {
+                    @Override
+                    public void call(Subscriber<? super Long> subscriber) {
+                        subscriber.onNext(mDatabase.insert(new WidgetSessionData(-1, widget.getLayoutTag(), JSONObject.quote("{}").getBytes())));
+                        subscriber.onCompleted();
+                    }
+                })
                 .compose(Transformers.asyncResult());
     }
 
@@ -64,10 +76,21 @@ public class WidgetSessionManager {
         if (mDatabase == null) {
             setup(context);
         }
-        return mDatabase.readAll()
-                .map(WidgetFactory::getWidget)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        return Observable
+                .create(new Observable.OnSubscribe<BaseWidget>() {
+                    @Override
+                    public void call(Subscriber<? super BaseWidget> subscriber) {
+                        List<WidgetSessionData> dataList = mDatabase.readAll();
+                        if (dataList != null) {
+                            Stream
+                                    .of(dataList)
+                                    .map(WidgetFactory::getWidget)
+                                    .filter(widget -> widget != null)
+                                    .forEach(subscriber::onNext);
+                        }
+                        subscriber.onCompleted();
+                    }
+                })
                 .compose(Transformers.asyncResult());
     }
 

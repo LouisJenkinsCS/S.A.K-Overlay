@@ -1,6 +1,5 @@
 package com.theif519.sakoverlay.Widgets;
 
-import com.annimon.stream.Optional;
 import com.theif519.sakoverlay.Widgets.POJO.WidgetSessionData;
 
 /**
@@ -18,13 +17,13 @@ public final class WidgetFactory {
      * @param data Data to recreate Widget
      * @return The Widget, or null if not found.
      */
-    public static Optional<BaseWidget> getWidget(WidgetSessionData data) {
+    public static BaseWidget getWidget(WidgetSessionData data) {
         BaseWidget fragment = createWidget(data.getTag());
         if(fragment != null){
             fragment.setUniqueId(data.getId());
             fragment.deserialize(data.getData());
         }
-        return Optional.ofNullable(fragment);
+        return fragment;
     }
 
     /**

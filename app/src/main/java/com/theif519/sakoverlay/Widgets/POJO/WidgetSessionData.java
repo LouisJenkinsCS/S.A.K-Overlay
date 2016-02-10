@@ -8,7 +8,6 @@ import com.theif519.sakoverlay.Widgets.BaseWidget;
  * TODO: Make this more recylceable.
  */
 public class WidgetSessionData {
-
     private long id;
     private String tag;
     private byte[] data;

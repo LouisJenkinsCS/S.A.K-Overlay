@@ -19,10 +19,4 @@ public class Transformers {
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io());
     }
-
-    public static <T> Observable.Transformer<T, T> sorted(){
-        return observable -> observable
-                .toSortedList()
-                .flatMap(Observable::from);
-    }
 }
