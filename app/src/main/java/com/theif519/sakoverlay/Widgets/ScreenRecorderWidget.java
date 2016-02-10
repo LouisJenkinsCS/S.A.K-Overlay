@@ -24,7 +24,7 @@ import com.theif519.sakoverlay.Widgets.Adapters.VideoInfoAdapter;
 import com.theif519.sakoverlay.Widgets.POJO.PermissionInfo;
 import com.theif519.sakoverlay.Widgets.POJO.VideoInfo;
 import com.theif519.sakoverlay.Widgets.Services.RecorderService;
-import com.theif519.utils.Misc.FileRetriever;
+import com.theif519.utils.Misc.FileTools;
 
 import java.io.File;
 import java.util.List;
@@ -82,7 +82,7 @@ public class ScreenRecorderWidget extends BaseWidget {
             }
         });
         final ListView listView = (ListView) getContentView().findViewById(R.id.screen_recorder_file_list);
-        List<File> files = FileRetriever.getFiles(Globals.RECORDER_FILE_SAVE_PATH);
+        List<File> files = FileTools.getFiles(Globals.RECORDER_FILE_SAVE_PATH);
         new MediaThumbnailGenerator() {
             @Override
             protected void onPostExecute(List<VideoInfo> videoInfos) {

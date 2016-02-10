@@ -8,10 +8,15 @@ import android.database.sqlite.SQLiteStatement;
 import android.os.Looper;
 import android.util.Log;
 
+import com.annimon.stream.Optional;
 import com.theif519.sakoverlay.Widgets.POJO.WidgetSessionData;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import rx.Observable;
 
 /**
  * Created by theif519 on 12/10/2015.
@@ -69,20 +74,20 @@ public class SessionDatabase extends SQLiteOpenHelper {
     }
 
 
-    public WidgetSessionData read(int id) {
+    public Optional<WidgetSessionData> read(int id) {
         setupIfNecessary();
         Cursor cursor = mDatabase.query(TABLE_NAME, new String[]{
                 WIDGET_ID, WIDGET_TAG, WIDGET_DATA
         }, WIDGET_ID + "=" + id, null, null, null, null);
         if (cursor == null) {
             Log.w(getClass().getName(), "Sorry, the table for id: " + id + " does not exist!");
-            return null;
+            return Optional.empty();
         }
         cursor.moveToFirst();
         WidgetSessionData data = parse(cursor);
         cursor.close();
         Log.i(getClass().getName(), "Read: " + data);
-        return data;
+        return Optional.of(data);
     }
 
     /**
@@ -92,14 +97,14 @@ public class SessionDatabase extends SQLiteOpenHelper {
      *
      * @return Map of WidgetSessionData mapped to their tag.
      */
-    public List<WidgetSessionData> readAll() {
+    public Observable<WidgetSessionData> readAll() {
         setupIfNecessary();
         Cursor cursor = mDatabase.query(TABLE_NAME, new String[]{
                 WIDGET_ID, WIDGET_TAG, WIDGET_DATA
         }, null, null, null, null, null);
         if (cursor == null || cursor.getCount() == 0) {
             Log.w(getClass().getName(), "Sorry, the table is empty!");
-            return null;
+            return Observable.empty();
         }
         List<WidgetSessionData> list = new ArrayList<>();
         cursor.moveToFirst();
@@ -110,7 +115,7 @@ public class SessionDatabase extends SQLiteOpenHelper {
         } while (cursor.moveToNext());
         Log.i(getClass().getName(), "Read all session data!");
         cursor.close();
-        return list;
+        return Observable.from(list);
     }
 
     /**
@@ -126,13 +131,17 @@ public class SessionDatabase extends SQLiteOpenHelper {
         return exists;
     }
 
-    public long insert(WidgetSessionData session){
+    /*
+        TODO: Make a public long create() or reserve() method which returns an id and reserves a spot.
+     */
+
+    public Observable<Long> insert(String tag){
         setupIfNecessary();
-        mInsert.bindString(1, session.getTag());
-        mInsert.bindBlob(2, session.getData());
+        mInsert.bindString(1, tag);
+        mInsert.bindBlob(2, JSONObject.NULL.toString().getBytes());
         long id = mInsert.executeInsert();
-        Log.i(getClass().getName(), "Inserted #" + id + " with Tag: " + session.getTag());
-        return id;
+        Log.i(getClass().getName(), "Inserted #" + id + " with Tag: " + tag);
+        return Observable.just(id);
     }
 
     /**
