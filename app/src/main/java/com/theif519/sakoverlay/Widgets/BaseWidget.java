@@ -422,8 +422,8 @@ public class BaseWidget extends Fragment {
     }
 
     /**
-     * For subclasses to override to setup their own additional needed information. Not abstract as it is not
-     * necessary to setup.
+     * For subclasses to override to setup their own additional needed information.
+     * Not abstract as it is not necessary to setup.
      */
     protected void setup() {
         if (mViewState == null) {
