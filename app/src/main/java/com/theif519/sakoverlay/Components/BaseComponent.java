@@ -17,6 +17,7 @@ import com.theif519.sakoverlay.Components.Types.Actions.Impl.Actions;
 import com.theif519.sakoverlay.Components.Types.Actions.Impl.BaseActions;
 import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.BaseConditionals;
 import com.theif519.sakoverlay.Components.Types.Conditionals.Impl.Conditionals;
+import com.theif519.sakoverlay.Components.Types.IReference;
 import com.theif519.sakoverlay.Core.Misc.Globals;
 import com.theif519.sakoverlay.R;
 
@@ -29,7 +30,7 @@ import rx.subjects.PublishSubject;
 /**
  * Created by theif519 on 12/27/2015.
  */
-public abstract class BaseComponent extends FrameLayout {
+public abstract class BaseComponent extends FrameLayout implements IReference {
 
     private FrameLayout mContainer, mRoot;
     private String mKey;
@@ -271,4 +272,18 @@ public abstract class BaseComponent extends FrameLayout {
         };
     }
 
+    @Override
+    public Class<? extends Conditionals> getConditionals() {
+        return BaseConditionals.class;
+    }
+
+    @Override
+    public Class<? extends Actions> getActions() {
+        return BaseActions.class;
+    }
+
+    @Override
+    public Class<?> getType() {
+        return getClass();
+    }
 }
