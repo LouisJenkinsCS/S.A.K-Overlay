@@ -16,54 +16,48 @@ To summarize, this will allow the user to align and place (or even Snap) Widgets
 
 Comes with already created and configured, convenient widgets.
 
-##### Web Browser
+##### Web Browser **[STABLE]**
 
-* Minimal web browser
-* Basic navigation of history
+Browse the web with the minimal implementation of our Web Browser. Contains basic history tracking, and in the future will be tracked across sessions.
 
-##### Sticky Note
+##### Sticky Note **[STABLE]**
 
 * Write notes
 * Persistent
 
-##### Google Maps
+##### Google Maps**[STABLE]**
 
 * Shows current location and address
 
-##### Screen Recorder
+##### Screen Recorder **[UNSTABLE]**
 
 * Records the screen
 * Can be controlled through a "floating" controller (Play/Stop button)
 
-##### Custom
+##### Custom **[IN DEVELOPMENT]**
 
-Create your own widgets (coming soon) with our Drag-And-Drop tool, which allows you, the user, to create your own Widget. As it is impossible to anticipate everyone's wants and needs, this feature allows you to make it yourself.
+Allows the creation of your own personal Widgets, allowing the user to use our Drag-and-Drop tools as a WYSIWYG layout creation tool, as well allowing more minimial and simple callbacks functions which allows the user to interract with other componenets of the layout, other layouts, or even other other applications, aptly named the Callback Generator.
 
-* Drag and Drop
-    - Move and align components of your layout, yourself.
-* Attribute Menu
-    - Allows you to manually alter attributes
-    - Allows you to create simple callback methods
-        + Uses a limited, minimal but simplistic DSL (Domain Specific Language)
-        + For example, on a button, you may want it to perform some action when pressed. With our simple Callback editor, it will allow simplistic actions based on predefined but user-aligned conditions
+#### Move & Resize **[IN DEVELOPMENT]**
 
-End Goal: In the end, I want to make it possible for anyone to import their own XML and .Java files themselves, and vice versa (exporting). To do so, I would transcribe my own DSL into a .Java file, compile it to .Dex, load it with a DexClassLoader, and call the callback methods necessary that way (I.E, onClick). This way, it can replicate the normal Android development way of using XML + .java.
+Allows you, the user, to move and adjust Widgets wherever and however you want. Widgets are preserved across sessions and recreated if needed to be exactly where you placed them. Snap Widgets to sides of the screen or corners, maximize or minimize them, all of the power is at your finger tips.
 
-#### Multitasking
+##### Not Just Inside The Overlay **[UNIMPLEMENTED]**
 
-* Launch multiple Widgets
-* Align multiple Widgets however you want
-* Snap Widgets to both sides and corners of the screen
-* Persistent
-* Application in background remain visible (I.E, overlay is mostly transparent), hence is less likely to be killed by Android.
+The ability to "detatch" the Widget will also be made possible, allowing users to not only create their own Widgets, but have it exist outside of the Overlay. This process is done by removing it from the Overlay and adding it to Android's own WindowManager. 
+
+#### Multitasking **[IN DEVELOPMENT]**
+
+Allows the user to not only launch Widgets, it also allows the user to manage multiple of them, leading to a more natural multitasking experience. They can be aligned however you please to further promote productivity, and is transparent so as to help ensure that application it is overlaying does not killed by the Android Out-Of-Memory manager.
 
 #### Gaming
 
+The Window Manager originally was created with gaming in mind, and although now is more general-use, gaming still is a key selling feature of this application.
+
 ##### Philosophy
 
-* Designed with gaming in mind
-* Originally meant to mimic the Steam overlay, now it will be capable of much more (in the future)
+Bring up the overlay in-game, browse the web, write down notes, or just plain do what your custom-made Widget was made to do. The overlay attempts to minimize itself and keep the background application visible at all times to ensure it is not killed off by Android's memory manager. 
 
 ### Pricing
 
-* When finished, this application will be completely free (with donations appreciated) and open source.
+Free. For the price of absolutely nothing, all of the following features are offered, as well as lifetime support from the Developer himself. To attribute to that, as GitHub is a public domain, others may contribute as well. Depending on how it goes, this project may also go fully Open Source under the GPL.

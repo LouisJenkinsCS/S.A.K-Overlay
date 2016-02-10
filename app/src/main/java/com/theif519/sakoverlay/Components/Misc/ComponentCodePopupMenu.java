@@ -52,8 +52,7 @@ public class ComponentCodePopupMenu extends PopupMenu implements PopupMenu.OnMen
         if (BitmaskTools.isSet(mask, REFERENCES)) {
             SubMenu components = menu.addSubMenu(ALL_GROUP, REFERENCES, 2, "References");
             ReferenceHelper.getInstance().getMappedReferences()
-                    .map(Map.Entry::getKey)
-                    .forEach(methodName -> components.add(REFERENCES, Menu.NONE, Menu.NONE, methodName));
+                    .forEach(mappedReference -> components.add(REFERENCES, Menu.NONE, Menu.NONE, mappedReference.getKey()));
         } else { // Note we do not want to both obtain methods and the reference itself. That would be silly.
             if (BitmaskTools.isSet(mask, CONDITIONALS)) {
                 ReferenceType<?> ref = reference.orElseThrow(() ->
