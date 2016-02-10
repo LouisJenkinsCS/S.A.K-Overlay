@@ -14,26 +14,17 @@ import java.util.Collections;
 
 /**
  * Created by theif519 on 10/12/2015.
- * <p>
+ * <p/>
  * Author: Louis Jenkins
- * <p>
+ * <p/>
  * A way around the annoying lack of a practical way to retrieve the file directly from the R.raw.*
  * file.
  */
-public final class FileTools {
+public final class FileRetriever {
 
-    public static String getFileSize(File f) {
-        long bytes = f.length();
-        int unit = 1024;
-        if (bytes < unit) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = "KMGTPE".charAt(exp - 1) + "";
-        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
-    }
+    private final static String TAG = "FileRetriever";
 
-    private final static String TAG = "FileTools";
-
-    private FileTools() {
+    private FileRetriever() {
 
     }
 
@@ -83,7 +74,7 @@ public final class FileTools {
         File f = new File(dir);
         f.mkdirs();
         File[] arr = f.listFiles();
-        if (arr != null) Collections.addAll(files, arr);
+        if(arr != null) Collections.addAll(files, arr);
         return files;
     }
 }
