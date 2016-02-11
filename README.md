@@ -1,5 +1,7 @@
 # S.A.K-Overlay
 
+[Window Manager](/S.A.K-Overlay_Screenshot.png)
+
 ## What is it?
 
 S.A.K-Overlay is the brand new, unique and original Window Manager for Android. A Window Manager, in this sense, is a container which allows the dynamic placement of Widgets to the user's specifications. While this definition may differ from the conventional meaning, it maintains the central philosophy in mind.
