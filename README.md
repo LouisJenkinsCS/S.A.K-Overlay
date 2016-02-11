@@ -1,6 +1,6 @@
 # S.A.K-Overlay
 
-[Window Manager](/S.A.K-Overlay_Screenshot.png)
+![Window Manager](/S.A.K-Overlay_Screenshot.png)
 
 ## What is it?
 
