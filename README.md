@@ -1,5 +1,10 @@
 # S.A.K-Overlay
 
+<a href="https://scan.coverity.com/projects/theif519-s-a-k-overlay">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/8595/badge.svg"/>
+</a>
+
 ![Window Manager](/S.A.K-Overlay_Screenshot.png)
 
 ## What is it?

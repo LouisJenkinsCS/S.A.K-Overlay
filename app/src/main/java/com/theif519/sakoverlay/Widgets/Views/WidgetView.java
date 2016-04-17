@@ -101,9 +101,21 @@ public class WidgetView extends RelativeLayout {
     }
 
     private boolean onResizeEvent(MotionEvent ev){
+        int mainPointer = getMainPointer(ev);
         return false;
         // TODO: Move new origin to closest pointer, remember that pointer and use it for further calculations
         // TODO: Change size as the distance between both pointers, no less than MIN_X and MIN_Y
+    }
+
+    private int getMainPointer(MotionEvent ev){
+        Rect hitRect = new Rect();
+        findViewById(R.id.widget_view_title_bar).getHitRect(hitRect);
+        for(int i = 0; i < ev.getPointerCount(); i++) {
+            if (hitRect.contains((int) ev.getX(i), (int) ev.getY(i))) {
+                return i;
+            }
+        }
+        throw new RuntimeException("Neither pointer was touching the title bar!");
     }
 
     private void checkViewBounds(){
